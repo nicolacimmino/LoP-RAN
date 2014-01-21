@@ -36,6 +36,7 @@
 #include <avr/sleep.h>
 #include <avr/power.h>
 #include <avr/wdt.h>
+#include "NetTime.h"
 
 //
 // Change the following consts if your connections are arranged in different way.
@@ -48,12 +49,11 @@ const byte EEPROM_RFCH_INNER_NODE = 0x01;        // 0x01  Last known good RF cha
 const byte EEPROM_URI  = 0x10;        // 0x10  Start of our URI, null terminated max 64 bytes including null
 const byte EEPROM_URI_TO = 0x50;        // 0x50  Start of the URI we report to, null terminated max 64 bytes including null
 
-
 // An instance of the NRF24L01+ chip controller.
 RF24 radio(radio_ce_pin,radio_csn_pin);
 
 // BCH Address is common to all nodes.
-const uint64_t BCH_PIPE_ADDR = 0x1000000001LL;
+const uint64_t BCH_PIPE_ADDR = 0x5000000001LL;
 
 // MTU size in Lop-RAN
 const uint32_t LopRAN_MTU = 256;
@@ -131,6 +131,8 @@ void setup(void)
   WDTCSR |= (1<<WDCE) | (1<<WDE); // Setting WDCE gives us 4 clock cycles time to change WDE
   WDTCSR =  1<<WDP2 | 1<<WDP1; // Set default sleep to 1 second.
   WDTCSR |= _BV(WDIE);  // Enable watchdog interrupt.
+  
+  getNetworkTime();
 }
 
 
@@ -166,7 +168,7 @@ void sleep_0_5_s()
 
 void loop(void)
 {
-      sleep_0_5_s();
+      //sleep_0_5_s();
       
       /*unsigned long start = millis();
       int toff_correction = tx_slot();
@@ -176,7 +178,16 @@ void loop(void)
       else if(toff_correction + 1365-tspent > 0)
         delay(toff_correction + 1365-tspent);
       */
-      broadcastBCH();  
+      
+      radio.setChannel(50);
+      
+      //broadcastBCH();
+      
+      radio.openReadingPipe(1,BCH_PIPE_ADDR); 
+      radio.startListening();    
+      String msg = radio.readMessage(1500);
+      Serial.println(msg);
+      
 }
 
 int tx_slot()
@@ -213,6 +224,7 @@ int tx_slot()
      
     return toff;
 }
+
 
 // Attempts to find an AP where to connect.
 // And if found it enters the network.
@@ -258,37 +270,72 @@ void scanForNet()
 
 void broadcastBCH()
 {
-  powerUp();
-  radio.stopListening();
-    
-  radio.setAutoAck(0);                          // Disable auto ACK
-  radio.openWritingPipe(BCH_PIPE_ADDR);           // Just default addresses, each operating mode will set its own.
+  NetTime currentNetTime = getNetworkTime();
   
-  int txbIX = 0;
+  radio.stopListening();
+
+  // Keep braodcasting for the all slot 0 duration.
+  while(currentNetTime.slot == 0)
+  {      
+    radio.setAutoAck(1);                          // Auto ACK
+    radio.openWritingPipe(BCH_PIPE_ADDR);           // Just default addresses, each operating mode will set its own.
+    
+    int txbIX = 0;
+   
+    // To allow ranging we step down power from 0dBm to -18dBm
+    for(byte power=3;; power--)
+    {
+      txbIX = 0;
  
-  // To allow ranging we step down power from 0dBm to -18dBm
-  for(byte power=3;; power--)
-  {
-    txbIX = 0;
+      currentNetTime = getNetworkTime();
+      
+      if(currentNetTime.off < 70)
+      {
+        // We are before off=70, we broadcast the BCH and ranging info.
+        
+        // We build the the BCH message according to ...:
+        // |0|1|2|3|4         |5   |6  |
+        // |B|C|H| |BCH_TXPOW|Power|END|
+        
+        // Header
+        strncpy(lop_tx_buffer, "BCH ", 4);
+        txbIX+=4;
+        
+        // The power
+        lop_tx_buffer[txbIX++] = '0'+BCH_TXPOW;
+        lop_tx_buffer[txbIX++] = '0'+power;
+        
+        // End marker
+        lop_tx_buffer[txbIX++] = 0;
+        
+        radio.setPALevel((rf24_pa_dbm_e)power);
+        radio.sendMessage(lop_tx_buffer);
+      }
+      else
+      {
+        // We are past off=70 we broadcast sync
+        // We build the the BCH sync message according to ...:
+        // |0|1|2|3|4   |
+        // |B|C|H|S||END|
+        
+        // Header
+        strncpy(lop_tx_buffer, "BCHS", 4);
+        txbIX+=4;
+        
+        // End marker
+        lop_tx_buffer[txbIX++] = 0;
+        
+        // We use max power for sync so we can reach all nodes
+        //  that might have heard us.
+        radio.setPALevel(RF24_PA_MAX);
+        radio.sendMessage(lop_tx_buffer);
+      }
+      
+      if(power == 0) break;
+    }
     
-    // Header
-    strncpy(lop_tx_buffer, "BCH ", 4);
-    txbIX+=4;
-    
-    // The power
-    lop_tx_buffer[txbIX++] = BCH_TXPOW;
-    lop_tx_buffer[txbIX++] = power;
-    
-    // End marker
-    lop_tx_buffer[txbIX++] = 0;
-    
-    //DumpToSerial(lop_tx_buffer, txbIX);
-    
-    bool ok = radio.sendMessage(lop_tx_buffer);
-         
-    if(power == 0) break;
   }
   
-  powerDown();  
+  radio.startListening();
 }
 
