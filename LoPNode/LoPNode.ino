@@ -136,13 +136,6 @@ void setup(void)
     uri_to = uri_to + (char)EEPROM.read(EEPROM_URI_TO+ix);
     ix++; 
   }
-  
-  // We setup here the Watchdog timer. Sleep duration will be set before sleep anyway.
-  MCUSR &= ~(1<<WDRF);  // Clear reset flag 
-  WDTCSR |= (1<<WDCE) | (1<<WDE); // Setting WDCE gives us 4 clock cycles time to change WDE
-  WDTCSR =  1<<WDP2 | 1<<WDP1; // Set default sleep to 1 second.
-  WDTCSR |= _BV(WDIE);  // Enable watchdog interrupt.
-  
 }
 
 
@@ -150,8 +143,8 @@ void DumpToSerial(char *data, uint8_t length)
 {
   for (int i=0; i<length; i++) 
   { 
-    if (data[i]<0x10) {Serial.print("0");} 
-    Serial.print(data[i],HEX); 
+    if ((uint8_t)data[i]<0x10) {Serial.print("0");} 
+    Serial.print((uint8_t)data[i],HEX); 
     Serial.print(" "); 
   }
   Serial.println();
@@ -189,29 +182,31 @@ void loop(void)
         delay(toff_correction + 1365-tspent);
       */
       
-      radio.setChannel(50);
-      
       /*while(getNetworkTime().slot != 0)
       { 
         delay(1);
       }
       broadcastBCH();
       */
-      //scanForNet();
+      scanForNet();
       
       
 }
 
 
+char preamble[5] = {0x55, 0xAA, 0x55, 0xAA, 0x00};
 
 void sendLoPRANMessage(char *data, int len)
 {
-  radio.stopListening();
+  // Write message length.
+  data[4]=len;
+        
   int offset=0;
+  radio.stopListening();
   while(offset < len)
   {  
     radio.write(data+offset, LoPRAN_payload_size);
-    delay(1);
+    //delay(1);
     offset+=LoPRAN_payload_size;
   }
   radio.startListening();
@@ -220,10 +215,9 @@ void sendLoPRANMessage(char *data, int len)
 bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms, int &received)
 {
   long started_reading = millis();
-  int messagelen = 4;
+  int messagelen = 6;
   bool timeout = false;
   
-  radio.startListening();
   
   received = 0;
   while(received < messagelen)
@@ -242,7 +236,15 @@ bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms, int &rece
     }
 	
     radio.read( data + received , LoPRAN_payload_size );
-    DumpToSerial(data, LoPRAN_payload_size);
+    //DumpToSerial(data, received + LoPRAN_payload_size);
+    
+    // If we don't have a preamble at the start of the message
+    //   discard all data and keep waiting.
+    if(strstr(data, preamble) - data != 0)
+    {
+      received = 0;
+      continue; 
+    }
     
     received += LoPRAN_payload_size;
     
@@ -250,9 +252,11 @@ bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms, int &rece
     //  is the 5th byte.
     if(received >= 5)
     {
-       messagelen = data[4]; 
+       messagelen = data[4];
     }
   }
+  
+  //DumpToSerial(data, received);
   
   return true;
 }
@@ -267,86 +271,71 @@ bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms, int &rece
 //
 void broadcastBCH()
 {
-  NetTime currentNetTime = getNetworkTime();
-  
-  radio.stopListening();
-
-  // Keep braodcasting for the all slot 0 duration.
-  while(currentNetTime.slot == 0)
-  {
+   
+    radio.setChannel(10);
     radio.setAutoAck(1);         
     radio.openWritingPipe(BCH_PIPE_ADDR);
     
     int txBufIndex = 0;
    
     // To allow ranging we step down power from 0dBm to -18dBm
-    for(byte power=3;; power--)
+    for(byte power=3; (int8_t)power>=0; power--)
     {
       txBufIndex = 0;
- 
-      currentNetTime = getNetworkTime();
-      
-      if(currentNetTime.off < 70)
-      {
-        // We are before off=70, we broadcast the BCH and ranging info.
-        
+     
         // We build the the BCH message according to ...:
-        // |0|1|2|3|4  |5        |6   |7  |
-        // |B|C|H| |Len|BCH_TXPOW|Power|END|
+        // |0|1|2|3|4  |5    |6   
+        // |B|C|H| |Len|Power|END|
         
-        // Header
-        strncpy(lop_tx_buffer, "BCH ", 4);
+        // Preamble
+        strncpy(lop_tx_buffer + txBufIndex, preamble, 4);
         txBufIndex+=4;
         
         // Place holder for length.
-        lop_tx_buffer[txBufIndex++] = 0;
+        txBufIndex++;
         
+        // Header
+        strncpy(lop_tx_buffer + txBufIndex, "BCH ", 4);
+        txBufIndex+=4;
+       
         // The power
-        lop_tx_buffer[txBufIndex++] = BCH_TXPOW;
         lop_tx_buffer[txBufIndex++] = power;
         
         // End marker
         lop_tx_buffer[txBufIndex++] = 0;
         
-        // Length
-        lop_tx_buffer[4]=txBufIndex;
-        
         radio.setPALevel((rf24_pa_dbm_e)power);
         sendLoPRANMessage(lop_tx_buffer, txBufIndex);
       }
-      else
+     
+      while(getNetworkTime().off < 70)
       {
-        // We are past off=70 we broadcast sync
+        delay(1);
+      }    
         // We build the the BCH sync message according to ...:
-        // |0|1|2|3|4   |
-        // |B|C|H|S||END|
+        // |0|1|2|3|4  |
+        // |B|C|H|S|END|
         
-        // Header
-        strncpy(lop_tx_buffer, "BCHS", 4);
+        txBufIndex = 0;
+        // Preamble
+        strncpy(lop_tx_buffer + txBufIndex, preamble, 4);
         txBufIndex+=4;
         
         // Place holder for length.
-        lop_tx_buffer[txBufIndex++] = 0;
+        txBufIndex++;
         
+        // Header
+        strncpy(lop_tx_buffer + txBufIndex, "BCHS", 4);
+        txBufIndex+=4;
+       
         // End marker
         lop_tx_buffer[txBufIndex++] = 0;
-        
-        // Length
-        lop_tx_buffer[4]=txBufIndex;
         
         // We use max power for sync so we can reach all nodes
         //  that might have heard us.
         radio.setPALevel(RF24_PA_MAX);
         sendLoPRANMessage(lop_tx_buffer, txBufIndex);
-        return;
-      }
-      
-      if(power == 0) break;
-    }
-    
-  }
-  
-  radio.startListening();
+         
 }
 
 
@@ -360,41 +349,45 @@ void scanForNet()
   int rxBytes = 0;
   lowest_tx_power_inner = RF24_PA_MAX;
   
-  radio.stopListening();
   radio.setAutoAck(1);         
   radio.openReadingPipe(1, BCH_PIPE_ADDR);
+  radio.startListening();
   
+  bool rangingStarted = false;
   while(true)
   {   
-    for(int ch=scan_start; ch<15; ch++)
-    {
-       radio.setChannel(ch);
+  
+       radio.setChannel(10);
+       //Serial.print("SCAN:");
+       //Serial.println(ch);
        
+       lop_rx_buffer[0]=0;
        bool res = receiveLoPRANMessage(lop_rx_buffer, LopRAN_MTU , 1500, rxBytes);
-       if(strstr(lop_rx_buffer, "BCH ") - lop_rx_buffer == 0)
+       if((strstr(lop_rx_buffer, "BCH ") - lop_rx_buffer) == 5)
        {        
          // Store this as last known good channel
-         if(ch != EEPROM.read(EEPROM_RFCH_INNER_NODE))
-           EEPROM.write(EEPROM_RFCH_INNER_NODE, ch);
+         //if(ch != EEPROM.read(EEPROM_RFCH_INNER_NODE))
+         //  EEPROM.write(EEPROM_RFCH_INNER_NODE, ch);
                  
          // Process ranging info to store lowest received
          //  power.
-         if(lowest_tx_power_inner > lop_rx_buffer[6])
+         if(lowest_tx_power_inner > lop_rx_buffer[9])
          {
-           lowest_tx_power_inner = lop_rx_buffer[6];
+           lowest_tx_power_inner = lop_rx_buffer[9];
          }
+         rangingStarted = true;
        } 
-       else if(strstr(lop_rx_buffer, "BCHS") - lop_rx_buffer == 0)
+       else if(rangingStarted && (strstr(lop_rx_buffer, "BCHS") - lop_rx_buffer) == 5)
       {
         Serial.print("BCH SYNC. POW=");
         Serial.println(lowest_tx_power_inner);
+        rangingStarted=false;
+        lowest_tx_power_inner=RF24_PA_MAX;
         return;
       } 
     }
     
-    // Not found, start from the first channel.
-    scan_start = 0;
-  }
+  
 }
 
 
