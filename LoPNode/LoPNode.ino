@@ -52,28 +52,34 @@ const byte EEPROM_URI_TO = 0x50;        // 0x50  Start of the URI we report to, 
 // An instance of the NRF24L01+ chip controller.
 RF24 radio(radio_ce_pin,radio_csn_pin);
 
-// BCH Address is common to all nodes.
-const uint64_t BCH_PIPE_ADDR = 0x5000000001LL;
 
 // MTU size in Lop-RAN
-const uint32_t LopRAN_MTU = 256;
 
-// Single radio packet size.
-const uint32_t LoPRAN_payload_size = 4;
+
+// Below constants represet LoP-RAN network parameters
+
+const uint32_t LOP_PAYL_SIZE = 16;                 // Single NRF24L01 packet payload size
+const uint32_t LOP_MTU = 256;                      // MTU size
+const uint8_t LOP_LOW_CHANNEL = 0;                // Lowest usable radio channel
+const uint8_t LOP_HI_CHANNEL = 15;                // Highest usable radio channel
+const uint64_t BCH_PIPE_ADDR = 0x5000000001LL;     // BCH Pipe Address
+
 
 // TX Buffer.
-char lop_tx_buffer[LopRAN_MTU];
+char lop_tx_buffer[LOP_MTU];
 
 // RX Buffer.
-char lop_rx_buffer[LopRAN_MTU];
+char lop_rx_buffer[LOP_MTU];
 
 // TX Power parameter in BCH.
 const byte BCH_TXPOW = 0x01;
 
 
 // Lowest usable power to talk to the inner node.
-int lowest_tx_power_inner = RF24_PA_MAX;
+uint8_t inbound_tx_power = RF24_PA_MAX;
 
+// Channel used for commincations towards the inner node.
+uint8_t inbound_channel = 0;
 
 // URI of this node, will be loaded from EEPROM_uri address.
 String uri = "";
@@ -108,7 +114,7 @@ void setup(void)
   radio.begin();
   radio.setCRCLength(RF24_CRC_8);               // 8 bits CRC
   radio.setRetries(15,15);                      // Max 15 retries 4mS interval
-  radio.setPayloadSize(LoPRAN_payload_size);                      // Payload sise, phisical layer MTU
+  radio.setPayloadSize(LOP_PAYL_SIZE);                      // Payload sise, phisical layer MTU
   radio.setChannel(EEPROM.read(EEPROM_RFCH_INNER_NODE));   // We start from the last known good channel
   radio.setDataRate(RF24_250KBPS);              // 250 kbps
   radio.setPALevel(RF24_PA_MAX);                // We start from max power, ranging will take care to adjust this.
@@ -205,9 +211,9 @@ void sendLoPRANMessage(char *data, int len)
   radio.stopListening();
   while(offset < len)
   {  
-    radio.write(data+offset, LoPRAN_payload_size);
+    radio.write(data+offset, LOP_PAYL_SIZE);
     //delay(1);
-    offset+=LoPRAN_payload_size;
+    offset+=LOP_PAYL_SIZE;
   }
   radio.startListening();
 }
@@ -229,14 +235,14 @@ bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms, int &rece
     
     // Fail the operation if we timeout or we receive more data
     //  than the supplied buffer can contain.
-    if(timeout || (received + LoPRAN_payload_size > bufLen))
+    if(timeout || (received + LOP_PAYL_SIZE > bufLen))
     {
-      received = -1;
+      received = 0;
       return false;
     }
 	
-    radio.read( data + received , LoPRAN_payload_size );
-    //DumpToSerial(data, received + LoPRAN_payload_size);
+    radio.read( data + received , LOP_PAYL_SIZE );
+    //DumpToSerial(data, received + LOP_PAYL_SIZE);
     
     // If we don't have a preamble at the start of the message
     //   discard all data and keep waiting.
@@ -246,7 +252,7 @@ bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms, int &rece
       continue; 
     }
     
-    received += LoPRAN_payload_size;
+    received += LOP_PAYL_SIZE;
     
     // If we got the header then the message length
     //  is the 5th byte.
@@ -255,8 +261,6 @@ bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms, int &rece
        messagelen = data[4];
     }
   }
-  
-  //DumpToSerial(data, received);
   
   return true;
 }
@@ -273,7 +277,6 @@ void broadcastBCH()
 {
    
     radio.setChannel(10);
-    radio.setAutoAck(1);         
     radio.openWritingPipe(BCH_PIPE_ADDR);
     
     int txBufIndex = 0;
@@ -338,56 +341,66 @@ void broadcastBCH()
          
 }
 
-
-// Attempts to find an AP where to connect.
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Attempts to find a node to communicate with.
+//
+// Performs network scan and ranging.
+//
 void scanForNet()
 {
   // Start the scan from the last known good channel.
-  int scan_start = EEPROM.read(EEPROM_RFCH_INNER_NODE);
-  if(scan_start>15)
-   scan_start = 0;
-  int rxBytes = 0;
-  lowest_tx_power_inner = RF24_PA_MAX;
+  inbound_channel = constrain(EEPROM.read(EEPROM_RFCH_INNER_NODE), LOP_LOW_CHANNEL, LOP_HI_CHANNEL);
   
-  radio.setAutoAck(1);         
+  // Used to sore received bytes count.
+  int rxBytes = 0;
+  
+  // We start from an invalid power so we can detect that we
+  //  got at least one ranging message avoiding false power
+  //  detection if we happen to get as sync as first message.
+  inbound_tx_power = RF24_PA_MAX+1;
+  
+  // Listen on the BCH pipe        
   radio.openReadingPipe(1, BCH_PIPE_ADDR);
   radio.startListening();
   
-  bool rangingStarted = false;
   while(true)
-  {   
-  
-       radio.setChannel(10);
-       //Serial.print("SCAN:");
-       //Serial.println(ch);
-       
-       lop_rx_buffer[0]=0;
-       bool res = receiveLoPRANMessage(lop_rx_buffer, LopRAN_MTU , 1500, rxBytes);
-       if((strstr(lop_rx_buffer, "BCH ") - lop_rx_buffer) == 5)
-       {        
-         // Store this as last known good channel
-         //if(ch != EEPROM.read(EEPROM_RFCH_INNER_NODE))
-         //  EEPROM.write(EEPROM_RFCH_INNER_NODE, ch);
-                 
-         // Process ranging info to store lowest received
-         //  power.
-         if(lowest_tx_power_inner > lop_rx_buffer[9])
-         {
-           lowest_tx_power_inner = lop_rx_buffer[9];
-         }
-         rangingStarted = true;
-       } 
-       else if(rangingStarted && (strstr(lop_rx_buffer, "BCHS") - lop_rx_buffer) == 5)
-      {
-        Serial.print("BCH SYNC. POW=");
-        Serial.println(lowest_tx_power_inner);
-        rangingStarted=false;
-        lowest_tx_power_inner=RF24_PA_MAX;
-        return;
-      } 
+  { 
+    // Try to read a message, linger maximum 1.5s on a given channel and if you get
+    //  nothing move on to the next.
+    radio.setChannel(inbound_channel);
+    if(!receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , 1500, rxBytes))
+    {
+      inbound_channel = (++inbound_channel % (LOP_HI_CHANNEL - LOP_LOW_CHANNEL)) + LOP_LOW_CHANNEL; 
+     
+      Serial.print("SCAN,");
+      Serial.println(inbound_channel);
+      continue; 
     }
     
-  
+    if((strstr(lop_rx_buffer, "BCH ") - lop_rx_buffer) == 5)
+    {        
+      // Store this as last known good channel, save EEPROM life by not
+      //  writing if there is no change.
+      if(inbound_channel != EEPROM.read(EEPROM_RFCH_INNER_NODE))
+        EEPROM.write(EEPROM_RFCH_INNER_NODE, inbound_channel);
+                 
+      // Process ranging info and store lowest usable power if we heard
+      //  a message weaker than last one.
+      if(inbound_tx_power > lop_rx_buffer[9])
+        inbound_tx_power = lop_rx_buffer[9];
+    
+    } 
+    else if(inbound_tx_power <= RF24_PA_MAX  && (strstr(lop_rx_buffer, "BCHS") - lop_rx_buffer) == 5)
+    {
+      // We have a sync. For now we just leave. Soon here we have to store
+      //  offset info for the NetTime module so that this moment becomes the
+      //  atart of slot 1.
+      Serial.print("BCHS,");
+      Serial.println(inbound_tx_power);
+      break;
+    }
+  }// while(true) 
 }
+
 
 
