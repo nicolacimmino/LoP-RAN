@@ -60,10 +60,13 @@ RF24 radio(radio_ce_pin,radio_csn_pin);
 
 const uint32_t LOP_PAYL_SIZE = 16;                 // Single NRF24L01 packet payload size
 const uint32_t LOP_MTU = 256;                      // MTU size
-const uint8_t LOP_LOW_CHANNEL = 0;                // Lowest usable radio channel
-const uint8_t LOP_HI_CHANNEL = 15;                // Highest usable radio channel
+const uint8_t LOP_LOW_CHANNEL = 0;                 // Lowest usable radio channel
+const uint8_t LOP_HI_CHANNEL = 15;                 // Highest usable radio channel
 const uint64_t BCH_PIPE_ADDR = 0x5000000001LL;     // BCH Pipe Address
 
+// The actual transmitted preamble is 4 bytes, we null terminate it to be able to use
+//  string manipulation functions when comparing etc.
+const char preamble[5] = {0x55, 0xAA, 0x55, 0xAA, 0x00}; 
 
 // TX Buffer.
 char lop_tx_buffer[LOP_MTU];
@@ -177,6 +180,12 @@ void sleep_0_5_s()
 
 void loop(void)
 {
+  // Preamble must always be in the beginning of each 
+  //  message. We prefill here the TX buffer so we 
+  //  save some redundant code in every message composition.
+  strncpy(lop_tx_buffer, preamble, 4);
+  
+  
       //sleep_0_5_s();
       
       /*unsigned long start = millis();
@@ -193,14 +202,14 @@ void loop(void)
         delay(1);
       }
       broadcastBCH();
-      */
+      delay(500);*/
       scanForNet();
       
       
 }
 
 
-char preamble[5] = {0x55, 0xAA, 0x55, 0xAA, 0x00};
+
 
 void sendLoPRANMessage(char *data, int len)
 {
@@ -276,68 +285,55 @@ bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms, int &rece
 void broadcastBCH()
 {
    
-    radio.setChannel(10);
-    radio.openWritingPipe(BCH_PIPE_ADDR);
+  radio.setChannel(10);
+  radio.openWritingPipe(BCH_PIPE_ADDR);
+     
+  // To allow ranging we step down power from 0dBm to -18dBm
+  for(byte power=3; (int8_t)power>=0; power--)
+  {
+    int txBufIndex = 5;
+     
+    // We build the the BCH message according to ...:
+    // |0|1|2|3|4  |5    |6    |7    |
+    // |B|C|H| |Len|Power|Block|Frame|
+        
+    // Header
+    strncpy(lop_tx_buffer + txBufIndex, "BCH ", 4);
+    txBufIndex+=4;
+       
+    // The power
+    lop_tx_buffer[txBufIndex++] = power;
+        
+    // Block and frame
+    lop_tx_buffer[txBufIndex++] = getNetworkTime().block;
+    lop_tx_buffer[txBufIndex++] = getNetworkTime().frame;
     
-    int txBufIndex = 0;
-   
-    // To allow ranging we step down power from 0dBm to -18dBm
-    for(byte power=3; (int8_t)power>=0; power--)
-    {
-      txBufIndex = 0;
-     
-        // We build the the BCH message according to ...:
-        // |0|1|2|3|4  |5    |6   
-        // |B|C|H| |Len|Power|END|
+    radio.setPALevel((rf24_pa_dbm_e)power);
+    sendLoPRANMessage(lop_tx_buffer, txBufIndex);
+  }
+  
+  // Wait till we near the end of the slot.   
+  while(getNetworkTime().off < 80)
+  {
+    delay(1);
+  }    
+  
+  // We build the the BCH sync message according to ...:
+  // |0|1|2|3|
+  // |B|C|H|S|
         
-        // Preamble
-        strncpy(lop_tx_buffer + txBufIndex, preamble, 4);
-        txBufIndex+=4;
+  int txBufIndex = 5;
         
-        // Place holder for length.
-        txBufIndex++;
-        
-        // Header
-        strncpy(lop_tx_buffer + txBufIndex, "BCH ", 4);
-        txBufIndex+=4;
+  // Header
+  strncpy(lop_tx_buffer + txBufIndex, "BCHS", 4);
+  txBufIndex+=4;
        
-        // The power
-        lop_tx_buffer[txBufIndex++] = power;
+  // End marker
+  lop_tx_buffer[txBufIndex++] = 0;
         
-        // End marker
-        lop_tx_buffer[txBufIndex++] = 0;
-        
-        radio.setPALevel((rf24_pa_dbm_e)power);
-        sendLoPRANMessage(lop_tx_buffer, txBufIndex);
-      }
-     
-      while(getNetworkTime().off < 70)
-      {
-        delay(1);
-      }    
-        // We build the the BCH sync message according to ...:
-        // |0|1|2|3|4  |
-        // |B|C|H|S|END|
-        
-        txBufIndex = 0;
-        // Preamble
-        strncpy(lop_tx_buffer + txBufIndex, preamble, 4);
-        txBufIndex+=4;
-        
-        // Place holder for length.
-        txBufIndex++;
-        
-        // Header
-        strncpy(lop_tx_buffer + txBufIndex, "BCHS", 4);
-        txBufIndex+=4;
-       
-        // End marker
-        lop_tx_buffer[txBufIndex++] = 0;
-        
-        // We use max power for sync so we can reach all nodes
-        //  that might have heard us.
-        radio.setPALevel(RF24_PA_MAX);
-        sendLoPRANMessage(lop_tx_buffer, txBufIndex);
+  // We use max power for sync so we can reach all nodes that might have heard us.
+  radio.setPALevel(RF24_PA_MAX);
+  sendLoPRANMessage(lop_tx_buffer, txBufIndex);
          
 }
 
@@ -345,6 +341,9 @@ void broadcastBCH()
 // Attempts to find a node to communicate with.
 //
 // Performs network scan and ranging.
+// This function blocks until a valid inner node is found. On return from this function
+//  the globals inbound_channel and inbound_tx_power are set to the right values for the
+//  found inner node.
 //
 void scanForNet()
 {
@@ -389,15 +388,25 @@ void scanForNet()
       if(inbound_tx_power > lop_rx_buffer[9])
         inbound_tx_power = lop_rx_buffer[9];
     
+      // Sync our nettime
+      setNetworkTime(lop_rx_buffer[10], lop_rx_buffer[11], 1);
+      
     } 
     else if(inbound_tx_power <= RF24_PA_MAX  && (strstr(lop_rx_buffer, "BCHS") - lop_rx_buffer) == 5)
     {
-      // We have a sync. For now we just leave. Soon here we have to store
-      //  offset info for the NetTime module so that this moment becomes the
-      //  atart of slot 1.
+      // We have a sync. 
+      Serial.print(millis());
+      Serial.print(",");
       Serial.print("BCHS,");
+      Serial.print(getNetworkTime().block);
+      Serial.print(",");
+      Serial.print(getNetworkTime().frame);
+      Serial.print(",");
+      Serial.print(inbound_channel);
+      Serial.print(",");
       Serial.println(inbound_tx_power);
-      break;
+      lop_rx_buffer[0]=0;
+      return;
     }
   }// while(true) 
 }
