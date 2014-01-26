@@ -33,9 +33,6 @@
 #include <SPI.h>
 #include <RF24.h>        // Copyright (C) 2011 J. Coliz <maniacbug@ymail.com>, GNU
 #include <EEPROM.h>
-#include <avr/sleep.h>
-#include <avr/power.h>
-#include <avr/wdt.h>
 #include "NetTime.h"
 
 //
@@ -49,19 +46,17 @@ const byte EEPROM_RFCH_INNER_NODE = 0x01;        // 0x01  Last known good RF cha
 const byte EEPROM_URI  = 0x10;        // 0x10  Start of our URI, null terminated max 64 bytes including null
 const byte EEPROM_URI_TO = 0x50;        // 0x50  Start of the URI we report to, null terminated max 64 bytes including null
 
+const byte EEPROM_FOCAL_NODE = 0xFF;    // 0xFF  During development used to signal the fact that this node is a focal node (if set to 1)
+
 // An instance of the NRF24L01+ chip controller.
 RF24 radio(radio_ce_pin,radio_csn_pin);
-
-
-// MTU size in Lop-RAN
-
 
 // Below constants represet LoP-RAN network parameters
 
 const uint32_t LOP_PAYL_SIZE = 16;                 // Single NRF24L01 packet payload size
 const uint32_t LOP_MTU = 256;                      // MTU size
-const uint8_t LOP_LOW_CHANNEL = 0;                 // Lowest usable radio channel
-const uint8_t LOP_HI_CHANNEL = 15;                 // Highest usable radio channel
+const uint8_t LOP_LOW_CHANNEL = 48;                 // Lowest usable radio channel
+const uint8_t LOP_HI_CHANNEL = 51;                 // Highest usable radio channel
 const uint64_t BCH_PIPE_ADDR = 0x5000000001LL;     // BCH Pipe Address
 
 // The actual transmitted preamble is 4 bytes, we null terminate it to be able to use
@@ -77,34 +72,11 @@ char lop_rx_buffer[LOP_MTU];
 // TX Power parameter in BCH.
 const byte BCH_TXPOW = 0x01;
 
-
 // Lowest usable power to talk to the inner node.
 uint8_t inbound_tx_power = RF24_PA_MAX;
 
 // Channel used for commincations towards the inner node.
 uint8_t inbound_channel = 0;
-
-// URI of this node, will be loaded from EEPROM_uri address.
-String uri = "";
-
-// URI to which we report. This is a single one in this test node, of course
-//   different applications might need to talk to different URIs
-String uri_to = "";
-
-// Flag, indicates that we have entered a network and we can send data.
-bool network_ok = false;
-
-// Count of consecutive TX operation failures
-int tx_fail = 0;
-
-// The Interrupt Service Routine, this is called everytime the watchdog interrupt fires.
-ISR(WDT_vect)
-{
-   //We don't do anything here at the moment.
-   // Code will resume the execution after the sleep.
-   //Serial.println("ISR");
-   return;
-}
 
 // Board setup.
 void setup(void)
@@ -121,32 +93,9 @@ void setup(void)
   radio.setChannel(EEPROM.read(EEPROM_RFCH_INNER_NODE));   // We start from the last known good channel
   radio.setDataRate(RF24_250KBPS);              // 250 kbps
   radio.setPALevel(RF24_PA_MAX);                // We start from max power, ranging will take care to adjust this.
-  radio.setAutoAck(1);                          // Auto ACK enabled
-  //radio.openWritingPipe(pipes[0]);              // Just default addresses, each operating mode will set its own.
-  //radio.openReadingPipe(1,pipes[1]);
-  //radio.startListening();
+  radio.setAutoAck(0);                          // Auto ACK enabled  
   
-  // Read URI from EEPROM
-  int ix=0;
-  while(ix<64)
-  {
-    //EEPROM.write(EEPROM_URI+ix,"node1@nicolacimmino.com\0"[ix]);
-    if(EEPROM.read(EEPROM_URI+ix)==0) break;
-    uri = uri + (char)EEPROM.read(EEPROM_URI+ix);
-    ix++; 
-  }
-  
-  // Read URI_TO from EEPROM
-  ix=0;
-  while(ix<64)
-  {
-    //EEPROM.write(EEPROM_URI_TO+ix,"logger@nicolacimmino.com\0"[ix]);
-    if(EEPROM.read(EEPROM_URI_TO+ix)==0) break;
-    uri_to = uri_to + (char)EEPROM.read(EEPROM_URI_TO+ix);
-    ix++; 
-  }
 }
-
 
 void DumpToSerial(char *data, uint8_t length)
 {
@@ -159,25 +108,6 @@ void DumpToSerial(char *data, uint8_t length)
   Serial.println();
 }
 
-void sleep_0_5_s()
-{
-  MCUSR &= ~(1<<WDRF);
-  WDTCSR |= (1<<WDCE) | (1<<WDE);
-  WDTCSR =  1<<WDP2 | 1<<WDP0;
-  WDTCSR |= _BV(WDIE);
-  
-  // Enter sleep mode
-    //logMessage("Sleeping");
-    set_sleep_mode(SLEEP_MODE_PWR_DOWN);  
-    sleep_enable();
-    sleep_mode();
-    
-    // We come here after the WDT wakes us up
-    // Disable sleep and power up all peripherals
-    sleep_disable(); 
-    power_all_enable();
-}
-
 void loop(void)
 {
   // Preamble must always be in the beginning of each 
@@ -185,27 +115,47 @@ void loop(void)
   //  save some redundant code in every message composition.
   strncpy(lop_tx_buffer, preamble, 4);
   
+  //EEPROM.write(EEPROM_FOCAL_NODE,1);
   
-      //sleep_0_5_s();
-      
-      /*unsigned long start = millis();
-      int toff_correction = tx_slot();
-      int tspent = (millis() - start) % 1000;
-      if(tspent < 365 && (toff_correction + 365-tspent) > 0)
-        delay(toff_correction + 365-tspent);
-      else if(toff_correction + 1365-tspent > 0)
-        delay(toff_correction + 1365-tspent);
-      */
-      
-      /*while(getNetworkTime().slot != 0)
+  // During development we use this register to force a node
+  //  to act as inner an other to act as outer.
+  // In the final code it will be a serial command seeting
+  //  the node as a focal if connected to an higher level controller.
+  if(EEPROM.read(EEPROM_FOCAL_NODE) == 1)
+  {  
+      while(getNetworkTime().slot != 0)
       { 
         delay(1);
       }
       broadcastBCH();
-      delay(500);*/
-      scanForNet();
+      delay(500);
+  }
+  else
+  {
       
-      
+      pinMode(2, OUTPUT);
+        
+      // Now that we are synced to an inner node
+      //  we just flash the LED on slot 5 purely to test sync
+      while(true)
+      {
+        if(getNetworkTime().frame == 0)
+        {
+          scanForNet();
+        }
+        
+        while(getNetworkTime().slot != 9)
+        {
+          delay(1);
+        }
+        digitalWrite(2,1);
+        while(getNetworkTime().slot == 9)
+        {
+          delay(1);
+        }
+        digitalWrite(2, 0);
+      }
+  }     
 }
 
 
@@ -247,11 +197,12 @@ bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms, int &rece
     if(timeout || (received + LOP_PAYL_SIZE > bufLen))
     {
       received = 0;
+      Serial.println("Timeout");
       return false;
     }
 	
     radio.read( data + received , LOP_PAYL_SIZE );
-    //DumpToSerial(data, received + LOP_PAYL_SIZE);
+    DumpToSerial(data, received + LOP_PAYL_SIZE);
     
     // If we don't have a preamble at the start of the message
     //   discard all data and keep waiting.
@@ -285,7 +236,7 @@ bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms, int &rece
 void broadcastBCH()
 {
    
-  radio.setChannel(10);
+  radio.setChannel(50);
   radio.openWritingPipe(BCH_PIPE_ADDR);
      
   // To allow ranging we step down power from 0dBm to -18dBm
