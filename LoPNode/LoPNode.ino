@@ -1,4 +1,4 @@
-// LopNode implements a LoP-RAN , scalable messaging for the Internet of Things
+// LopNode implements a LoP-RAN , a low power radio access network
 //  Copyright (C) 2014 Nicola Cimmino
 //
 //    This program is free software: you can redistribute it and/or modify
@@ -57,8 +57,9 @@ const uint32_t LOP_PAYL_SIZE = 16;                 // Single NRF24L01 packet pay
 const uint32_t LOP_MTU = 256;                      // MTU size
 const uint8_t LOP_LOW_CHANNEL = 48;                 // Lowest usable radio channel
 const uint8_t LOP_HI_CHANNEL = 51;                 // Highest usable radio channel
-const uint64_t BCH_PIPE_ADDR = 0x5000000001LL;     // BCH Pipe Address
-
+const uint64_t BCH_PIPE_ADDR = 0x5000000001LL;     // BCH Pipe Address (outbound only)
+const uint64_t ACH_PIPE_ADDR_IN = 0x5100000100LL;  // ACH inbound pipe
+const uint64_t ACH_PIPE_ADDR_OUT = 0x5000000100LL;  // ACH outboud pipe
 // The actual transmitted preamble is 4 bytes, we null terminate it to be able to use
 //  string manipulation functions when comparing etc.
 const char preamble[5] = {0x55, 0xAA, 0x55, 0xAA, 0x00}; 
@@ -69,14 +70,18 @@ char lop_tx_buffer[LOP_MTU];
 // RX Buffer.
 char lop_rx_buffer[LOP_MTU];
 
-// TX Power parameter in BCH.
-const byte BCH_TXPOW = 0x01;
-
 // Lowest usable power to talk to the inner node.
 uint8_t inbound_tx_power = RF24_PA_MAX;
 
 // Channel used for commincations towards the inner node.
 uint8_t inbound_channel = 0;
+
+// Used to sore received bytes count.
+int rxBytes = 0;
+
+// Indicates network status.
+// TODO: change to enum we need more than 2 statuses.
+boolean netStatus = false;
 
 // Board setup.
 void setup(void)
@@ -128,7 +133,12 @@ void loop(void)
         delay(1);
       }
       broadcastBCH();
-      delay(500);
+      
+      while(getNetworkTime().slot != 1)
+      { 
+        delay(1);
+      }
+      serverACH();
   }
   else
   {
@@ -139,16 +149,25 @@ void loop(void)
       //  we just flash the LED on slot 5 purely to test sync
       while(true)
       {
-        if(getNetworkTime().frame == 0)
+        if(getNetworkTime().frame == 0 || !netStatus)
         {
           scanForNet();
         }
         
-        while(getNetworkTime().slot != 9)
+        while(getNetworkTime().slot != 1)
         {
           delay(1);
         }
-        digitalWrite(2,1);
+        netStatus = registerWithInnerNode();
+        
+        if(netStatus)
+        {
+          while(getNetworkTime().slot != 9)
+          {
+            delay(1);
+          }
+          digitalWrite(2,1);
+        }
         while(getNetworkTime().slot == 9)
         {
           delay(1);
@@ -300,9 +319,6 @@ void scanForNet()
 {
   // Start the scan from the last known good channel.
   inbound_channel = constrain(EEPROM.read(EEPROM_RFCH_INNER_NODE), LOP_LOW_CHANNEL, LOP_HI_CHANNEL);
-  
-  // Used to sore received bytes count.
-  int rxBytes = 0;
   
   // We start from an invalid power so we can detect that we
   //  got at least one ranging message avoiding false power
