@@ -31,8 +31,26 @@ NetTime getNetworkTime(void)
   return time;
 }
 
-void setNetworkTime(byte block, byte frame, byte slot)
+//void setNetworkTime(byte block, byte frame, byte slot)
+void setNetworkTime(NetTime newTime)
 {
-  unsigned long wantedMillis = block * 10000l + frame * 1000l + slot * 100l; 
+  unsigned long wantedMillis = newTime.block * 10000l + newTime.frame * 1000l + newTime.slot * 100l; 
   off_off = (millis() % 60000) - wantedMillis;
 }
+
+void waitUntil(NetTime time)
+{
+  do
+  {
+  } while(!isTime(time));
+}
+
+bool isTime(NetTime time)
+{
+  NetTime currentTime = getNetworkTime();
+  return   (time.block == -1 || currentTime.block == time.block) &&
+           (time.frame == -1 || currentTime.frame== time.frame) &&
+           (time.slot == -1 || currentTime.slot== time.slot) &&
+           (time.off == -1 || currentTime.off== time.off);
+}
+

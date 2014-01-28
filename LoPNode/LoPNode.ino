@@ -100,6 +100,13 @@ void setup(void)
   radio.setPALevel(RF24_PA_MAX);                // We start from max power, ranging will take care to adjust this.
   radio.setAutoAck(0);                          // Auto ACK enabled  
   
+  // Preamble must always be in the beginning of each 
+  //  message. We prefill here the TX buffer so we 
+  //  save some redundant code in every message composition.
+  strncpy(lop_tx_buffer, preamble, 4);
+  
+  //EEPROM.write(EEPROM_FOCAL_NODE,1);
+  
 }
 
 void DumpToSerial(char *data, uint8_t length)
@@ -115,12 +122,6 @@ void DumpToSerial(char *data, uint8_t length)
 
 void loop(void)
 {
-  // Preamble must always be in the beginning of each 
-  //  message. We prefill here the TX buffer so we 
-  //  save some redundant code in every message composition.
-  strncpy(lop_tx_buffer, preamble, 4);
-  
-  //EEPROM.write(EEPROM_FOCAL_NODE,1);
   
   // During development we use this register to force a node
   //  to act as inner an other to act as outer.
@@ -145,34 +146,37 @@ void loop(void)
       
       pinMode(2, OUTPUT);
         
-      // Now that we are synced to an inner node
-      //  we just flash the LED on slot 5 purely to test sync
       while(true)
       {
-        if(getNetworkTime().frame == 0 || !netStatus)
+        // Resync to network at every block. This corrects
+        //  drifting caused by clock innacuracies while not
+        //  being too heavy on the network. Note that time
+        //  sync is a receive only operation so the fact that
+        //  all nodes in the net will do it at the same time
+        //  is no cause for congestion.
+        if(!netStatus || isTime((NetTime){0,0,0,-1}))
         {
           scanForNet();
+          
+          // Wait slot 1 (ACH) and register if we are not already.
+          if(!netStatus)
+          {
+            waitUntil((NetTime){-1, -1, 1, -1});
+            netStatus = registerWithInnerNode();
+          }
         }
         
-        while(getNetworkTime().slot != 1)
-        {
-          delay(1);
-        }
-        netStatus = registerWithInnerNode();
-        
+        // For test purposes only wait slot 9
+        //  to light the led if we are registered
+        //  and put if off at the end of the slot
         if(netStatus)
         {
-          while(getNetworkTime().slot != 9)
-          {
-            delay(1);
-          }
+          waitUntil((NetTime){-1, -1, 9, -1});
           digitalWrite(2,1);
+          waitUntil((NetTime){-1, -1, 9, 99});
+          digitalWrite(2, 0);
         }
-        while(getNetworkTime().slot == 9)
-        {
-          delay(1);
-        }
-        digitalWrite(2, 0);
+       
       }
   }     
 }
@@ -243,140 +247,5 @@ bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms, int &rece
   
   return true;
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-// Broadcast BCH
-//
-// Must be called as close as possible to off=0 of slot=0
-//
-// We have to broadcast first BCH repeatedly with ranging information followed
-//  by a BCH Sync at off=70
-//
-void broadcastBCH()
-{
-   
-  radio.setChannel(50);
-  radio.openWritingPipe(BCH_PIPE_ADDR);
-     
-  // To allow ranging we step down power from 0dBm to -18dBm
-  for(byte power=3; (int8_t)power>=0; power--)
-  {
-    int txBufIndex = 5;
-     
-    // We build the the BCH message according to ...:
-    // |0|1|2|3|4  |5    |6    |7    |
-    // |B|C|H| |Len|Power|Block|Frame|
-        
-    // Header
-    strncpy(lop_tx_buffer + txBufIndex, "BCH ", 4);
-    txBufIndex+=4;
-       
-    // The power
-    lop_tx_buffer[txBufIndex++] = power;
-        
-    // Block and frame
-    lop_tx_buffer[txBufIndex++] = getNetworkTime().block;
-    lop_tx_buffer[txBufIndex++] = getNetworkTime().frame;
-    
-    radio.setPALevel((rf24_pa_dbm_e)power);
-    sendLoPRANMessage(lop_tx_buffer, txBufIndex);
-  }
-  
-  // Wait till we near the end of the slot.   
-  while(getNetworkTime().off < 80)
-  {
-    delay(1);
-  }    
-  
-  // We build the the BCH sync message according to ...:
-  // |0|1|2|3|
-  // |B|C|H|S|
-        
-  int txBufIndex = 5;
-        
-  // Header
-  strncpy(lop_tx_buffer + txBufIndex, "BCHS", 4);
-  txBufIndex+=4;
-       
-  // End marker
-  lop_tx_buffer[txBufIndex++] = 0;
-        
-  // We use max power for sync so we can reach all nodes that might have heard us.
-  radio.setPALevel(RF24_PA_MAX);
-  sendLoPRANMessage(lop_tx_buffer, txBufIndex);
-         
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-// Attempts to find a node to communicate with.
-//
-// Performs network scan and ranging.
-// This function blocks until a valid inner node is found. On return from this function
-//  the globals inbound_channel and inbound_tx_power are set to the right values for the
-//  found inner node.
-//
-void scanForNet()
-{
-  // Start the scan from the last known good channel.
-  inbound_channel = constrain(EEPROM.read(EEPROM_RFCH_INNER_NODE), LOP_LOW_CHANNEL, LOP_HI_CHANNEL);
-  
-  // We start from an invalid power so we can detect that we
-  //  got at least one ranging message avoiding false power
-  //  detection if we happen to get as sync as first message.
-  inbound_tx_power = RF24_PA_MAX+1;
-  
-  // Listen on the BCH pipe        
-  radio.openReadingPipe(1, BCH_PIPE_ADDR);
-  radio.startListening();
-  
-  while(true)
-  { 
-    // Try to read a message, linger maximum 1.5s on a given channel and if you get
-    //  nothing move on to the next.
-    radio.setChannel(inbound_channel);
-    if(!receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , 1500, rxBytes))
-    {
-      inbound_channel = (++inbound_channel % (LOP_HI_CHANNEL - LOP_LOW_CHANNEL)) + LOP_LOW_CHANNEL; 
-     
-      Serial.print("SCAN,");
-      Serial.println(inbound_channel);
-      continue; 
-    }
-    
-    if((strstr(lop_rx_buffer, "BCH ") - lop_rx_buffer) == 5)
-    {        
-      // Store this as last known good channel, save EEPROM life by not
-      //  writing if there is no change.
-      if(inbound_channel != EEPROM.read(EEPROM_RFCH_INNER_NODE))
-        EEPROM.write(EEPROM_RFCH_INNER_NODE, inbound_channel);
-                 
-      // Process ranging info and store lowest usable power if we heard
-      //  a message weaker than last one.
-      if(inbound_tx_power > lop_rx_buffer[9])
-        inbound_tx_power = lop_rx_buffer[9];
-    
-      // Sync our nettime
-      setNetworkTime(lop_rx_buffer[10], lop_rx_buffer[11], 1);
-      
-    } 
-    else if(inbound_tx_power <= RF24_PA_MAX  && (strstr(lop_rx_buffer, "BCHS") - lop_rx_buffer) == 5)
-    {
-      // We have a sync. 
-      Serial.print(millis());
-      Serial.print(",");
-      Serial.print("BCHS,");
-      Serial.print(getNetworkTime().block);
-      Serial.print(",");
-      Serial.print(getNetworkTime().frame);
-      Serial.print(",");
-      Serial.print(inbound_channel);
-      Serial.print(",");
-      Serial.println(inbound_tx_power);
-      lop_rx_buffer[0]=0;
-      return;
-    }
-  }// while(true) 
-}
-
 
 
