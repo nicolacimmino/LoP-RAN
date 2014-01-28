@@ -55,7 +55,7 @@ void broadcastBCH()
   
   // Wait till we near the end of the slot. 
   waitUntil((NetTime){-1, -1, -1, 90});  
-     
+  
   // We build the the BCH sync message according to ...:
   // |5|6|7|8|9    |10   |
   // |B|C|H|S|Block|Frame|
@@ -128,11 +128,9 @@ void scanForNet()
     else if(inbound_tx_power <= RF24_PA_MAX  && (strstr(lop_rx_buffer, "BCHS") - lop_rx_buffer) == 5)
     {
       // Sync our nettime
-      setNetworkTime((NetTime){lop_rx_buffer[9], lop_rx_buffer[10], 1, 0});
+      setNetworkTime((NetTime){lop_rx_buffer[9], lop_rx_buffer[10], 0, 90});
       
       // We have a sync. 
-      Serial.print(millis());
-      Serial.print(",");
       Serial.print("BCHS,");
       Serial.print(getNetworkTime().block);
       Serial.print(",");

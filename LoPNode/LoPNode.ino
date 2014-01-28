@@ -146,8 +146,7 @@ void loop(void)
       
       pinMode(2, OUTPUT);
         
-      while(true)
-      {
+      
         // Resync to network at every block. This corrects
         //  drifting caused by clock innacuracies while not
         //  being too heavy on the network. Note that time
@@ -171,14 +170,13 @@ void loop(void)
         //  and put if off at the end of the slot
         if(netStatus)
         {
-          waitUntil((NetTime){-1, -1, 9, -1});
+          waitUntil((NetTime){-1, -1, 9, 0});
           digitalWrite(2,1);
           waitUntil((NetTime){-1, -1, 9, 99});
           digitalWrite(2, 0);
         }
        
-      }
-  }     
+   }  
 }
 
 
@@ -188,7 +186,10 @@ void sendLoPRANMessage(char *data, int len)
 {
   // Write message length.
   data[4]=len;
-        
+  
+  Serial.print("RAWTX,");  
+  DumpToSerial(data,len);
+  
   int offset=0;
   radio.stopListening();
   while(offset < len)
@@ -220,11 +221,12 @@ bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms, int &rece
     if(timeout || (received + LOP_PAYL_SIZE > bufLen))
     {
       received = 0;
-      Serial.println("Timeout");
+      Serial.println("RAWRX,NODATA");
       return false;
     }
 	
     radio.read( data + received , LOP_PAYL_SIZE );
+    Serial.print("RAWRX,");
     DumpToSerial(data, received + LOP_PAYL_SIZE);
     
     // If we don't have a preamble at the start of the message

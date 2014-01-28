@@ -62,15 +62,9 @@ boolean registerWithInnerNode()
     }
 
     // Wait next ACH, this is more efficient than give up
-    //  immediately are resume scan.
-    while(getNetworkTime().slot == 1)
-    {
-      delay(1);
-    }
-    while(getNetworkTime().slot != 1)
-    {
-      delay(1);
-    }    
+    //  immediately are resume scan. We need to wait next frame
+    //  slot 1.
+    waitUntil((NetTime){-1, (getNetworkTime().frame + 1) % 10, 1, -1});    
   }
   
   return false;
@@ -87,7 +81,7 @@ void serverACH()
   // Used to sore received bytes count.
   int rxBytes = 0;
   
-  if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , 1000, rxBytes))
+  if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , 100, rxBytes))
   {
     if((strstr(lop_rx_buffer, "REG ") - lop_rx_buffer) == 5)
     {

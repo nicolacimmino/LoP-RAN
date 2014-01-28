@@ -49,8 +49,8 @@ bool isTime(NetTime time)
 {
   NetTime currentTime = getNetworkTime();
   return   (time.block == -1 || currentTime.block == time.block) &&
-           (time.frame == -1 || currentTime.frame== time.frame) &&
-           (time.slot == -1 || currentTime.slot== time.slot) &&
-           (time.off == -1 || currentTime.off== time.off);
+           (time.frame == -1 || currentTime.frame == time.frame) &&
+           (time.slot == -1 || currentTime.slot == time.slot) &&
+           (time.off == -1 || currentTime.off == time.off);
 }
 

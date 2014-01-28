@@ -17,10 +17,10 @@
 
 typedef struct
 {
-  byte block;
-  byte frame;
-  byte slot;
-  byte off; 
+  int8_t block;
+  int8_t frame;
+  int8_t slot;
+  int8_t off; 
 } NetTime, *pNetTime;
 
 
