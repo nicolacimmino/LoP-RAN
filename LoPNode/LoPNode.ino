@@ -122,7 +122,7 @@ void DumpToSerial(char *data, uint8_t length)
 
 void loop(void)
 {
-  
+ 
   // During development we use this register to force a node
   //  to act as inner an other to act as outer.
   // In the final code it will be a serial command seeting
@@ -146,7 +146,10 @@ void loop(void)
       
       pinMode(2, OUTPUT);
         
-      
+ 
+      if(netStatus)
+        waitUntil((NetTime){-1, -1, 0, 0});
+        
         // Resync to network at every block. This corrects
         //  drifting caused by clock innacuracies while not
         //  being too heavy on the network. Note that time
@@ -172,7 +175,7 @@ void loop(void)
         {
           waitUntil((NetTime){-1, -1, 9, 0});
           digitalWrite(2,1);
-          waitUntil((NetTime){-1, -1, 9, 99});
+          waitUntil((NetTime){-1, -1, 9, 50});
           digitalWrite(2, 0);
         }
        
@@ -227,7 +230,7 @@ bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms, int &rece
 	
     radio.read( data + received , LOP_PAYL_SIZE );
     Serial.print("RAWRX,");
-    DumpToSerial(data, received + LOP_PAYL_SIZE);
+    DumpToSerial(data, data[4]);
     
     // If we don't have a preamble at the start of the message
     //   discard all data and keep waiting.

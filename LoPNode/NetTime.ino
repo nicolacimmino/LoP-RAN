@@ -35,7 +35,10 @@ NetTime getNetworkTime(void)
 void setNetworkTime(NetTime newTime)
 {
   unsigned long wantedMillis = newTime.block * 10000l + newTime.frame * 1000l + newTime.slot * 100l; 
+  long previous_off_off = off_off;
   off_off = (millis() % 60000) - wantedMillis;
+  Serial.print("CLKADJ,");
+  Serial.println(previous_off_off - off_off);
 }
 
 void waitUntil(NetTime time)
