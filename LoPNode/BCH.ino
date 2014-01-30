@@ -67,6 +67,7 @@ void broadcastBCH()
   // Block and frame
   lop_tx_buffer[txBufIndex++] = getNetworkTime().block;
   lop_tx_buffer[txBufIndex++] = getNetworkTime().frame;
+  lop_tx_buffer[txBufIndex++] = getNetworkTime().off;
     
   // We use max power for sync so we can reach all nodes that might have heard us.
   radio.setPALevel(RF24_PA_MAX);
