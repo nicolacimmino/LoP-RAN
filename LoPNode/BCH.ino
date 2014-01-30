@@ -35,13 +35,12 @@ void broadcastBCH()
     int txBufIndex = 5;
      
     // We build the the BCH message according to ...:
-    // |5|6|7|8|9    |10   |11   |
-    // |B|C|H| |Power|Block|Frame|
+    // |5   |6    |7    |8    |
+    // |0x60|Power|Block|Frame|
         
-    // Header
-    strncpy(lop_tx_buffer + txBufIndex, "BCH ", 4);
-    txBufIndex+=4;
-       
+    // BCH
+    lop_tx_buffer[txBufIndex++] = 0x60;
+    
     // The power
     lop_tx_buffer[txBufIndex++] = power;
         
@@ -57,14 +56,13 @@ void broadcastBCH()
   waitUntil((NetTime){-1, -1, -1, 90});  
   
   // We build the the BCH sync message according to ...:
-  // |5|6|7|8|9    |10   |
-  // |B|C|H|S|Block|Frame|
+  // |5   |6    |7    |
+  // |0x61|Block|Frame|
         
   int txBufIndex = 5;
         
-  // Header
-  strncpy(lop_tx_buffer + txBufIndex, "BCHS", 4);
-  txBufIndex+=4;
+  // BCHS
+  lop_tx_buffer[txBufIndex++] = 0x61;
              
   // Block and frame
   lop_tx_buffer[txBufIndex++] = getNetworkTime().block;
@@ -113,7 +111,7 @@ void scanForNet()
       continue; 
     }
     
-    if((strstr(lop_rx_buffer, "BCH ") - lop_rx_buffer) == 5)
+    if(lop_rx_buffer[5] == 0x60)
     {        
       // Store this as last known good channel, save EEPROM life by not
       //  writing if there is no change.
@@ -122,13 +120,13 @@ void scanForNet()
                  
       // Process ranging info and store lowest usable power if we heard
       //  a message weaker than last one.
-      if(inbound_tx_power > lop_rx_buffer[9])
-        inbound_tx_power = lop_rx_buffer[9];
+      if(inbound_tx_power > lop_rx_buffer[6])
+        inbound_tx_power = lop_rx_buffer[6];
     } 
-    else if(inbound_tx_power <= RF24_PA_MAX  && (strstr(lop_rx_buffer, "BCHS") - lop_rx_buffer) == 5)
+    else if(inbound_tx_power <= RF24_PA_MAX  && lop_rx_buffer[5] == 0x61)
     {
       // Sync our nettime
-      setNetworkTime((NetTime){lop_rx_buffer[9], lop_rx_buffer[10], 0, 90});
+      setNetworkTime((NetTime){lop_rx_buffer[6], lop_rx_buffer[7], 0, 90});
       
       // We have a sync. 
       Serial.print("BCHS,");
