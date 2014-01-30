@@ -24,9 +24,9 @@ NetTime getNetworkTime(void)
   unsigned long timemS = millis() - off_off;
   
   time.off = timemS % 100;
-  time.slot = (timemS / 100) % 10;
-  time.frame = (timemS / 1000 )  % 10;
-  time.block = (timemS / 10000)  % 6;
+  time.slot = (long)floor(timemS / 100.0) % 10;
+  time.frame = (long)floor(timemS / 1000.0)  % 10;
+  time.block = (long)floor(timemS / 10000.0)  % 6;
   
   return time;
 }
