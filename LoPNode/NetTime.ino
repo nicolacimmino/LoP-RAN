@@ -21,12 +21,12 @@ long off_off = 0;
 NetTime getNetworkTime(void)
 {
   NetTime time;
-  unsigned long timemS = millis() - off_off;
+  unsigned long timemS = (millis() - off_off) % 60000;
   
   time.off = timemS % 100;
-  time.slot = (long)floor(timemS / 100.0) % 10;
-  time.frame = (long)floor(timemS / 1000.0)  % 10;
-  time.block = (long)floor(timemS / 10000.0)  % 6;
+  time.slot = (long)floor(timemS / 100.0f) % 10;
+  time.frame = (long)floor(timemS / 1000.0f)  % 10;
+  time.block = (long)floor(timemS / 10000.0f)  % 6;
   
   return time;
 }
@@ -34,7 +34,7 @@ NetTime getNetworkTime(void)
 //void setNetworkTime(byte block, byte frame, byte slot)
 void setNetworkTime(NetTime newTime)
 {
-  unsigned long wantedMillis = newTime.block * 10000l + newTime.frame * 1000l + newTime.slot * 100l; 
+  long wantedMillis = newTime.block * 10000l + newTime.frame * 1000l + newTime.slot * 100l + newTime.off; 
   long previous_off_off = off_off;
   off_off = (millis() % 60000) - wantedMillis;
   Serial.print("CLKADJ,");

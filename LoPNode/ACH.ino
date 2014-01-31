@@ -50,7 +50,6 @@ boolean registerWithInnerNode()
     radio.openWritingPipe(ACH_PIPE_ADDR_IN);
     radio.openReadingPipe(1, ACH_PIPE_ADDR_OUT);
     sendLoPRANMessage(lop_tx_buffer, txBufIndex);
-    
     radio.startListening();
     
     if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , 1000, rxBytes))
@@ -98,7 +97,8 @@ void serverACH()
       // The token
       lop_tx_buffer[txBufIndex++] = lop_rx_buffer[10];
             
-      radio.setPALevel((rf24_pa_dbm_e)inbound_tx_power);
+      radio.setPALevel((rf24_pa_dbm_e)lop_rx_buffer[9]);
+      delay(2);
       sendLoPRANMessage(lop_tx_buffer, txBufIndex);
       Serial.print("REG,");
       Serial.println((uint8_t)lop_rx_buffer[10], HEX);

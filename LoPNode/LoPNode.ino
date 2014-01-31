@@ -163,7 +163,7 @@ void loop(void)
           // Wait slot 1 (ACH) and register if we are not already.
           if(!netStatus)
           {
-            waitUntil((NetTime){-1, -1, 1, -1});
+            waitUntil((NetTime){-1, -1, 1, 10});
             netStatus = registerWithInnerNode();
           }
         }
