@@ -83,6 +83,8 @@ int rxBytes = 0;
 // TODO: change to enum we need more than 2 statuses.
 boolean netStatus = false;
 
+long off_off = 0;
+
 // Board setup.
 void setup(void)
 {
@@ -122,7 +124,6 @@ void DumpToSerial(char *data, uint8_t length)
 
 void loop(void)
 {
- 
   // During development we use this register to force a node
   //  to act as inner an other to act as outer.
   // In the final code it will be a serial command seeting
@@ -174,14 +175,17 @@ void loop(void)
         if(netStatus)
         {
           waitUntil((NetTime){-1, -1, 9, 0});
+          Serial.println(millis());
           digitalWrite(2,1);
           waitUntil((NetTime){-1, -1, 9, 50});
+          Serial.println(millis());
+          Serial.println(off_off);
+          Serial.println("-");
           digitalWrite(2, 0);
         }
        
    }  
 }
-
 
 
 

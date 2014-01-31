@@ -25,7 +25,9 @@
 //
 void broadcastBCH()
 {
-   
+  // RTX guard
+  delay(20);
+  
   radio.setChannel(50);
   radio.openWritingPipe(BCH_PIPE_ADDR);
      

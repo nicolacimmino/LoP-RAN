@@ -15,8 +15,6 @@
 //    along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 
-long off_off = 0;
-
 
 NetTime getNetworkTime(void)
 {
@@ -54,6 +52,6 @@ bool isTime(NetTime time)
   return   (time.block == -1 || currentTime.block == time.block) &&
            (time.frame == -1 || currentTime.frame == time.frame) &&
            (time.slot == -1 || currentTime.slot == time.slot) &&
-           (time.off == -1 || currentTime.off == time.off);
+           (time.off == -1 || currentTime.off >= time.off);
 }
 
