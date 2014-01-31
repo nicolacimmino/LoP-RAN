@@ -14,25 +14,34 @@ LoP-RAN is a low-power low-cost radio access network that allows devices with ex
 Core functions
 =======
 
-LoP-RAN is concerned only with two very basic core functions namely the delivery of a message from any node to the access point and the delivery of a message from the access point to any node. The following ancillary functions are also part of LoP-RAN:
+LoP-RAN is concerned only with two very basic core functions namely the delivery of a message from any node to the access point and the delivery of a message from the access point to any node. The following ancillary functions are also part of LoP-RAN and are needed to support the core functions:
 
-- Network discovery
-- Redio resources allocation
+- Nodes discovery
+- Redio resources management
 - Ranging
-- Peers hierarchy discovery
+- Network hierarchy discovery
+- Addressing and routing
 
-**Network discovery**
+**Nodes discovery**
 
-LoP-RAN provides a broadcast channel on which each node of the network advertises itself so that peers can be discovered without prior knoweledge.
+LoP-RAN provides for the means needed by a node to discover other nodes that are within radio reach. No prior knoweledge of the network is needed, so a node doesn't need to be cofigured before having it to enter the network.
 
-**Radio resources allocation**
+**Radio resources management**
 
-Radio resources such as radio channels, time slots in each channel as well as radio addresses need to be nogotiated among peers so that they can communicate efficently and with low probability of interference.
+Radio resources such as radio channels, time slots in each channel as well as radio pipes addresses need to be nogotiated among nodes so that they can communicate efficently and with low probability of interference. This functionality is completely automatic and the nodes self organize so that prior network planning is not necessary.
 
 **Ranging**
 
-Ranging is the act of finding the lowest needed trasmit power to reach another peer. This has the benefit of reducing the power consumption as well as the interferece.
+Ranging is the act of finding the lowest needed trasmit power to reach another node. This has the benefit of reducing the power consumption as well as the interferece.
 
-**Peers hierarchy discovery**
+**Network hierarchy discovery**
 
-In a mesh network that aims for the delivery of messages to specific nodes it's necessary to know how peers relate to each other in order to route a message efficently. This prevents the need to simply flood the network which is a less power efficient strategy.
+Given the goal of the network to transfer messages from an access point to any node and from any node to an access point the nodes self organize themselves in a hierarchy that can be either a star network or a tree. Also in this case the organization is completely autonomous and doesn't require prior knoweledge.
+
+**Addressing and routing**
+
+Each node gets an address that is unique inside the network. This address is used to identify message originating from and destined to the node. The address is a self routing address, that is, an address that contains all the needed information to route the message to the recipient. In this way the nodes involved in the routing don't need to store large routing tables and their load is reduced.
+
+
+
+
