@@ -17,7 +17,7 @@ Core functions
 LoP-RAN is concerned only with two very basic core functions namely the delivery of a message from any node to the access point and the delivery of a message from the access point to any node. The following ancillary functions are also part of LoP-RAN and are needed to support the core functions:
 
 - Nodes discovery
-- Redio resources management
+- Radio resources management
 - Ranging
 - Network hierarchy discovery
 - Addressing and routing
