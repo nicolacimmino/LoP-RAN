@@ -1,14 +1,10 @@
-LoP-RAN
-=======
-
-A Low Power - Radio Access Network designed to be deployed on ISM bands.
-
-
 
 Introduction
 =======
 
-LoP-RAN is a low-power low-cost radio access network that allows devices with extremely low resources to communicate. The network supports a mesh topology in which all traffic tends towards a focal point, the access point which can act as a gateway to the Internet.
+LoP-RAN is a low-power low-cost radio access network that allows devices with extremely low resources to communicate. The network self organizes into a tree to allow all nodes to communicate with the access point. Whenever nodes join or leave the network the others self organize in order to keep the communication up using the minimum amount of resources.
+
+![Self Organizing](https://raw.github.com/nicolacimmino/LoP-RAN/develop/Documentation/Diagrams/SelfOrganizing.gif)
 
 
 Core functions
