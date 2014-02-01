@@ -57,6 +57,9 @@ boolean registerWithInnerNode()
     {
       if(lop_rx_buffer[5] == 0x71)
       {
+        inboundTimeSlot.block = lop_rx_buffer[7];
+        inboundTimeSlot.frame = lop_rx_buffer[8];
+        inboundTimeSlot.slot = lop_rx_buffer[9];
         return true;
       }
     }
@@ -70,7 +73,7 @@ boolean registerWithInnerNode()
   return false;
 }
 
-void serverACH()
+void serveACH()
 {
   // Listen on the ACH pipe
   radio.openWritingPipe(ACH_PIPE_ADDR_OUT);  
@@ -98,11 +101,11 @@ void serverACH()
           
       lop_tx_buffer[txBufIndex++] = 0x71;                          // REGACK
       lop_tx_buffer[txBufIndex++] = token;                         // TOKEN
-      lop_tx_buffer[txBufIndex++] = (*neighbourDescriptor).rm_block;  // RMBLOCK
-      lop_tx_buffer[txBufIndex++] = (*neighbourDescriptor).rm_frame;  // RMFRAME
-      lop_tx_buffer[txBufIndex++] = (*neighbourDescriptor).rm_slot;   // RMSLOT
+      lop_tx_buffer[txBufIndex++] = (*neighbourDescriptor).resourceMask.block;  // RMBLOCK
+      lop_tx_buffer[txBufIndex++] = (*neighbourDescriptor).resourceMask.frame;  // RMFRAME
+      lop_tx_buffer[txBufIndex++] = (*neighbourDescriptor).resourceMask.slot;   // RMSLOT
       lop_tx_buffer[txBufIndex++] = 1;                             // ALEN
-      lop_tx_buffer[txBufIndex++] = (*neighbourDescriptor).rm_slot;      // Address byte
+      lop_tx_buffer[txBufIndex++] = (*neighbourDescriptor).resourceMask.slot;      // Address byte
       
       
       delay(LOP_RTXGUARD);

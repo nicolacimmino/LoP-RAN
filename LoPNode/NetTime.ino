@@ -46,12 +46,15 @@ void waitUntil(NetTime time)
   } while(!isTime(time));
 }
 
-bool isTime(NetTime time)
+bool isTime(NetTime mask)
 {
-  NetTime currentTime = getNetworkTime();
-  return   (time.block == -1 || currentTime.block == time.block) &&
-           (time.frame == -1 || currentTime.frame == time.frame) &&
-           (time.slot == -1 || currentTime.slot == time.slot) &&
-           (time.off == -1 || currentTime.off >= time.off);
+  return timeMatchesMask(getNetworkTime(), mask);
 }
 
+bool timeMatchesMask(NetTime time, NetTime mask)
+{
+  return   (mask.block == -1 || time.block == mask.block) &&
+           (mask.frame == -1 || time.frame == mask.frame) &&
+           (mask.slot == -1 || time.slot == mask.slot) &&
+           (mask.off == -1 || time.off >= mask.off);
+}

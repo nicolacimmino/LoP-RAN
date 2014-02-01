@@ -33,11 +33,28 @@ pONDescriptor allocateRadioResources(byte tx_power)
     {
       OuterNeighboursList[ix] = new ONDescriptor();
       (*OuterNeighboursList[ix]).tx_power = tx_power;
-      (*OuterNeighboursList[ix]).rm_slot = ix + 2; 
-      (*OuterNeighboursList[ix]).rm_frame = -1;
-      (*OuterNeighboursList[ix]).rm_block = -1;
+      (*OuterNeighboursList[ix]).resourceMask.off = -1;
+      (*OuterNeighboursList[ix]).resourceMask.slot = ix + 2; 
+      (*OuterNeighboursList[ix]).resourceMask.frame = -1;
+      (*OuterNeighboursList[ix]).resourceMask.block = -1;
       return OuterNeighboursList[ix];
     }
   }
 }
+
+pONDescriptor getNeighbourDescriptor(NetTime time)
+{
+  // Find a neighbour allocated for this time slot.
+  for(int ix=0; ix<LOP_MAX_OUT_NEIGHBOURS; ix++)
+  {
+    if(timeMatchesMask(time, (*OuterNeighboursList[ix]).resourceMask))
+    {
+      return OuterNeighboursList[ix];
+    }
+  }
+  
+  // No neighbour alloted here.
+  return 0;
+}
+
 

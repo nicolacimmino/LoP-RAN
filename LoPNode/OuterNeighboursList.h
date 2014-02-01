@@ -18,8 +18,6 @@
 typedef struct
 {
   byte tx_power;
-  byte rm_block;
-  byte rm_frame;
-  byte rm_slot;
+  NetTime resourceMask;
 } ONDescriptor, *pONDescriptor;
 

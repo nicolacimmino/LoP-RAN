@@ -91,6 +91,12 @@ long off_off = 0;
 // Distance from access point
 byte lop_dap = 0;
 
+// Message Buffer.
+char lop_message_buffer[LOP_MTU];
+
+NetTime inboundTimeSlot;
+
+
 // Board setup.
 void setup(void)
 {
@@ -113,6 +119,10 @@ void setup(void)
   //  save some redundant code in every message composition.
   strncpy(lop_tx_buffer, preamble, 4);
   
+  // Just for test purpose until we have the UART interface to send messages
+  strncpy(lop_message_buffer, "ping", 4);
+  lop_message_buffer[4] = 0;
+  
   // For testing only we fix the DAP so we have always the same
   //  node acting as AP and others in a star nework around it.
   //EEPROM.write(EEPROM_FOCAL_NODE,1);
@@ -120,6 +130,7 @@ void setup(void)
   {
     lop_dap = 1;
   }
+  
 }
 
 void DumpToSerial(char *data, uint8_t length)
@@ -141,17 +152,17 @@ void loop(void)
   //  the node as a focal if connected to an higher level controller.
   if(EEPROM.read(EEPROM_FOCAL_NODE) == 1)
   {  
-      while(getNetworkTime().slot != 0)
-      { 
-        delay(1);
-      }
+      waitUntil((NetTime){-1, -1, 0, 0});
       broadcastBCH();
       
-      while(getNetworkTime().slot != 1)
-      { 
-        delay(1);
+      waitUntil((NetTime){-1, -1, 1, 0});
+      serveACH();
+      
+      for(int slot=2; slot<10; slot++)
+      {
+          waitUntil((NetTime){-1, -1, slot, 0});
+          serveCCH();
       }
-      serverACH();
   }
   else
   {
@@ -180,17 +191,10 @@ void loop(void)
           }
         }
         
-        // For test purposes only wait slot 9
-        //  to light the led if we are registered
-        //  and put if off at the end of the slot
-        if(netStatus)
-        {
-          waitUntil((NetTime){-1, -1, 9, 0});
-          digitalWrite(2,1);
-          waitUntil((NetTime){-1, -1, 9, 50});
-          digitalWrite(2, 0);
-        }
-       
+        
+        waitUntil(inboundTimeSlot);
+        inititateCCHTransaction();
+           
    }  
 }
 
