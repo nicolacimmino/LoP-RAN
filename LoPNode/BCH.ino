@@ -56,10 +56,7 @@ void broadcastBCH()
     radio.setPALevel((rf24_pa_dbm_e)power);
     sendLoPRANMessage(lop_tx_buffer, txBufIndex);
   }
-  
-  // Wait till we near the end of the slot. 
-  //waitUntil((NetTime){-1, -1, -1, 90});  
-  
+   
   // We build the the BCH sync message according to ...:
   // |5   |6    |7    |
   // |0x61|Block|Frame|

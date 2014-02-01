@@ -60,6 +60,8 @@ const uint8_t LOP_HI_CHANNEL = 51;                 // Highest usable radio chann
 const uint64_t BCH_PIPE_ADDR = 0x5000000001LL;     // BCH Pipe Address (outbound only)
 const uint64_t ACH_PIPE_ADDR_IN = 0x5100000100LL;  // ACH inbound pipe
 const uint64_t ACH_PIPE_ADDR_OUT = 0x5000000100LL;  // ACH outboud pipe
+const uint64_t LOP_RTXGUARD = 2;                    // RX-TX Guard time
+const uint64_t LOP_MAX_OUT_NEIGHBOURS = 16;          // Maximum outer neighbours
 // The actual transmitted preamble is 4 bytes, we null terminate it to be able to use
 //  string manipulation functions when comparing etc.
 const char preamble[5] = {0x55, 0xAA, 0x55, 0xAA, 0x00}; 

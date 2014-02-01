@@ -33,13 +33,12 @@ boolean registerWithInnerNode()
     int txBufIndex = 5;
        
     // We build the the REG message according to ...:
-    // |5|6|7|8|9    |10   | 
-    // |R|E|G| |Power|Token|
+    // |5   |6    |7    | 
+    // |0x70|Power|Token|
           
-    // Header
-    strncpy(lop_tx_buffer + txBufIndex, "REG ", 4);
-    txBufIndex+=4;
-         
+    // REG
+    lop_tx_buffer[txBufIndex++] = 0x70;
+    
     // The power
     lop_tx_buffer[txBufIndex++] = inbound_tx_power;
     
@@ -49,12 +48,14 @@ boolean registerWithInnerNode()
     radio.setPALevel((rf24_pa_dbm_e)inbound_tx_power);
     radio.openWritingPipe(ACH_PIPE_ADDR_IN);
     radio.openReadingPipe(1, ACH_PIPE_ADDR_OUT);
+    
+    delay(LOP_RTXGUARD);
     sendLoPRANMessage(lop_tx_buffer, txBufIndex);
     radio.startListening();
     
-    if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , 1000, rxBytes))
+    if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , 100, rxBytes))
     {
-      if((strstr(lop_rx_buffer, "REGA") - lop_rx_buffer) == 5)
+      if(lop_rx_buffer[5] == 0x71)
       {
         return true;
       }
@@ -82,23 +83,23 @@ void serverACH()
   
   if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , 100, rxBytes))
   {
-    if((strstr(lop_rx_buffer, "REG ") - lop_rx_buffer) == 5)
+    if(lop_rx_buffer[5] == 0x70)
     {
       int txBufIndex = 5;
        
       // We build the the REGA message according to ...:
-      // |5|6|7|8|9    |
-      // |R|E|G|A|Token|
+      // |5   |6    |
+      // |0x71|Token|
           
       // Header
-      strncpy(lop_tx_buffer + txBufIndex, "REGA", 4);
-      txBufIndex+=4;
-            
+      lop_tx_buffer[txBufIndex++] = 0x71;
+      
       // The token
       lop_tx_buffer[txBufIndex++] = lop_rx_buffer[10];
             
       radio.setPALevel((rf24_pa_dbm_e)lop_rx_buffer[9]);
-      delay(2);
+      
+      delay(LOP_RTXGUARD); 
       sendLoPRANMessage(lop_tx_buffer, txBufIndex);
       Serial.print("REG,");
       Serial.println((uint8_t)lop_rx_buffer[10], HEX);
