@@ -34,6 +34,7 @@
 #include <RF24.h>        // Copyright (C) 2011 J. Coliz <maniacbug@ymail.com>, GNU
 #include <EEPROM.h>
 #include "NetTime.h"
+#include "OuterNeighboursList.h"
 
 //
 // Change the following consts if your connections are arranged in different way.
@@ -185,12 +186,8 @@ void loop(void)
         if(netStatus)
         {
           waitUntil((NetTime){-1, -1, 9, 0});
-          Serial.println(millis());
           digitalWrite(2,1);
           waitUntil((NetTime){-1, -1, 9, 50});
-          Serial.println(millis());
-          Serial.println(off_off);
-          Serial.println("-");
           digitalWrite(2, 0);
         }
        

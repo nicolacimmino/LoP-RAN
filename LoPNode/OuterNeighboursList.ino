@@ -15,5 +15,29 @@
 //    along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 
+pONDescriptor OuterNeighboursList[LOP_MAX_OUT_NEIGHBOURS];
 
-ONDescriptor OuterNeighboursList[LOP_MAX_OUT_NEIGHBOURS];
+void clearOuterNeighboursList()
+{
+  for(int ix=0; ix<LOP_MAX_OUT_NEIGHBOURS; ix++)
+    OuterNeighboursList[ix] = 0;
+}
+
+// Allocates radio resources to serve an outer neighbour.
+pONDescriptor allocateRadioResources(byte tx_power)
+{
+  // Find the first free time slot
+  for(int ix=0; ix<LOP_MAX_OUT_NEIGHBOURS; ix++)
+  {
+    if(OuterNeighboursList[ix] == 0)
+    {
+      OuterNeighboursList[ix] = new ONDescriptor();
+      (*OuterNeighboursList[ix]).tx_power = tx_power;
+      (*OuterNeighboursList[ix]).rm_slot = ix + 2; 
+      (*OuterNeighboursList[ix]).rm_frame = -1;
+      (*OuterNeighboursList[ix]).rm_block = -1;
+      return OuterNeighboursList[ix];
+    }
+  }
+}
+

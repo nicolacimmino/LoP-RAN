@@ -85,21 +85,28 @@ void serverACH()
   {
     if(lop_rx_buffer[5] == 0x70)
     {
+      byte tx_power = lop_rx_buffer[6];
+      byte token = lop_rx_buffer[7];
+      
+      ONDescriptor* neighbourDescriptor = allocateRadioResources(tx_power);
+      
       int txBufIndex = 5;
        
       // We build the the REGA message according to ...:
-      // |5   |6    |
-      // |0x71|Token|
+      // |5   |6    |7      |8      |9     |10  |11 ...    |
+      // |0x71|Token|RMBLOCK|RMFRAME|RMSLOT|ALEN|Address...|
           
-      // Header
-      lop_tx_buffer[txBufIndex++] = 0x71;
+      lop_tx_buffer[txBufIndex++] = 0x71;                          // REGACK
+      lop_tx_buffer[txBufIndex++] = token;                         // TOKEN
+      lop_tx_buffer[txBufIndex++] = (*neighbourDescriptor).rm_block;  // RMBLOCK
+      lop_tx_buffer[txBufIndex++] = (*neighbourDescriptor).rm_frame;  // RMFRAME
+      lop_tx_buffer[txBufIndex++] = (*neighbourDescriptor).rm_slot;   // RMSLOT
+      lop_tx_buffer[txBufIndex++] = 1;                             // ALEN
+      lop_tx_buffer[txBufIndex++] = (*neighbourDescriptor).rm_slot;      // Address byte
       
-      // The token
-      lop_tx_buffer[txBufIndex++] = lop_rx_buffer[10];
-            
-      radio.setPALevel((rf24_pa_dbm_e)lop_rx_buffer[9]);
       
-      delay(LOP_RTXGUARD); 
+      delay(LOP_RTXGUARD);
+      radio.setPALevel((rf24_pa_dbm_e)tx_power);  
       sendLoPRANMessage(lop_tx_buffer, txBufIndex);
       Serial.print("REG,");
       Serial.println((uint8_t)lop_rx_buffer[10], HEX);
