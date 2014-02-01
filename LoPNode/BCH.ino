@@ -50,6 +50,9 @@ void broadcastBCH()
     lop_tx_buffer[txBufIndex++] = getNetworkTime().block;
     lop_tx_buffer[txBufIndex++] = getNetworkTime().frame;
     
+    // DAP
+    lop_tx_buffer[txBufIndex++] = lop_dap;
+    
     radio.setPALevel((rf24_pa_dbm_e)power);
     sendLoPRANMessage(lop_tx_buffer, txBufIndex);
   }

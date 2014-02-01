@@ -85,6 +85,9 @@ boolean netStatus = false;
 
 long off_off = 0;
 
+// Distance from access point
+byte lop_dap = 0;
+
 // Board setup.
 void setup(void)
 {
@@ -107,8 +110,13 @@ void setup(void)
   //  save some redundant code in every message composition.
   strncpy(lop_tx_buffer, preamble, 4);
   
+  // For testing only we fix the DAP so we have always the same
+  //  node acting as AP and others in a star nework around it.
   //EEPROM.write(EEPROM_FOCAL_NODE,1);
-  
+  if(EEPROM.read(EEPROM_FOCAL_NODE) != 1)
+  {
+    lop_dap = 1;
+  }
 }
 
 void DumpToSerial(char *data, uint8_t length)
