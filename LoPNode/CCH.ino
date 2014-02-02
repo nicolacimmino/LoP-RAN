@@ -47,8 +47,8 @@ void inititateCCHTransaction()
     int txBufIndex = 5;
        
     // We build the the MSG message according to ...:
-    // |5   |6     |7  |...|
-    // |0x80|MSGLEN|MSG|...|
+    // |5   |6     |7      |...|
+    // |0x80|MSGLEN|MSGDATA|...|
         
     lop_tx_buffer[txBufIndex++] = 0x80;            // MSGI
     
@@ -75,9 +75,11 @@ void inititateCCHTransaction()
       
       if(lop_rx_buffer[5] == (char)0x81)
       {
-        for(int ix=0; ix<lop_rx_buffer[6]; ix++)
+        tuneNetwrokTime(lop_rx_buffer[6]);
+        
+        for(int ix=0; ix<lop_rx_buffer[7]; ix++)
         {
-          lop_message_buffer[ix] = lop_rx_buffer[7+ix];
+          lop_message_buffer[ix] = lop_rx_buffer[8+ix];
         }
         Serial.print("MSGO,");
         Serial.println(lop_message_buffer);
@@ -114,10 +116,11 @@ void serveCCH()
         int txBufIndex = 5;
         
         // We build the the MSGI message according to ...:
-        // |5   |6     |7  |...|
-        // |0x81|MSGLEN|MSG|...|
+        // |5   |6  |7     |8  |...|
+        // |0x81|OFF|MSGLEN|MSG|...|
             
         lop_tx_buffer[txBufIndex++] = 0x81;            // MSGO
+        lop_tx_buffer[txBufIndex++] = getNetworkTime().off;  // MSGO
         
         txBufIndex++;                                  // MSG LEN will be filled up when known
         
@@ -127,7 +130,7 @@ void serveCCH()
           // Message is null terminated. 
           if(lop_message_buffer[ix] == 0)
           {
-            lop_tx_buffer[6] = ix+1;                    // MSG content length
+            lop_tx_buffer[7] = ix+1;                    // MSG content length
             break;
           } 
         }

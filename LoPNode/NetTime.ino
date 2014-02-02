@@ -39,6 +39,14 @@ void setNetworkTime(NetTime newTime)
   Serial.println(previous_off_off - off_off);
 }
 
+void tuneNetwrokTime(int8_t off)
+{
+  int8_t off_tune = (getNetworkTime().off - off);
+  off_off += off_tune;
+  Serial.print("CLKTUN,");
+  Serial.println(off_tune);
+}
+
 void waitUntil(NetTime time)
 {
   do
