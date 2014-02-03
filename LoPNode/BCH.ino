@@ -18,6 +18,7 @@
 //    This source code referes, where apllicable, to the chapter and 
 //    sub chapter of these documents.
 
+#include "LoPDia.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Offsets inside the RX/TX buffer of the various SDUs elements.
@@ -29,16 +30,16 @@
 // |0        |1  |2  |3  |4  |5        |6  |7  |8
 // +---------+---+---+---+---+---------+---+---+----
 
-const uint8_t LOP_IX_SDU_ID = 5;
-const uint8_t LOP_IX_SDU_BCH_POW = 6;
-const uint8_t LOP_IX_SDU_BCH_BLOCK = 7;
-const uint8_t LOP_IX_SDU_BCH_FRAME = 8;
-const uint8_t LOP_IX_SDU_BCH_DAP = 9;
-const uint8_t LOP_LEN_SDU_BCH = 10;
-const uint8_t LOP_IX_SDU_BCHS_BLOCK = 6;
-const uint8_t LOP_IX_SDU_BCHS_FRAME = 7;
-const uint8_t LOP_IX_SDU_BCHS_OFF = 8;
-const uint8_t LOP_LEN_SDU_BCHS = 9;
+#define LOP_IX_SDU_ID  5
+#define LOP_IX_SDU_BCH_POW  6
+#define LOP_IX_SDU_BCH_BLOCK  7
+#define LOP_IX_SDU_BCH_FRAME  8
+#define LOP_IX_SDU_BCH_DAP  9
+#define LOP_LEN_SDU_BCH  10
+#define LOP_IX_SDU_BCHS_BLOCK  6
+#define LOP_IX_SDU_BCHS_FRAME  7
+#define LOP_IX_SDU_BCHS_OFF  8
+#define LOP_LEN_SDU_BCHS  9
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Broadcast BCH
@@ -119,16 +120,13 @@ void innerNodeScanAndSync()
     //  the chances to get a full BCH broadcast while not spending too much time on the
     //  same radio channel.
     radio.setChannel(inbound_channel);
-    if(!receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION * 1.5, rxBytes))
+    if(!receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION * 1.8, rxBytes))
     {
       // We got nothing, move to the next channel. We continuously loop all available channels.
       inbound_channel = (++inbound_channel % (LOP_HI_CHANNEL - LOP_LOW_CHANNEL)) + LOP_LOW_CHANNEL; 
      
-      if(lop_dia_enabled)
-      {
-        Serial.print("SCAN,");
-        Serial.println(inbound_channel);
-      }
+      dia_simpleFormNumericLog("SCAN", 1, inbound_channel);
+
       continue; 
     }
     else if(lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_BCH)
@@ -154,19 +152,9 @@ void innerNodeScanAndSync()
       //  have no ACK and are very short.
       setNetworkTime((NetTime){lop_rx_buffer[LOP_IX_SDU_BCHS_BLOCK], lop_rx_buffer[LOP_IX_SDU_BCHS_FRAME], 0, lop_rx_buffer[LOP_IX_SDU_BCHS_OFF]});
       
-      // We have a sync. 
-      if(lop_dia_enabled)
-      {
-        Serial.print("BCHS,");
-        Serial.print(getNetworkTime().block);
-        Serial.print(",");
-        Serial.print(getNetworkTime().frame);
-        Serial.print(",");
-        Serial.print(inbound_channel);
-        Serial.print(",");
-        Serial.println(inbound_tx_power);
-      }
-      
+      // We have a sync.
+      dia_simpleFormNumericLog("BCHS", 2, inbound_channel, inbound_tx_power);
+  
       return;
     }
   }// while(true) 

@@ -15,6 +15,8 @@
 //    along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 
+#include "LoPDia.h"
+
 uint64_t CCH_PIPE_ADDR_IN = 0;
 uint64_t CCH_PIPE_ADDR_OUT = 0;
 
@@ -67,8 +69,7 @@ void inititateCCHTransaction()
     
     radio.setPALevel((rf24_pa_dbm_e)inbound_tx_power);  
     sendLoPRANMessage(lop_tx_buffer, txBufIndex);
-    Serial.print("MSGI,");
-    Serial.println(lop_message_buffer);
+    dia_simpleFormTextLog("MSGI", lop_message_buffer);
     
     if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , 100, rxBytes))
     {
@@ -81,8 +82,7 @@ void inititateCCHTransaction()
         {
           lop_message_buffer[ix] = lop_rx_buffer[8+ix];
         }
-        Serial.print("MSGO,");
-        Serial.println(lop_message_buffer);
+        dia_simpleFormTextLog("MSGO", lop_message_buffer);
       }
     }
     
@@ -110,9 +110,8 @@ void serveCCH()
         {
           lop_message_buffer[ix] = lop_rx_buffer[7+ix];
         }
-        Serial.print("MSGI,");
-        Serial.println(lop_message_buffer);
-    
+        dia_simpleFormTextLog("MSGI", lop_message_buffer);
+       
         int txBufIndex = 5;
         
         // We build the the MSGI message according to ...:
@@ -138,8 +137,7 @@ void serveCCH()
         delay(LOP_RTXGUARD);
     
         sendLoPRANMessage(lop_tx_buffer, txBufIndex);
-        Serial.print("MSGO,");
-        Serial.println(lop_message_buffer);
+        dia_simpleFormTextLog("MSGO", lop_message_buffer);
       }
     }
 }

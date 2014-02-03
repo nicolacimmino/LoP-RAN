@@ -15,6 +15,7 @@
 //    along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 
+#include "LoPDia.h"
 
 NetTime getNetworkTime(void)
 {
@@ -35,16 +36,14 @@ void setNetworkTime(NetTime newTime)
   long wantedMillis = newTime.block * 10000l + newTime.frame * 1000l + newTime.slot * 100l + newTime.off; 
   long previous_off_off = off_off;
   off_off = (millis() % 60000) - wantedMillis;
-  Serial.print("CLKADJ,");
-  Serial.println(previous_off_off - off_off);
+  dia_simpleFormNumericLog("CLKADJ", 1, previous_off_off - off_off);
 }
 
 void tuneNetwrokTime(int8_t off)
 {
   int8_t off_tune = (getNetworkTime().off - off);
   off_off += off_tune;
-  Serial.print("CLKTUN,");
-  Serial.println(off_tune);
+  dia_simpleFormNumericLog("CLKTUN", 1, off_tune);
 }
 
 void waitUntil(NetTime time)

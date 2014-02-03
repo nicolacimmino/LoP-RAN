@@ -33,6 +33,7 @@
 #include <SPI.h>
 #include <RF24.h>        // Copyright (C) 2011 J. Coliz <maniacbug@ymail.com>, GNU
 #include <EEPROM.h>
+#include "LoPDia.h"
 #include "NetTime.h"
 #include "OuterNeighboursList.h"
 
@@ -93,10 +94,6 @@ int rxBytes = 0;
 // TODO: change to enum we need more than 2 statuses.
 boolean netStatus = false;
 
-// Enables the LOP-Diagnostic interface that outputs on serial port
-//  a log of the radio activity.
-boolean lop_dia_enabled = true;
-
 long off_off = 0;
 
 // Distance from access point
@@ -154,7 +151,6 @@ void DumpToSerial(char *data, uint8_t length)
     Serial.print((uint8_t)data[i],HEX); 
     Serial.print(" "); 
   }
-  Serial.println();
 }
 
 void loop(void)
@@ -217,9 +213,11 @@ void sendLoPRANMessage(char *data, int len)
 {
   // Write message length.
   data[4]=len;
-  
-  Serial.print("RAWTX,");  
+
+  dia_logTime();
+  dia_logString("RAWTX");  
   DumpToSerial(data,len);
+  dia_closeLog();
   
   int offset=0;
   radio.stopListening();
@@ -252,14 +250,16 @@ bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms, int &rece
     if(timeout || (received + LOP_PAYL_SIZE > bufLen))
     {
       received = 0;
-      Serial.println("RAWRX,NODATA");
+      dia_simpleFormTextLog("RAWRX", "NODATA");
       return false;
     }
 	
     radio.read( data + received , LOP_PAYL_SIZE );
-    Serial.print("RAWRX,");
-    DumpToSerial(data, data[4]);
-    
+    dia_logTime();
+    dia_logString("RAWRX");  
+    DumpToSerial(data,data[4]);
+    dia_closeLog();
+  
     // If we don't have a preamble at the start of the message
     //   discard all data and keep waiting.
     if(strstr(data, preamble) - data != 0)

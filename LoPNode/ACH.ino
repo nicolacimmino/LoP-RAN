@@ -15,6 +15,8 @@
 //    along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 
+#include "LoPDia.h"
+
 boolean registerWithInnerNode()
 {
   // Get a random number to minimize chances of collisions during registration.
@@ -111,8 +113,7 @@ void serveACH()
       delay(LOP_RTXGUARD);
       radio.setPALevel((rf24_pa_dbm_e)tx_power);  
       sendLoPRANMessage(lop_tx_buffer, txBufIndex);
-      Serial.print("REG,");
-      Serial.println((uint8_t)lop_rx_buffer[10], HEX);
+      dia_simpleFormNumericLog("REG",lop_rx_buffer[10]);
     }
   }    
 }
