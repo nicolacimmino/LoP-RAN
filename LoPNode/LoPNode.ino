@@ -62,10 +62,17 @@ const uint64_t BCH_PIPE_ADDR = 0x5000000001LL;     // BCH Pipe Address (outbound
 const uint64_t ACH_PIPE_ADDR_IN = 0x5100000100LL;  // ACH inbound pipe
 const uint64_t ACH_PIPE_ADDR_OUT = 0x5000000100LL;  // ACH outboud pipe
 const uint64_t LOP_RTXGUARD = 2;                    // RX-TX Guard time
+const uint64_t LOP_SLOTDURATION = 100;              // Slot duration in mS
 const uint64_t LOP_MAX_OUT_NEIGHBOURS = 16;          // Maximum outer neighbours
 // The actual transmitted preamble is 4 bytes, we null terminate it to be able to use
 //  string manipulation functions when comparing etc.
 const char preamble[5] = {0x55, 0xAA, 0x55, 0xAA, 0x00}; 
+
+const uint64_t LOP_BUF_SDU_START = 5;        // Offset inside the TX/RX buffers where the SDU starts 
+
+const uint8_t LOP_SDU_BCH = 0x60;
+const uint8_t LOP_SDU_BCHS = 0x61;
+
 
 // TX Buffer.
 char lop_tx_buffer[LOP_MTU];
@@ -86,6 +93,10 @@ int rxBytes = 0;
 // TODO: change to enum we need more than 2 statuses.
 boolean netStatus = false;
 
+// Enables the LOP-Diagnostic interface that outputs on serial port
+//  a log of the radio activity.
+boolean lop_dia_enabled = true;
+
 long off_off = 0;
 
 // Distance from access point
@@ -94,6 +105,8 @@ byte lop_dap = 0;
 // Message Buffer.
 char lop_message_buffer[LOP_MTU];
 
+// The mask representing the timeslot assigned to this node
+//  for traffic towards/from the inner node.
 NetTime inboundTimeSlot;
 
 
@@ -181,7 +194,7 @@ void loop(void)
         //  is no cause for congestion.
         if(!netStatus || isTime((NetTime){0,0,0,-1}))
         {
-          scanForNet();
+          innerNodeScanAndSync();
           
           // Wait slot 1 (ACH) and register if we are not already.
           if(!netStatus)
