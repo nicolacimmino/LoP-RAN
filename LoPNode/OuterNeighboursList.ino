@@ -24,7 +24,7 @@ void clearOuterNeighboursList()
 }
 
 // Allocates radio resources to serve an outer neighbour.
-pONDescriptor allocateRadioResources(byte tx_power)
+ONDescriptor allocateRadioResources(byte tx_power)
 {
   // Find the first free time slot
   for(int ix=0; ix<LOP_MAX_OUT_NEIGHBOURS; ix++)
@@ -37,7 +37,7 @@ pONDescriptor allocateRadioResources(byte tx_power)
       (*OuterNeighboursList[ix]).resourceMask.slot = ix + 2; 
       (*OuterNeighboursList[ix]).resourceMask.frame = -1;
       (*OuterNeighboursList[ix]).resourceMask.block = -1;
-      return OuterNeighboursList[ix];
+      return *OuterNeighboursList[ix];
     }
   }
 }

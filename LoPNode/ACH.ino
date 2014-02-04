@@ -14,106 +14,126 @@
 //    You should have received a copy of the GNU General Public License
 //    along with this program.  If not, see http://www.gnu.org/licenses/.
 //
+// LoP-RAN Specifications are available at https://github.com/nicolacimmino/LoP-RAN/wiki
+//    This source code referes, where apllicable, to the chapter and 
+//    sub chapter of these documents.
 
 #include "LoPDia.h"
 
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Offsets inside the RX/TX buffer of the various SDUs elements.
+//   These are offsets realtive to the PDU start, not relative to the SDU start. According to
+//    the below ASCII art graph the SDU always starts at an offset 5.
+//
+// +---------+---+---+---+---+---------+---+---+----
+// |PDU Start|x  |x  |x  |x  |SDU start|x  |x  |...
+// |0        |1  |2  |3  |4  |5        |6  |7  |8
+// +---------+---+---+---+---+---------+---+---+----
+
+#define LOP_IX_SDU_REG_POW 6
+#define LOP_IX_SDU_REG_TOKEN 7
+#define LOP_LEN_SDU_REG 8
+#define LOP_IX_SDU_REGACK_TOKEN 6
+#define LOP_IX_SDU_REGACK_BLOCK 7
+#define LOP_IX_SDU_REGACK_FRAME 8
+#define LOP_IX_SDU_REGACK_SLOT 9
+#define LOP_IX_SDU_REGACK_ALEN 10
+#define LOP_IX_SDU_REGACK_ADDRESS 11
+#define LOP_LEN_SDU_REGACK 12
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Attempts to register with an inner node in order to get radio resources allocted.
+//  The call can block for up to 3 frames if a succesfull REGACK is not received.
+// Must be called at OFF=0 of SLOT=1 of on any frame of a node that is not registered yet with
+//  an inner node only after having found a BCH.
+//
 boolean registerWithInnerNode()
 {
   // Get a random number to minimize chances of collisions during registration.
-  // Since the instant we come here is a function of when the inner node triggers
-  //  the slot start relative to our code start time correlation between two nodes
-  //  should be very low even if they are started concurrently, so micros() will
-  //  provide a random enough seed. Additionally in the rare event (1 over 255)
-  //  that two nodes get the same random token both registration messages will
-  //  be discarded by the inner node.
+  // Randomizing with uS since start should be enough since the time at which we
+  //  come here is highly variable (power on reset, BCH broadcast time at least).
   randomSeed(micros());
   
-  for(int retry=0; retry<3; retry++)
+  for(int retry=0; retry<LOP_REG_MAX_RETRY; retry++)
   {
     byte randToken = random(0,255);
-    
-    int txBufIndex = 5;
        
-    // We build the the REG message according to ...:
-    // |5   |6    |7    | 
-    // |0x70|Power|Token|
-          
-    // REG
-    lop_tx_buffer[txBufIndex++] = 0x70;
+    // Build the the REG message according to LOP_01.01§6.1
+    lop_tx_buffer[LOP_IX_SDU_ID] = LOP_SDU_REG;
+    lop_tx_buffer[LOP_IX_SDU_REG_POW] = inbound_tx_power;
+    lop_tx_buffer[LOP_IX_SDU_REG_TOKEN] = randToken;
     
-    // The power
-    lop_tx_buffer[txBufIndex++] = inbound_tx_power;
-    
-    // The token
-    lop_tx_buffer[txBufIndex++] = randToken;
-            
+    // Setup the ACH phy layer parameters according to LOP_01.01§4        
     radio.setPALevel((rf24_pa_dbm_e)inbound_tx_power);
     radio.openWritingPipe(ACH_PIPE_ADDR_IN);
     radio.openReadingPipe(1, ACH_PIPE_ADDR_OUT);
     
+    // Introduce a guard to accomodate for sligh drift according to LOP_01.01§6
     delay(LOP_RTXGUARD);
-    sendLoPRANMessage(lop_tx_buffer, txBufIndex);
-    radio.startListening();
     
-    if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , 100, rxBytes))
+    sendLoPRANMessage(lop_tx_buffer, LOP_LEN_SDU_REG);
+    
+    // Wait a reply, expect  a REGACK with the same token, ignore anything else
+    //  according to according to LOP_01.01§6.2
+    radio.startListening();
+    if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION, rxBytes))
     {
-      if(lop_rx_buffer[5] == 0x71)
+      if(lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_REGACK && lop_rx_buffer[LOP_IX_SDU_REGACK_TOKEN] == randToken)
       {
-        inboundTimeSlot.block = lop_rx_buffer[7];
-        inboundTimeSlot.frame = lop_rx_buffer[8];
-        inboundTimeSlot.slot = lop_rx_buffer[9];
+        // Store the inbound link time slot assigned to us.
+        inboundTimeSlot.block = lop_rx_buffer[LOP_IX_SDU_REGACK_BLOCK];
+        inboundTimeSlot.frame = lop_rx_buffer[LOP_IX_SDU_REGACK_FRAME];
+        inboundTimeSlot.slot = lop_rx_buffer[LOP_IX_SDU_REGACK_SLOT];
         return true;
       }
     }
 
-    // Wait next ACH, this is more efficient than give up
-    //  immediately are resume scan. We need to wait next frame
-    //  slot 1.
-    waitUntil((NetTime){-1, (getNetworkTime().frame + 1) % 10, 1, -1});    
+    // We failed to receive a REGACK, we just wait the next ACH to retry.
+    waitUntil((NetTime){-1, (getNetworkTime().frame + 1) % LOP_FRAMES_PER_BLOCK, 1, -1});    
   }
   
+  // We failed more than LOP_REG_MAX_RETRY, give up. 
   return false;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Serves requests on the ACH.
+// Must be called at OFF=0 of SLOT=1 of on any frame of a node that broadcasts a BCH. The call
+//  might return before the end of SLOT 1 but never after.
+//
 void serveACH()
 {
-  // Listen on the ACH pipe
+  // Setup the ACH phy layer parameters according to LOP_01.01§4        
   radio.openWritingPipe(ACH_PIPE_ADDR_OUT);  
   radio.openReadingPipe(1, ACH_PIPE_ADDR_IN);
   radio.setChannel(50);
   radio.startListening();
-  
-  // Used to sore received bytes count.
-  int rxBytes = 0;
-  
-  if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , 100, rxBytes))
+   
+  if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION, rxBytes))
   {
-    if(lop_rx_buffer[5] == 0x70)
+    // Expect a REG message.
+    if(lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_REG)
     {
-      byte tx_power = lop_rx_buffer[6];
-      byte token = lop_rx_buffer[7];
+      // Allocate radio resources and store them in the ONL.
+      ONDescriptor neighbourDescriptor = allocateRadioResources(lop_rx_buffer[LOP_IX_SDU_REG_POW]);
+
+      // Build the the REG message according to LOP_01.01§6.2
+      lop_tx_buffer[LOP_IX_SDU_ID] = LOP_SDU_REGACK;
+      lop_tx_buffer[LOP_IX_SDU_REGACK_TOKEN] = lop_rx_buffer[LOP_IX_SDU_REG_TOKEN];        // TOKEN
+      lop_tx_buffer[LOP_IX_SDU_REGACK_BLOCK] = (neighbourDescriptor).resourceMask.block;  // RMBLOCK
+      lop_tx_buffer[LOP_IX_SDU_REGACK_FRAME] = (neighbourDescriptor).resourceMask.frame;  // RMFRAME
+      lop_tx_buffer[LOP_IX_SDU_REGACK_SLOT] = (neighbourDescriptor).resourceMask.slot;   // RMSLOT
+      lop_tx_buffer[LOP_IX_SDU_REGACK_ALEN] = 1;                             // ALEN Always one for now since we have only start network support
+      lop_tx_buffer[LOP_IX_SDU_REGACK_ADDRESS] = (neighbourDescriptor).resourceMask.slot;      // Address byte
       
-      ONDescriptor* neighbourDescriptor = allocateRadioResources(tx_power);
-      
-      int txBufIndex = 5;
-       
-      // We build the the REGA message according to ...:
-      // |5   |6    |7      |8      |9     |10  |11 ...    |
-      // |0x71|Token|RMBLOCK|RMFRAME|RMSLOT|ALEN|Address...|
-          
-      lop_tx_buffer[txBufIndex++] = 0x71;                          // REGACK
-      lop_tx_buffer[txBufIndex++] = token;                         // TOKEN
-      lop_tx_buffer[txBufIndex++] = (*neighbourDescriptor).resourceMask.block;  // RMBLOCK
-      lop_tx_buffer[txBufIndex++] = (*neighbourDescriptor).resourceMask.frame;  // RMFRAME
-      lop_tx_buffer[txBufIndex++] = (*neighbourDescriptor).resourceMask.slot;   // RMSLOT
-      lop_tx_buffer[txBufIndex++] = 1;                             // ALEN
-      lop_tx_buffer[txBufIndex++] = (*neighbourDescriptor).resourceMask.slot;      // Address byte
-      
-      
+      // Introduce a guard to accomodate for RX/TX switch time according to LOP_01.01§6
       delay(LOP_RTXGUARD);
-      radio.setPALevel((rf24_pa_dbm_e)tx_power);  
-      sendLoPRANMessage(lop_tx_buffer, txBufIndex);
-      dia_simpleFormNumericLog("REG",lop_rx_buffer[10]);
+    
+      // Send the PDU using the power negotiated with the outer node.
+      radio.setPALevel((rf24_pa_dbm_e)lop_rx_buffer[LOP_IX_SDU_REG_POW]);  
+      sendLoPRANMessage(lop_tx_buffer, LOP_LEN_SDU_REGACK);
+      
+      dia_simpleFormNumericLog("REG",lop_rx_buffer[LOP_IX_SDU_REGACK_SLOT]);
     }
   }    
 }

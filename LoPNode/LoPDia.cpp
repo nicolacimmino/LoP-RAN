@@ -41,6 +41,8 @@ void dia_logTime()
     Serial.print(".");
     Serial.print(currentTime.off);
     Serial.print(",");
+    Serial.print(millis());
+    Serial.print(",");
   }
 }
 

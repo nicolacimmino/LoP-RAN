@@ -30,7 +30,6 @@
 // |0        |1  |2  |3  |4  |5        |6  |7  |8
 // +---------+---+---+---+---+---------+---+---+----
 
-#define LOP_IX_SDU_ID  5
 #define LOP_IX_SDU_BCH_POW  6
 #define LOP_IX_SDU_BCH_BLOCK  7
 #define LOP_IX_SDU_BCH_FRAME  8
@@ -45,7 +44,7 @@
 // Broadcast BCH
 //
 // Must be called at OFF=0 of SLOT=0 of each frame of a node that can act as an inner node
-//  ofr another node (DAP!=0xFF).
+//  for another node (DAP!=0xFF).
 //
 // This call will return as soon as the broadcast is done which might be before the end of 
 //  the slot, but never after.
@@ -116,7 +115,7 @@ void innerNodeScanAndSync()
   
   while(true)
   { 
-    // We attempt to receive on a given channel for maximum 150% of a slot so we maximize
+    // We attempt to receive on a given channel for maximum 180% of a slot so we maximize
     //  the chances to get a full BCH broadcast while not spending too much time on the
     //  same radio channel.
     radio.setChannel(inbound_channel);

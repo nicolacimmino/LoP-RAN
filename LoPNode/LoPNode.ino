@@ -55,25 +55,29 @@ RF24 radio(radio_ce_pin,radio_csn_pin);
 
 // Below constants represet LoP-RAN network parameters
 
-const uint32_t LOP_PAYL_SIZE = 16;                 // Single NRF24L01 packet payload size
-const uint32_t LOP_MTU = 256;                      // MTU size
-const uint8_t LOP_LOW_CHANNEL = 48;                 // Lowest usable radio channel
-const uint8_t LOP_HI_CHANNEL = 51;                 // Highest usable radio channel
-const uint64_t BCH_PIPE_ADDR = 0x5000000001LL;     // BCH Pipe Address (outbound only)
-const uint64_t ACH_PIPE_ADDR_IN = 0x5100000100LL;  // ACH inbound pipe
-const uint64_t ACH_PIPE_ADDR_OUT = 0x5000000100LL;  // ACH outboud pipe
-const uint64_t LOP_RTXGUARD = 2;                    // RX-TX Guard time
-const uint64_t LOP_SLOTDURATION = 100;              // Slot duration in mS
-const uint64_t LOP_MAX_OUT_NEIGHBOURS = 16;          // Maximum outer neighbours
+#define LOP_PAYL_SIZE 16                 // NRF24L01 MAC layer payload size
+#define LOP_MTU 256                      // MTU size
+#define LOP_LOW_CHANNEL 48                 // Lowest usable radio channel
+#define LOP_HI_CHANNEL  51                 // Highest usable radio channel
+#define LOP_REG_MAX_RETRY 3
+#define BCH_PIPE_ADDR  0x5000000001LL     // BCH Pipe Address (outbound only)
+#define ACH_PIPE_ADDR_IN 0x5100000100LL  // ACH inbound pipe
+#define  ACH_PIPE_ADDR_OUT 0x5000000100LL  // ACH outboud pipe
+#define  LOP_RTXGUARD 2                    // RX-TX Guard time
+#define  LOP_SLOTDURATION 100              // Slot duration in mS
+#define LOP_FRAMES_PER_BLOCK 10            // Amount of frames in each block
+#define  LOP_MAX_OUT_NEIGHBOURS 16          // Maximum outer neighbours
 // The actual transmitted preamble is 4 bytes, we null terminate it to be able to use
 //  string manipulation functions when comparing etc.
 const char preamble[5] = {0x55, 0xAA, 0x55, 0xAA, 0x00}; 
 
-const uint64_t LOP_BUF_SDU_START = 5;        // Offset inside the TX/RX buffers where the SDU starts 
+#define LOP_IX_SDU_ID  5 // SDU ID position in the PDU
 
-const uint8_t LOP_SDU_BCH = 0x60;
-const uint8_t LOP_SDU_BCHS = 0x61;
 
+#define LOP_SDU_BCH 0x60
+#define LOP_SDU_BCHS 0x61
+#define LOP_SDU_REG 0x70
+#define LOP_SDU_REGACK 0x71
 
 // TX Buffer.
 char lop_tx_buffer[LOP_MTU];
