@@ -113,7 +113,7 @@ void innerNodeScanAndSync()
     //  the chances to get a full BCH broadcast while not spending too much time on the
     //  same radio channel.
     radio.setChannel(inbound_channel);
-    if(!receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION * 1.8))
+    if(!receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_FRAMEDURATION))
     {
       // We got nothing, move to the next channel. We continuously loop all available channels.
       inbound_channel = (++inbound_channel % (LOP_HI_CHANNEL - LOP_LOW_CHANNEL)) + LOP_LOW_CHANNEL; 
