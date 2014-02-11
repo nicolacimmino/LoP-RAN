@@ -17,6 +17,7 @@
 
 #include "LoPDia.h"
 #include "NetTime.h"
+#include "LoPParams.h"
 
 long off_off = 0;
 
@@ -26,8 +27,8 @@ NetTime getNetworkTime(void)
   unsigned long timemS = (millis() - off_off) % 60000;
   
   time.off = timemS % 100;
-  time.slot = (long)floor(timemS / 100.0f) % 10;
-  time.frame = (long)floor(timemS / 1000.0f)  % 10;
+  time.slot = (long)floor(timemS / LOP_SLOTDURATION) % (int)(LOP_FRAMEDURATION / LOP_SLOTDURATION);
+  time.frame = (long)floor(timemS / LOP_FRAMEDURATION)  % 10;
   time.block = (long)floor(timemS / 10000.0f)  % 6;
   
   return time;

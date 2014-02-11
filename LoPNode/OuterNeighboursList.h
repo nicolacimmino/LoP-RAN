@@ -24,6 +24,7 @@ typedef struct
 {
   byte tx_power;
   NetTime resourceMask;
+  double last_seen;
 } ONDescriptor, *pONDescriptor;
 
 void clearOuterNeighboursList();

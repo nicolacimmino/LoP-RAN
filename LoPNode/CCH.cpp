@@ -149,6 +149,9 @@ void serveCCH()
     
         sendLoPRANMessage(lop_tx_buffer, txBufIndex);
         dia_simpleFormTextLog("MSGO", lop_message_buffer);
+        
+        // We got some data from the node, refresh the last seen
+        (*neighbour).last_seen = millis();
       }
     }
 }
