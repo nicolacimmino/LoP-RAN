@@ -25,5 +25,6 @@
 
 extern uint8_t inbound_tx_power;
 extern NetTime inboundTimeSlot;
+extern byte tx_error_count;
 
 #endif

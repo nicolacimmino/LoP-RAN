@@ -34,6 +34,7 @@
 #include <RF24.h>        // Copyright (C) 2011 J. Coliz <maniacbug@ymail.com>, GNU
 #include <EEPROM.h>
 #include "Common.h"
+#include "LoPParams.h"
 #include "LoPDia.h"
 #include "NetTime.h"
 #include "DataLink.h"
@@ -134,6 +135,11 @@ void loop(void)
         {
           waitUntil(inboundTimeSlot);
           inititateCCHTransaction();
+          
+          if(tx_error_count > LOP_MAX_TX_ERROR)
+          {
+            netStatus = false;
+          }
         }
            
    }  

@@ -94,7 +94,19 @@ void inititateCCHTransaction()
           lop_message_buffer[ix] = lop_rx_buffer[8+ix];
         }
         dia_simpleFormTextLog("MSGO", lop_message_buffer);
+        
+        // Reset the TX error count.
+        tx_error_count = 0;
       }
+      else
+      {
+        tx_error_count++;     
+      }
+
+    }
+    else
+    {
+      tx_error_count++;     
     }
     
     digitalWrite(2, 0);
@@ -114,7 +126,7 @@ void serveCCH()
   radio.startListening();
   
   if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 2))
-    {
+  {
       if(lop_rx_buffer[5] == (char)0x80)
       {
         for(int ix=0; ix<lop_rx_buffer[6]; ix++)
@@ -153,5 +165,5 @@ void serveCCH()
         // We got some data from the node, refresh the last seen
         (*neighbour).last_seen = millis();
       }
-    }
+  }
 }

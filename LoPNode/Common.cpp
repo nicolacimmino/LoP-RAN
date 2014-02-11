@@ -29,3 +29,7 @@ uint8_t inbound_tx_power = RF24_PA_MAX;
 //  for traffic towards/from the inner node.
 NetTime inboundTimeSlot;
 
+// Counter of TX errors.
+// Reset every time a sucessful communication on the CCH is performed.
+byte tx_error_count = 0;
+
