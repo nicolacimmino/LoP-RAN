@@ -1,4 +1,4 @@
-// LoPDia is part of LoP-RAN , provides diagnostic logging to investigate nodes activity.
+// LoPParams is part of LoP-RAN , provides constants that define network behaviour.
 //  Copyright (C) 2014 Nicola Cimmino
 //
 //    This program is free software: you can redistribute it and/or modify
@@ -18,19 +18,27 @@
 //    This source code referes, where apllicable, to the chapter and 
 //    sub chapter of these documents.
 
-#ifndef __LopDia_h__
-#define __LopDia_h__
+#ifndef __LOP_PARAMS_H__
+#define __LOP_PARAMS_H__
 
-#include <Arduino.h>
+// Below constants represet LoP-RAN network parameters
 
-void dia_logTime();
-void dia_logString(char* string);
-void dia_logInt(int value);
-void dia_closeLog();
-void dia_simpleFormNumericLog(const char* event, int count, ...);
-void dia_simpleFormTextLog(const char* event, const char* text);
-void dia_logBufferToHex(char *data, uint8_t length);
+#define LOP_REG_MAX_RETRY 3
+#define BCH_PIPE_ADDR  0x5000000001LL     // BCH Pipe Address (outbound only)
+#define ACH_PIPE_ADDR_IN 0x5100000100LL  // ACH inbound pipe
+#define  ACH_PIPE_ADDR_OUT 0x5000000100LL  // ACH outboud pipe
+#define  LOP_RTXGUARD 2                    // RX-TX Guard time
+#define  LOP_SLOTDURATION 100              // Slot duration in mS
+#define LOP_FRAMES_PER_BLOCK 10            // Amount of frames in each block
+#define  LOP_MAX_OUT_NEIGHBOURS 16          // Maximum outer neighbours
+
+#define LOP_IX_SDU_ID  5 // SDU ID position in the PDU
+
+
+#define LOP_SDU_BCH 0x60
+#define LOP_SDU_BCHS 0x61
+#define LOP_SDU_REG 0x70
+#define LOP_SDU_REGACK 0x71
 
 #endif
-
 

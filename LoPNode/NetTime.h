@@ -15,6 +15,11 @@
 //    along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 
+#ifndef __NETTIME_H__
+#define __NETTIME_H__
+
+#include <Arduino.h>
+
 typedef struct
 {
   int8_t block;
@@ -25,3 +30,11 @@ typedef struct
 
 
 NetTime getNetworkTime(void);
+void setNetworkTime(NetTime newTime);
+void tuneNetwrokTime(int8_t off);
+bool timeMatchesMask(NetTime time, NetTime mask);
+void waitUntil(NetTime time);
+bool isTime(NetTime mask);
+
+#endif
+

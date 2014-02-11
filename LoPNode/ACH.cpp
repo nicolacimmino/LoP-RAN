@@ -18,28 +18,16 @@
 //    This source code referes, where apllicable, to the chapter and 
 //    sub chapter of these documents.
 
+#include "Arduino.h"
+#include <EEPROM.h>
+#include "Common.h"
 #include "LoPDia.h"
+#include "LoPParams.h"
+#include "DataLink.h"
+#include "NetTime.h"
+#include "OuterNeighboursList.h"
+#include "ACH.h"
 
-///////////////////////////////////////////////////////////////////////////////////////////////
-// Offsets inside the RX/TX buffer of the various SDUs elements.
-//   These are offsets realtive to the PDU start, not relative to the SDU start. According to
-//    the below ASCII art graph the SDU always starts at an offset 5.
-//
-// +---------+---+---+---+---+---------+---+---+----
-// |PDU Start|x  |x  |x  |x  |SDU start|x  |x  |...
-// |0        |1  |2  |3  |4  |5        |6  |7  |8
-// +---------+---+---+---+---+---------+---+---+----
-
-#define LOP_IX_SDU_REG_POW 6
-#define LOP_IX_SDU_REG_TOKEN 7
-#define LOP_LEN_SDU_REG 8
-#define LOP_IX_SDU_REGACK_TOKEN 6
-#define LOP_IX_SDU_REGACK_BLOCK 7
-#define LOP_IX_SDU_REGACK_FRAME 8
-#define LOP_IX_SDU_REGACK_SLOT 9
-#define LOP_IX_SDU_REGACK_ALEN 10
-#define LOP_IX_SDU_REGACK_ADDRESS 11
-#define LOP_LEN_SDU_REGACK 12
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Attempts to register with an inner node in order to get radio resources allocted.
@@ -76,7 +64,7 @@ boolean registerWithInnerNode()
     // Wait a reply, expect  a REGACK with the same token, ignore anything else
     //  according to according to LOP_01.01§6.2
     radio.startListening();
-    if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION, rxBytes))
+    if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION))
     {
       if(lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_REGACK && lop_rx_buffer[LOP_IX_SDU_REGACK_TOKEN] == randToken)
       {
@@ -109,7 +97,7 @@ void serveACH()
   radio.setChannel(50);
   radio.startListening();
    
-  if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION, rxBytes))
+  if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION))
   {
     // Expect a REG message.
     if(lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_REG)

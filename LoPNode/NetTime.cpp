@@ -16,6 +16,9 @@
 //
 
 #include "LoPDia.h"
+#include "NetTime.h"
+
+long off_off = 0;
 
 NetTime getNetworkTime(void)
 {

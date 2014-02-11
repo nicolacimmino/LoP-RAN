@@ -101,3 +101,13 @@ void dia_simpleFormTextLog(const char* event, const char* text)
   Serial.print(",");
   Serial.println(text);
 }
+
+void dia_logBufferToHex(char *data, uint8_t length)
+{
+  for (int i=0; i<length; i++) 
+  { 
+    if ((uint8_t)data[i]<0x10) {Serial.print("0");} 
+    Serial.print((uint8_t)data[i],HEX); 
+    Serial.print(" "); 
+  }
+}

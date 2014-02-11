@@ -1,4 +1,4 @@
-// OuterNeighboursList is part of LoP-RAN , provides managing of the ONL.
+// Common is part of LoP-RAN , provides globals that are common to several modules.
 //  Copyright (C) 2014 Nicola Cimmino
 //
 //    This program is free software: you can redistribute it and/or modify
@@ -14,21 +14,18 @@
 //    You should have received a copy of the GNU General Public License
 //    along with this program.  If not, see http://www.gnu.org/licenses/.
 //
+// LoP-RAN Specifications are available at https://github.com/nicolacimmino/LoP-RAN/wiki
+//    This source code referes, where apllicable, to the chapter and 
+//    sub chapter of these documents.
 
-#ifndef __OUTERNEIGHBOURSLIST_H
-#define __OUTERNEIGHBOURSLIST_H
-
+#include <Arduino.h>
+#include <RF24.h>        // Copyright (C) 2011 J. Coliz <maniacbug@ymail.com>, GNU
 #include "NetTime.h"
 
-typedef struct
-{
-  byte tx_power;
-  NetTime resourceMask;
-} ONDescriptor, *pONDescriptor;
+// Lowest usable power to talk to the inner node.
+uint8_t inbound_tx_power = RF24_PA_MAX;
 
-void clearOuterNeighboursList();
-ONDescriptor allocateRadioResources(byte tx_power);
-pONDescriptor getNeighbourDescriptor(NetTime time);
-
-#endif
+// The mask representing the timeslot assigned to this node
+//  for traffic towards/from the inner node.
+NetTime inboundTimeSlot;
 
