@@ -130,9 +130,11 @@ void loop(void)
           }
         }
         
-        
-        waitUntil(inboundTimeSlot);
-        inititateCCHTransaction();
+        if(netStatus)
+        {
+          waitUntil(inboundTimeSlot);
+          inititateCCHTransaction();
+        }
            
    }  
 }
