@@ -82,7 +82,7 @@ void inititateCCHTransaction()
     sendLoPRANMessage(lop_tx_buffer, txBufIndex);
     dia_simpleFormTextLog("MSGI", lop_message_buffer);
     
-    if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION))
+    if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 2))
     {
       
       if(lop_rx_buffer[5] == (char)0x81)
