@@ -113,7 +113,7 @@ void serveCCH()
   radio.setPALevel((rf24_pa_dbm_e)(*neighbour).tx_power);
   radio.startListening();
   
-  if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION))
+  if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 2))
     {
       if(lop_rx_buffer[5] == (char)0x80)
       {

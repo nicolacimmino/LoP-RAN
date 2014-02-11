@@ -85,11 +85,11 @@ bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms)
     }
 	
     radio.read( data + received , LOP_PAYL_SIZE );
-    dia_logTime();
+    /*dia_logTime();
     dia_logString("RAWRX");  
     dia_logBufferToHex(data,data[4]);
     dia_closeLog();
-  
+    */
     // If we don't have a preamble at the start of the message
     //   discard all data and keep waiting.
     if(strstr(data, preamble) - data != 0)
@@ -116,12 +116,12 @@ void sendLoPRANMessage(char *data, int len)
 {
   // Write message length.
   data[4]=len;
-
+  /*
   dia_logTime();
   dia_logString("RAWTX");  
   dia_logBufferToHex(data,len);
   dia_closeLog();
-  
+  */
   int offset=0;
   radio.stopListening();
   while(offset < len)

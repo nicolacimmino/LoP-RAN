@@ -26,7 +26,7 @@
 
 // Enables the LOP-Diagnostic interface that outputs on serial port
 //  a log of the radio activity.
-boolean lop_dia_enabled = true;
+boolean lop_dia_enabled = false;
 
 void dia_logTime()
 {
@@ -74,40 +74,49 @@ void dia_closeLog()
 
 void dia_simpleFormNumericLog(const char* event, int count, ...)
 {
-  dia_logTime();
-  Serial.print(event);
-  
-  int argument;
-
-  //We use a va_list macro to go trough arguments
-  va_list l_Arg;
-  va_start(l_Arg, argument);
-
-  for(int ix=0; ix<count; ix++)
+  if(lop_dia_enabled)
   {
-    argument =  va_arg(l_Arg, int);
-    Serial.print(",");
-    Serial.print(argument);    
-  }  
-  va_end(l_Arg);
-
-  Serial.println();
+    dia_logTime();
+    Serial.print(event);
+    
+    int argument;
+  
+    //We use a va_list macro to go trough arguments
+    va_list l_Arg;
+    va_start(l_Arg, argument);
+  
+    for(int ix=0; ix<count; ix++)
+    {
+      argument =  va_arg(l_Arg, int);
+      Serial.print(",");
+      Serial.print(argument);    
+    }  
+    va_end(l_Arg);
+  
+    Serial.println();
+  }
 }
 
 void dia_simpleFormTextLog(const char* event, const char* text)
 {
-  dia_logTime();
-  Serial.print(event);
-  Serial.print(",");
-  Serial.println(text);
+  if(lop_dia_enabled)
+  {
+    dia_logTime();
+    Serial.print(event);
+    Serial.print(",");
+    Serial.println(text);
+  }
 }
 
 void dia_logBufferToHex(char *data, uint8_t length)
 {
-  for (int i=0; i<length; i++) 
-  { 
-    if ((uint8_t)data[i]<0x10) {Serial.print("0");} 
-    Serial.print((uint8_t)data[i],HEX); 
-    Serial.print(" "); 
+  if(lop_dia_enabled)
+  {
+    for (int i=0; i<length; i++) 
+    { 
+      if ((uint8_t)data[i]<0x10) {Serial.print("0");} 
+      Serial.print((uint8_t)data[i],HEX); 
+      Serial.print(" "); 
+    }
   }
 }
