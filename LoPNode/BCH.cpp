@@ -26,7 +26,7 @@
 #include "DataLink.h"
 #include "NetTime.h"
 #include "BCH.h"
-
+#include "ControlInterface.h"
 
 // Distance from access point
 byte lop_dap = 0;
@@ -109,6 +109,9 @@ void innerNodeScanAndSync()
   
   while(true)
   { 
+    // Keep the control interface active during scan.
+    serveControlInterface();
+    
     // We attempt to receive on a given channel for maximum 180% of a slot so we maximize
     //  the chances to get a full BCH broadcast while not spending too much time on the
     //  same radio channel.

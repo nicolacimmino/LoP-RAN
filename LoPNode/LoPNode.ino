@@ -42,7 +42,7 @@
 #include "BCH.h"
 #include "CCH.h"
 #include "OuterNeighboursList.h"
-
+#include "ControlInterface.h"
 
 //
 // Change the following consts if your connections are arranged in different way.
@@ -56,9 +56,6 @@ const byte EEPROM_FOCAL_NODE = 0xFF;    // 0xFF  During development used to sign
 
 
 
-// Indicates network status.
-// TODO: change to enum we need more than 2 statuses.
-boolean netStatus = false;
 
 
 
@@ -72,7 +69,8 @@ void setup(void)
   Serial.begin(115200);
   
   setupDataLink();
- 
+  setupControlInterface();
+  
   // For testing only we fix the DAP so we have always the same
   //  node acting as AP and others in a star nework around it.
   //EEPROM.write(EEPROM_FOCAL_NODE,1);
@@ -110,7 +108,7 @@ void loop(void)
       pinMode(2, OUTPUT);
         
  
-      if(netStatus)
+      if(inner_link_up)
         waitUntil((NetTime){-1, -1, 0, 0});
         
         // Resync to network at every block. This corrects
@@ -119,26 +117,26 @@ void loop(void)
         //  sync is a receive only operation so the fact that
         //  all nodes in the net will do it at the same time
         //  is no cause for congestion.
-        if(!netStatus || isTime((NetTime){0,0,0,-1}))
+        if(!inner_link_up || isTime((NetTime){0,0,0,-1}))
         {
           innerNodeScanAndSync();
           
           // Wait slot 1 (ACH) and register if we are not already.
-          if(!netStatus)
+          if(!inner_link_up)
           {
             waitUntil((NetTime){-1, -1, 1, 10});
-            netStatus = registerWithInnerNode();
+            inner_link_up = registerWithInnerNode();
           }
         }
         
-        if(netStatus)
+        if(inner_link_up)
         {
           waitUntil(inboundTimeSlot);
           inititateCCHTransaction();
           
           if(tx_error_count > LOP_MAX_TX_ERROR)
           {
-            netStatus = false;
+            inner_link_up = false;
           }
         }
            

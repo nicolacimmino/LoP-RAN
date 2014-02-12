@@ -82,6 +82,9 @@ void inititateCCHTransaction()
     sendLoPRANMessage(lop_tx_buffer, txBufIndex);
     dia_simpleFormTextLog("MSGI", lop_message_buffer);
     
+    // Empty the message buffer.
+    lop_message_buffer[0] = 0;
+    
     if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 2))
     {
       
@@ -92,6 +95,10 @@ void inititateCCHTransaction()
         for(int ix=0; ix<lop_rx_buffer[7]; ix++)
         {
           lop_message_buffer[ix] = lop_rx_buffer[8+ix];
+          if(lop_message_buffer[ix] != 0)
+          {
+            lop_message_buffer_has_rx_message = true;
+          }
         }
         dia_simpleFormTextLog("MSGO", lop_message_buffer);
         

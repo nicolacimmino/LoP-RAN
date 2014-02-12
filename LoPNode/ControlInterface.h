@@ -1,4 +1,4 @@
-// Common is part of LoP-RAN , provides globals that are common to several modules.
+// ControlInterface is part of LoP-RAN , provides UART control interface of the node.
 //  Copyright (C) 2014 Nicola Cimmino
 //
 //    This program is free software: you can redistribute it and/or modify
@@ -18,16 +18,17 @@
 //    This source code referes, where apllicable, to the chapter and 
 //    sub chapter of these documents.
 
-#ifndef __COMMON_H__
-#define __COMMON_H__
+#ifndef __CONTROLINTERFACE_H__
+#define __CONTROLINTERFACE_H__
 
-#include "NetTime.h"
+#define MAX_CONTROL_MSG_SIZE 256
 
-// Message Buffer.
-extern char lop_message_buffer[];
-extern boolean lop_message_buffer_has_rx_message;
-extern uint8_t inbound_tx_power;
-extern NetTime inboundTimeSlot;
-extern byte tx_error_count;
-extern boolean inner_link_up;
+extern char control_rx_buffer[];
+extern int control_rx_buffer_ix;
+
+void setupControlInterface();
+void serveControlInterface();
+void process_control_command();
+
 #endif
+

@@ -23,6 +23,8 @@
 
 #include <Arduino.h>
 
+extern boolean lop_dia_enabled;
+
 void dia_logTime();
 void dia_logString(char* string);
 void dia_logInt(int value);

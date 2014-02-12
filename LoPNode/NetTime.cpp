@@ -18,6 +18,7 @@
 #include "LoPDia.h"
 #include "NetTime.h"
 #include "LoPParams.h"
+#include "ControlInterface.h"
 
 long off_off = 0;
 
@@ -54,6 +55,7 @@ void waitUntil(NetTime time)
 {
   do
   {
+    serveControlInterface();
   } while(!isTime(time));
 }
 

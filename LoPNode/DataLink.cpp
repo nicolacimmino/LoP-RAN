@@ -24,12 +24,7 @@
 #include "NetTime.h"
 #include "DataLink.h"
 
-
-
 RF24 radio(radio_ce_pin,radio_csn_pin);
-
-// Message Buffer.
-char lop_message_buffer[LOP_MTU];
 
 // TX Buffer.
 char lop_tx_buffer[LOP_MTU];
@@ -53,11 +48,7 @@ void setupDataLink()
   //  message. We prefill here the TX buffer so we 
   //  save some redundant code in every message composition.
   strncpy(lop_tx_buffer, preamble, 4);
-  
-  // Just for test purpose until we have the UART interface to send messages
-  strncpy(lop_message_buffer, "ping", 4);
-  lop_message_buffer[4] = 0;
-    
+   
 }
 
 bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms)

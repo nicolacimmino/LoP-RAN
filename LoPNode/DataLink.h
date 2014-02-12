@@ -41,9 +41,6 @@ const char preamble[5] = {0x55, 0xAA, 0x55, 0xAA, 0x00};
 
 extern RF24 radio;
 
-// Message Buffer.
-extern char lop_message_buffer[];
-
 // TX Buffer.
 extern char lop_tx_buffer[];
 

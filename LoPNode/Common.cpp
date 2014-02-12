@@ -21,6 +21,14 @@
 #include <Arduino.h>
 #include <RF24.h>        // Copyright (C) 2011 J. Coliz <maniacbug@ymail.com>, GNU
 #include "NetTime.h"
+#include "DataLink.h"
+
+// Message Buffer.
+char lop_message_buffer[LOP_MTU];
+
+// If set indicates that the buffer contains an incoming message
+//  otherwise it contains an outgoing message.
+boolean lop_message_buffer_has_rx_message = false;
 
 // Lowest usable power to talk to the inner node.
 uint8_t inbound_tx_power = RF24_PA_MAX;
@@ -33,3 +41,5 @@ NetTime inboundTimeSlot;
 // Reset every time a sucessful communication on the CCH is performed.
 byte tx_error_count = 0;
 
+// Inidcates wether the inner link has been eastablished
+boolean inner_link_up = false;
