@@ -123,7 +123,7 @@ void process_control_command()
         Serial.print(",");
         Serial.print(OuterNeighboursList[ix]->resourceMask.slot);  
         Serial.print(",");
-        Serial.println(constrain(LOP_ONL_ALLOCATION_TTL - (millis() - OuterNeighboursList[ix]->last_seen), 0, LOP_ONL_ALLOCATION_TTL)); 
+        Serial.println((int)constrain(LOP_ONL_ALLOCATION_TTL - (millis() - OuterNeighboursList[ix]->last_seen), 0, LOP_ONL_ALLOCATION_TTL)); 
       }
     }
     Serial.println("OK");
