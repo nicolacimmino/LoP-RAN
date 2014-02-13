@@ -32,7 +32,7 @@
 #define LOP_FRAMEDURATION 1000.0f               // Frame duration in mS
 #define LOP_ONL_ALLOCATION_TTL 10000          // Maximum TTL for an entry in the ONL
 #define LOP_FRAMES_PER_BLOCK 10            // Amount of frames in each block
-#define  LOP_MAX_OUT_NEIGHBOURS 16          // Maximum outer neighbours
+#define  LOP_MAX_OUT_NEIGHBOURS 8          // Maximum outer neighbours
 #define LOP_MAX_TX_ERROR 4                  // Maximum transmission errors before the inner link is torn down
 #define LOP_IX_SDU_ID  5 // SDU ID position in the PDU
 

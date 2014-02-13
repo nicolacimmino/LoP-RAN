@@ -103,16 +103,16 @@ void serveACH()
     if(lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_REG)
     {
       // Allocate radio resources and store them in the ONL.
-      ONDescriptor neighbourDescriptor = allocateRadioResources(lop_rx_buffer[LOP_IX_SDU_REG_POW]);
+      pONDescriptor neighbourDescriptor = allocateRadioResources(lop_rx_buffer[LOP_IX_SDU_REG_POW]);
 
       // Build the the REG message according to LOP_01.01§6.2
       lop_tx_buffer[LOP_IX_SDU_ID] = LOP_SDU_REGACK;
       lop_tx_buffer[LOP_IX_SDU_REGACK_TOKEN] = lop_rx_buffer[LOP_IX_SDU_REG_TOKEN];        // TOKEN
-      lop_tx_buffer[LOP_IX_SDU_REGACK_BLOCK] = (neighbourDescriptor).resourceMask.block;  // RMBLOCK
-      lop_tx_buffer[LOP_IX_SDU_REGACK_FRAME] = (neighbourDescriptor).resourceMask.frame;  // RMFRAME
-      lop_tx_buffer[LOP_IX_SDU_REGACK_SLOT] = (neighbourDescriptor).resourceMask.slot;   // RMSLOT
+      lop_tx_buffer[LOP_IX_SDU_REGACK_BLOCK] = neighbourDescriptor->resourceMask.block;  // RMBLOCK
+      lop_tx_buffer[LOP_IX_SDU_REGACK_FRAME] = neighbourDescriptor->resourceMask.frame;  // RMFRAME
+      lop_tx_buffer[LOP_IX_SDU_REGACK_SLOT] = neighbourDescriptor->resourceMask.slot;   // RMSLOT
       lop_tx_buffer[LOP_IX_SDU_REGACK_ALEN] = 1;                             // ALEN Always one for now since we have only start network support
-      lop_tx_buffer[LOP_IX_SDU_REGACK_ADDRESS] = (neighbourDescriptor).resourceMask.slot;      // Address byte
+      lop_tx_buffer[LOP_IX_SDU_REGACK_ADDRESS] = neighbourDescriptor->resourceMask.slot;      // Address byte
       
       // Introduce a guard to accomodate for RX/TX switch time according to LOP_01.01§6
       delay(LOP_RTXGUARD);

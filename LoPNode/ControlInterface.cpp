@@ -23,6 +23,8 @@
 #include "Common.h"
 #include "ControlInterface.h"
 #include "LoPDia.h"
+#include "OuterNeighboursList.h"
+#include "LoPParams.h"
 
 char control_rx_buffer[MAX_CONTROL_MSG_SIZE];
 int control_rx_buffer_ix = 0;
@@ -86,6 +88,11 @@ void process_control_command()
   
     Serial.println("OK");  
   }
+  else if(strstr(control_rx_buffer, "ATID?") - control_rx_buffer == 0)
+  {
+    Serial.println("LoP-RAN RadioFW 0.1");
+    Serial.println("OK"); 
+  }
   else if(strstr(control_rx_buffer, "ATDI0") - control_rx_buffer == 0)
   {
     lop_dia_enabled = false;
@@ -99,6 +106,44 @@ void process_control_command()
   else if(strstr(control_rx_buffer, "ATNT?") - control_rx_buffer == 0)
   {  
     Serial.println((inner_link_up)?"1":"0");
+    Serial.println("OK");
+  }
+  else if(strstr(control_rx_buffer, "ATIPW?") - control_rx_buffer == 0)
+  {  
+    Serial.println(inbound_tx_power);
+    Serial.println("OK");
+  }
+  else if(strstr(control_rx_buffer, "ATONL?") - control_rx_buffer == 0)
+  {  
+    for(int ix=0; ix<LOP_MAX_OUT_NEIGHBOURS; ix++)
+    {
+      if(OuterNeighboursList[ix] != 0)
+      {
+        Serial.print(OuterNeighboursList[ix]->tx_power);
+        Serial.print(",");
+        Serial.print(OuterNeighboursList[ix]->resourceMask.slot);  
+        Serial.print(",");
+        Serial.println(constrain(LOP_ONL_ALLOCATION_TTL - (millis() - OuterNeighboursList[ix]->last_seen), 0, LOP_ONL_ALLOCATION_TTL)); 
+      }
+    }
+    Serial.println("OK");
+  }
+  else if(strstr(control_rx_buffer, "ATME?") - control_rx_buffer == 0)
+  {  
+    // The below chunk of code calculates amount of free memory.
+    // This code is found in several forums and blogs but I never found
+    //  an attribution for it, so I cannot give proper credit.
+    // To uderstand what goes on here we need to remember that the stack
+    //  grows from the bottom of memory up and the heap from the top down.
+    // The code creates an int, which will be created on the stack as it is
+    //  a local variable, so the address of v will be the current top of the
+    //  stack. It will then subtract this address from the current highest 
+    //  heap address that is found in the system variable __brkval unless
+    //  the heap is empty in which case it will be __heap_start.
+    extern int __heap_start, *__brkval; 
+    int v; 
+    Serial.println((int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval));
+    Serial.println("OK");
   }
   else
   {

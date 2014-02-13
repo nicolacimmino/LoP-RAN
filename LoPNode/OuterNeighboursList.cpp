@@ -34,22 +34,22 @@ void clearOuterNeighboursList()
 }
 
 // Allocates radio resources to serve an outer neighbour.
-ONDescriptor allocateRadioResources(byte tx_power)
+pONDescriptor allocateRadioResources(byte tx_power)
 {
   // Find the first free time slot
   for(int ix=0; ix<LOP_MAX_OUT_NEIGHBOURS; ix++)
   {
-    if(OuterNeighboursList[ix] == 0 || (millis() - (*OuterNeighboursList[ix]).last_seen) > LOP_ONL_ALLOCATION_TTL)
+    if(OuterNeighboursList[ix] == 0 || (millis() - OuterNeighboursList[ix]->last_seen) > LOP_ONL_ALLOCATION_TTL)
     {
       if(OuterNeighboursList[ix] == 0)
         OuterNeighboursList[ix] = new ONDescriptor();
-      (*OuterNeighboursList[ix]).tx_power = tx_power;
-      (*OuterNeighboursList[ix]).resourceMask.off = -1;
-      (*OuterNeighboursList[ix]).resourceMask.slot = ix + 2; 
-      (*OuterNeighboursList[ix]).resourceMask.frame = -1;
-      (*OuterNeighboursList[ix]).resourceMask.block = -1;
-      (*OuterNeighboursList[ix]).last_seen = millis();    
-      return *OuterNeighboursList[ix];
+      OuterNeighboursList[ix]->tx_power = tx_power;
+      OuterNeighboursList[ix]->resourceMask.off = -1;
+      OuterNeighboursList[ix]->resourceMask.slot = ix + 2; 
+      OuterNeighboursList[ix]->resourceMask.frame = -1;
+      OuterNeighboursList[ix]->resourceMask.block = -1;
+      OuterNeighboursList[ix]->last_seen = millis();    
+      return OuterNeighboursList[ix];
     }
   }
 }

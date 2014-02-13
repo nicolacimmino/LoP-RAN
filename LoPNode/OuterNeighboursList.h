@@ -27,8 +27,10 @@ typedef struct
   double last_seen;
 } ONDescriptor, *pONDescriptor;
 
+extern pONDescriptor OuterNeighboursList[];
+
 void clearOuterNeighboursList();
-ONDescriptor allocateRadioResources(byte tx_power);
+pONDescriptor allocateRadioResources(byte tx_power);
 pONDescriptor getNeighbourDescriptor(NetTime time);
 
 #endif
