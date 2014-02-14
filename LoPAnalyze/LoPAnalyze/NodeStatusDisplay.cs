@@ -43,10 +43,21 @@ namespace LoPAnalyze
                     }
                     try
                     {
+
                         serialPort.ReadExisting();
                         serialPort.WriteLine("ATID?");
                         String response = serialPort.ReadLine();
-                        this.Text = response.Replace("\n", "").Replace("\r","") + " (" + SerialPortName + ")";
+                        this.Text = response.Replace("\n", "").Replace("\r", "") + " (" + SerialPortName + ")";
+
+                        serialPort.ReadExisting();
+                        serialPort.WriteLine("ATDAP?");
+                        response = serialPort.ReadLine();
+                        labelDAP.Text = response.Replace("\n", "").Replace("\r", "");
+
+                        serialPort.ReadExisting();
+                        serialPort.WriteLine("ATADD?");
+                        response = serialPort.ReadLine();
+                        labelAddress.Text = response.Replace("\n", "").Replace("\r", "");
 
                         listViewONL.Items.Clear();
                         serialPort.ReadExisting();
@@ -57,23 +68,25 @@ namespace LoPAnalyze
                             response = serialPort.ReadLine();
                             if (!response.Contains("OK"))
                             {
-                                List<String> onlTokens = new List<String>(response.Replace("\n","").Split(','));
+                                List<String> onlTokens = new List<String>(response.Replace("\n", "").Split(','));
                                 ListViewItem item = listViewONL.Items.Add(onlTokens[1]);
                                 if (int.Parse(onlTokens[2]) > 9000)
                                 {
                                     item.SubItems.Add(((3 - int.Parse(onlTokens[0])) * -6).ToString() + " dBm");
                                     item.SubItems.Add(onlTokens[2]);
+                                    item.SubItems.Add(onlTokens[3]);
                                     item.SubItems.Add("Active");
                                 }
                                 else if (int.Parse(onlTokens[2]) > 0)
                                 {
                                     item.SubItems.Add("---");
                                     item.SubItems.Add(onlTokens[2]);
-
+                                    item.SubItems.Add(onlTokens[3]);
                                     item.SubItems.Add("Time Wait");
                                 }
                                 else
                                 {
+                                    item.SubItems.Add("---");
                                     item.SubItems.Add("---");
                                     item.SubItems.Add("---");
                                     item.SubItems.Add("Free");

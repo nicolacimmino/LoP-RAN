@@ -32,6 +32,10 @@ char lop_tx_buffer[LOP_MTU];
 // RX Buffer.
 char lop_rx_buffer[LOP_MTU];
 
+// Distance from Access Point.
+// Default is 0xFF (that is no access).
+byte lop_dap = 0xFF;
+
 void setupDataLink()
 {
   // These are fixed parameters in LoP-RAN.
@@ -48,7 +52,9 @@ void setupDataLink()
   //  message. We prefill here the TX buffer so we 
   //  save some redundant code in every message composition.
   strncpy(lop_tx_buffer, preamble, 4);
-   
+  
+  // Initialize lop_dap according to our role
+  lop_dap=(EEPROM.read(EEPROM_RFCH_ACT_AS_AP)==1)?0:0xFF;
 }
 
 bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms)
@@ -76,11 +82,11 @@ bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms)
     }
 	
     radio.read( data + received , LOP_PAYL_SIZE );
-    /*dia_logTime();
+    dia_logTime();
     dia_logString("RAWRX");  
     dia_logBufferToHex(data,data[4]);
     dia_closeLog();
-    */
+    
     // If we don't have a preamble at the start of the message
     //   discard all data and keep waiting.
     if(strstr(data, preamble) - data != 0)
@@ -107,12 +113,12 @@ void sendLoPRANMessage(char *data, int len)
 {
   // Write message length.
   data[4]=len;
-  /*
+  
   dia_logTime();
   dia_logString("RAWTX");  
   dia_logBufferToHex(data,len);
   dia_closeLog();
-  */
+  
   int offset=0;
   radio.stopListening();
   while(offset < len)

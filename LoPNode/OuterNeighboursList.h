@@ -25,6 +25,7 @@ typedef struct
   byte tx_power;
   NetTime resourceMask;
   double last_seen;
+  byte address[LOP_ADDRESS_SIZE_NIBBLES];
 } ONDescriptor, *pONDescriptor;
 
 extern pONDescriptor OuterNeighboursList[];

@@ -41,9 +41,6 @@
 #define LOP_IX_SDU_BCHS_OFF  8
 #define LOP_LEN_SDU_BCHS  9
 
-// Distance from access point
-extern byte lop_dap;
-
 // Channel used for commincations towards the inner node.
 extern uint8_t inbound_channel;
 

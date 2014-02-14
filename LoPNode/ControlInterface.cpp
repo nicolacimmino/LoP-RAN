@@ -20,11 +20,13 @@
 
 #include <Arduino.h>
 #include <Serial.h>
+#include <EEPROM.h>
 #include "Common.h"
 #include "ControlInterface.h"
 #include "LoPDia.h"
 #include "OuterNeighboursList.h"
 #include "LoPParams.h"
+#include "DataLink.h"
 
 char control_rx_buffer[MAX_CONTROL_MSG_SIZE];
 int control_rx_buffer_ix = 0;
@@ -32,17 +34,31 @@ int control_rx_buffer_ix = 0;
 void setupControlInterface()
 {
   // Empty the message buffer.
-  lop_message_buffer[0] = 0;  
+  lop_message_buffer_o[0] = 0;
+  lop_message_buffer_i[0] = 0;
 }
 
 void serveControlInterface()
 {
+  // If we are the AP (DAP=0) RX means outbound else it means always outbound.
+  char* message_buffer_rx = (lop_dap == 0)?lop_message_buffer_i:lop_message_buffer_o;
+  
   if(lop_message_buffer_has_rx_message)
   {
     Serial.print("ATRX ");
-    Serial.println(lop_message_buffer);
+    
+    // Print the address if we are the AP
+    if(lop_dap == 0)
+    {
+      for(int ix=0; ix<LOP_ADDRESS_SIZE_NIBBLES; ix++)
+      {
+        Serial.print('0' + lop_message_buffer_address_i[ix]);
+      }
+      Serial.print(" ");
+    }
+    Serial.println(message_buffer_rx);
     lop_message_buffer_has_rx_message = false;
-    lop_message_buffer[0]=0;
+    message_buffer_rx[0]=0;
   }
   
   long start_time = millis();
@@ -52,8 +68,12 @@ void serveControlInterface()
     control_rx_buffer[control_rx_buffer_ix++] = Serial.read();
 
     // We have a terminator process the command.
-    if(control_rx_buffer[control_rx_buffer_ix-1]=='\n')
+    if(control_rx_buffer[control_rx_buffer_ix-1]=='\n' 
+        || control_rx_buffer[control_rx_buffer_ix-1]=='\r')
     {
+       // Make sure the terminator is \n cause we rely on that later
+       //  (some terminals send \r)
+       control_rx_buffer[control_rx_buffer_ix-1]='\n';
        process_control_command();
     }
     
@@ -72,20 +92,33 @@ void process_control_command()
 {
   if(strstr(control_rx_buffer, "ATTX ") - control_rx_buffer == 0)
   {
-    // Copy the message body till terination char is found.
-    for(int ix=5; ix<MAX_CONTROL_MSG_SIZE; ix++)
+    // If we are the AP (DAP=0) TX means outbound else it means always inbound.
+    char *message_buffer = (lop_dap == 0)?lop_message_buffer_o:lop_message_buffer_i;
+    
+    // Copy the address if we are the AP
+    if(lop_dap == 0)
     {
-      lop_message_buffer[ix-5]=control_rx_buffer[ix];
+      for(int ix=0; ix<LOP_ADDRESS_SIZE_NIBBLES; ix++)
+      {
+        message_buffer[ix] = '0' - control_rx_buffer[ix+5];
+      }
+    }
+    
+    // Copy the message body till terination char is found.
+    // Start offset of message depends on presence of address. TODO: cleanup!
+    for(int ix=0; ix<MAX_CONTROL_MSG_SIZE; ix++)
+    {
+      int ctrl_buf_ix = ix+5+((lop_dap == 0)?(LOP_ADDRESS_SIZE_NIBBLES+1):0);
+      message_buffer[ix]=control_rx_buffer[ctrl_buf_ix];
       
       // We reached the end of the control message. We need
       //  to null terminate the lop message and we are done.
-      if(control_rx_buffer[ix]=='\n')
+      if(control_rx_buffer[ctrl_buf_ix]=='\n')
       {
-        lop_message_buffer[ix-5]=0;
+        message_buffer[ix]=0;
         break;
       }
     }
-  
     Serial.println("OK");  
   }
   else if(strstr(control_rx_buffer, "ATID?") - control_rx_buffer == 0)
@@ -113,6 +146,36 @@ void process_control_command()
     Serial.println(inbound_tx_power);
     Serial.println("OK");
   }
+  else if(strstr(control_rx_buffer, "ATDAP?") - control_rx_buffer == 0)
+  {  
+    Serial.println(lop_dap);
+    Serial.println("OK");
+  }
+  else if(strstr(control_rx_buffer, "ATADD?") - control_rx_buffer == 0)
+  {  
+    for(int ix=0; ix<LOP_ADDRESS_SIZE_NIBBLES; ix++)
+    {
+      Serial.print(node_address[ix],HEX);
+      if(ix%2==1 && ix!=LOP_ADDRESS_SIZE_NIBBLES-1)
+      {
+         Serial.print(".");
+      }
+    }
+    Serial.println("");
+    Serial.println("OK");
+  }
+  else if(strstr(control_rx_buffer, "ATAP1") - control_rx_buffer == 0)
+  {  
+    lop_dap = 0;
+    EEPROM.write(EEPROM_RFCH_ACT_AS_AP, 1);
+    Serial.println("OK");
+  }
+  else if(strstr(control_rx_buffer, "ATAP0") - control_rx_buffer == 0)
+  {  
+    lop_dap = 0xFF;
+    EEPROM.write(EEPROM_RFCH_ACT_AS_AP, 0);
+    Serial.println("OK");
+  }
   else if(strstr(control_rx_buffer, "ATONL?") - control_rx_buffer == 0)
   {  
     for(int ix=0; ix<LOP_MAX_OUT_NEIGHBOURS; ix++)
@@ -123,7 +186,17 @@ void process_control_command()
         Serial.print(",");
         Serial.print(OuterNeighboursList[ix]->resourceMask.slot);  
         Serial.print(",");
-        Serial.println((int)constrain(LOP_ONL_ALLOCATION_TTL - (millis() - OuterNeighboursList[ix]->last_seen), 0, LOP_ONL_ALLOCATION_TTL)); 
+        Serial.print((int)constrain(LOP_ONL_ALLOCATION_TTL - (millis() - OuterNeighboursList[ix]->last_seen), 0, LOP_ONL_ALLOCATION_TTL)); 
+        Serial.print(",");
+        for(int ix=0; ix<LOP_ADDRESS_SIZE_NIBBLES; ix++)
+        {
+          Serial.print(OuterNeighboursList[ix]->address[ix],HEX);
+          if(ix%2==1 && ix!=LOP_ADDRESS_SIZE_NIBBLES-1)
+          {
+             Serial.print(".");
+          }
+        }
+        Serial.println("");
       }
     }
     Serial.println("OK");

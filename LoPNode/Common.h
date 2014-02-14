@@ -22,12 +22,17 @@
 #define __COMMON_H__
 
 #include "NetTime.h"
+#include "DataLink.h"
 
 // Message Buffer.
-extern char lop_message_buffer[];
+extern char lop_message_buffer_i[];
+extern byte lop_message_buffer_address_i[];
+extern char lop_message_buffer_o[];
+extern byte lop_message_buffer_address_o[];
 extern boolean lop_message_buffer_has_rx_message;
 extern uint8_t inbound_tx_power;
 extern NetTime inboundTimeSlot;
 extern byte tx_error_count;
 extern boolean inner_link_up;
+extern byte node_address[];
 #endif

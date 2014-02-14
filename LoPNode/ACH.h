@@ -38,9 +38,8 @@
 #define LOP_IX_SDU_REGACK_BLOCK 7
 #define LOP_IX_SDU_REGACK_FRAME 8
 #define LOP_IX_SDU_REGACK_SLOT 9
-#define LOP_IX_SDU_REGACK_ALEN 10
-#define LOP_IX_SDU_REGACK_ADDRESS 11
-#define LOP_LEN_SDU_REGACK 12
+#define LOP_IX_SDU_REGACK_ADDRESS 10
+#define LOP_LEN_SDU_REGACK 14
 
 boolean registerWithInnerNode();
 void serveACH();

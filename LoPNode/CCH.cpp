@@ -69,9 +69,9 @@ void inititateCCHTransaction()
     
     for(int ix=0; ix<LOP_MTU; ix++)                // MSG content
     {
-      lop_tx_buffer[txBufIndex++] = lop_message_buffer[ix];
+      lop_tx_buffer[txBufIndex++] = lop_message_buffer_i[ix];
       // Message is null terminated. 
-      if(lop_message_buffer[ix] == 0)
+      if(lop_message_buffer_i[ix] == 0)
       {
         lop_tx_buffer[6] = ix+1;                    // MSG content length
         break;
@@ -80,10 +80,11 @@ void inititateCCHTransaction()
     
     radio.setPALevel((rf24_pa_dbm_e)inbound_tx_power);  
     sendLoPRANMessage(lop_tx_buffer, txBufIndex);
-    dia_simpleFormTextLog("MSGI", lop_message_buffer);
+    dia_simpleFormTextLog("MSGI", lop_message_buffer_i);
     
     // Empty the message buffer.
-    lop_message_buffer[0] = 0;
+    lop_message_buffer_i[0] = 0;
+    lop_message_buffer_o[0] = 0;
     
     if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 2))
     {
@@ -94,13 +95,13 @@ void inititateCCHTransaction()
         
         for(int ix=0; ix<lop_rx_buffer[7]; ix++)
         {
-          lop_message_buffer[ix] = lop_rx_buffer[8+ix];
-          if(lop_message_buffer[ix] != 0)
+          lop_message_buffer_o[ix] = lop_rx_buffer[8+ix];
+          if(lop_message_buffer_o[ix] != 0)
           {
             lop_message_buffer_has_rx_message = true;
           }
         }
-        dia_simpleFormTextLog("MSGO", lop_message_buffer);
+        dia_simpleFormTextLog("MSGO", lop_message_buffer_o);
         
         // Reset the TX error count.
         tx_error_count = 0;
@@ -138,9 +139,9 @@ void serveCCH()
       {
         for(int ix=0; ix<lop_rx_buffer[6]; ix++)
         {
-          lop_message_buffer[ix] = lop_rx_buffer[7+ix];
+          lop_message_buffer_i[ix] = lop_rx_buffer[7+ix];
         }
-        dia_simpleFormTextLog("MSGI", lop_message_buffer);
+        dia_simpleFormTextLog("MSGI", lop_message_buffer_i);
        
         int txBufIndex = 5;
         
@@ -149,25 +150,37 @@ void serveCCH()
         // |0x81|OFF|MSGLEN|MSG|...|
             
         lop_tx_buffer[txBufIndex++] = 0x81;            // MSGO
-        lop_tx_buffer[txBufIndex++] = getNetworkTime().off;  // MSGO
         
+        txBufIndex++;                                  // Current OFF will be filled just before sending
         txBufIndex++;                                  // MSG LEN will be filled up when known
         
-        for(int ix=0; ix<LOP_MTU; ix++)                // MSG content
+        pONDescriptor neighbourDescriptor = getNeighbourDescriptor(getNetworkTime());
+        
+        // See if the outbound message waiting is for the address of the 
+        //  node assigned to this slot, if not we just send an empty message
+        //  in order to complete the CCH trasaction.
+        if(memcmp((void*)lop_message_buffer_address_o, (void*)neighbourDescriptor->address, LOP_ADDRESS_SIZE_NIBBLES))
         {
-          lop_tx_buffer[txBufIndex++] = lop_message_buffer[ix];
-          // Message is null terminated. 
-          if(lop_message_buffer[ix] == 0)
+          for(int ix=0; ix<LOP_MTU; ix++)                // MSG content
           {
-            lop_tx_buffer[7] = ix+1;                    // MSG content length
-            break;
-          } 
+            lop_tx_buffer[txBufIndex++] = lop_message_buffer_o[ix];
+            // Message is null terminated. 
+            if(lop_message_buffer_o[ix] == 0)
+            {
+              lop_tx_buffer[7] = ix+1;                    // MSG content length
+              break;
+            } 
+          }
+          // Empty the message buffer.
+          lop_message_buffer_o[0]=0;
         }
         
         delay(LOP_RTXGUARD);
     
+        lop_tx_buffer[6] = getNetworkTime().off;  // OFF
+        
         sendLoPRANMessage(lop_tx_buffer, txBufIndex);
-        dia_simpleFormTextLog("MSGO", lop_message_buffer);
+        dia_simpleFormTextLog("MSGO", lop_message_buffer_o);
         
         // We got some data from the node, refresh the last seen
         (*neighbour).last_seen = millis();

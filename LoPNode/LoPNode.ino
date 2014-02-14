@@ -44,22 +44,6 @@
 #include "OuterNeighboursList.h"
 #include "ControlInterface.h"
 
-//
-// Change the following consts if your connections are arranged in different way.
-
-
-const byte EEPROM_FOCAL_NODE = 0xFF;    // 0xFF  During development used to signal the fact that this node is a focal node (if set to 1)
-
-
-
-
-
-
-
-
-
-
-
 
 // Board setup.
 void setup(void)
@@ -70,25 +54,16 @@ void setup(void)
   
   setupDataLink();
   setupControlInterface();
-  
-  // For testing only we fix the DAP so we have always the same
-  //  node acting as AP and others in a star nework around it.
-  //EEPROM.write(EEPROM_FOCAL_NODE,1);
-  if(EEPROM.read(EEPROM_FOCAL_NODE) != 1)
-  {
-    lop_dap = 1;
-  }
 }
 
 
 
 void loop(void)
 {
-  // During development we use this register to force a node
-  //  to act as inner an other to act as outer.
-  // In the final code it will be a serial command seeting
-  //  the node as a focal if connected to an higher level controller.
-  if(EEPROM.read(EEPROM_FOCAL_NODE) == 1)
+  
+  // Currently we support only star network so we broadcast the
+  //  BCH and serve ACH only if DAP=0
+  if(lop_dap == 0)
   {  
       waitUntil((NetTime){-1, -1, 0, 0});
       broadcastBCH();
@@ -104,7 +79,6 @@ void loop(void)
   }
   else
   {
-      
       pinMode(2, OUTPUT);
         
  

@@ -48,7 +48,16 @@ pONDescriptor allocateRadioResources(byte tx_power)
       OuterNeighboursList[ix]->resourceMask.slot = ix + 2; 
       OuterNeighboursList[ix]->resourceMask.frame = -1;
       OuterNeighboursList[ix]->resourceMask.block = -1;
-      OuterNeighboursList[ix]->last_seen = millis();    
+      OuterNeighboursList[ix]->last_seen = millis();
+      OuterNeighboursList[ix]->address[0] = ix+1;
+      OuterNeighboursList[ix]->address[1] = 0;
+      OuterNeighboursList[ix]->address[2] = 0;
+      OuterNeighboursList[ix]->address[3] = 0;
+      OuterNeighboursList[ix]->address[4] = 0;
+      OuterNeighboursList[ix]->address[5] = 0;
+      OuterNeighboursList[ix]->address[6] = 0;
+      OuterNeighboursList[ix]->address[7] = 0;
+      
       return OuterNeighboursList[ix];
     }
   }

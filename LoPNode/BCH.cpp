@@ -28,9 +28,6 @@
 #include "BCH.h"
 #include "ControlInterface.h"
 
-// Distance from access point
-byte lop_dap = 0;
-
 // Channel used for commincations towards the inner node.
 uint8_t inbound_channel = 0;
 
@@ -107,7 +104,8 @@ void innerNodeScanAndSync()
   radio.openReadingPipe(1, BCH_PIPE_ADDR);
   radio.startListening();
   
-  while(true)
+  // Keep scanning unless we are set as an AP from the control interface.
+  while(lop_dap != 0)
   { 
     // Keep the control interface active during scan.
     serveControlInterface();
@@ -138,6 +136,11 @@ void innerNodeScanAndSync()
       //  a message weaker than last one.
       if(inbound_tx_power > lop_rx_buffer[LOP_IX_SDU_BCH_POW])
         inbound_tx_power = lop_rx_buffer[LOP_IX_SDU_BCH_POW];
+        
+      // Set our DAP as one more of the detected node. This is out current DAP
+      //  even though the link is not currently yet up (that will happen in the
+      //  ACH abd will be signalled by inner_link_up.
+      lop_dap = lop_rx_buffer[LOP_IX_SDU_BCH_DAP]+1;
     } 
     else if(inbound_tx_power != RF24_PA_ERROR  && lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_BCHS)
     {

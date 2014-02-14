@@ -64,7 +64,7 @@ boolean registerWithInnerNode()
     // Wait a reply, expect  a REGACK with the same token, ignore anything else
     //  according to according to LOP_01.01§6.2
     radio.startListening();
-    if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION))
+    if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 2))
     {
       if(lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_REGACK && lop_rx_buffer[LOP_IX_SDU_REGACK_TOKEN] == randToken)
       {
@@ -72,6 +72,17 @@ boolean registerWithInnerNode()
         inboundTimeSlot.block = lop_rx_buffer[LOP_IX_SDU_REGACK_BLOCK];
         inboundTimeSlot.frame = lop_rx_buffer[LOP_IX_SDU_REGACK_FRAME];
         inboundTimeSlot.slot = lop_rx_buffer[LOP_IX_SDU_REGACK_SLOT];
+        
+        node_address[0] = lop_rx_buffer[LOP_IX_SDU_REGACK_ADDRESS]&0xF;
+        node_address[1] = lop_rx_buffer[LOP_IX_SDU_REGACK_ADDRESS]>>4;
+        node_address[2] = lop_rx_buffer[LOP_IX_SDU_REGACK_ADDRESS+1]&0xF;
+        node_address[3] = lop_rx_buffer[LOP_IX_SDU_REGACK_ADDRESS+1]>>4;
+        node_address[4] = lop_rx_buffer[LOP_IX_SDU_REGACK_ADDRESS+2]&0xF;
+        node_address[5] = lop_rx_buffer[LOP_IX_SDU_REGACK_ADDRESS+2]>>4;
+        node_address[6] = lop_rx_buffer[LOP_IX_SDU_REGACK_ADDRESS+3]&0xF;
+        node_address[7] = lop_rx_buffer[LOP_IX_SDU_REGACK_ADDRESS+3]>>4;
+        
+        
         return true;
       }
     }
@@ -97,7 +108,7 @@ void serveACH()
   radio.setChannel(50);
   radio.startListening();
    
-  if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION))
+  if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 2))
   {
     // Expect a REG message.
     if(lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_REG)
@@ -111,8 +122,13 @@ void serveACH()
       lop_tx_buffer[LOP_IX_SDU_REGACK_BLOCK] = neighbourDescriptor->resourceMask.block;  // RMBLOCK
       lop_tx_buffer[LOP_IX_SDU_REGACK_FRAME] = neighbourDescriptor->resourceMask.frame;  // RMFRAME
       lop_tx_buffer[LOP_IX_SDU_REGACK_SLOT] = neighbourDescriptor->resourceMask.slot;   // RMSLOT
-      lop_tx_buffer[LOP_IX_SDU_REGACK_ALEN] = 1;                             // ALEN Always one for now since we have only start network support
-      lop_tx_buffer[LOP_IX_SDU_REGACK_ADDRESS] = neighbourDescriptor->resourceMask.slot;      // Address byte
+      
+      // While we internally store the address unpacked as nibbles on the air interface
+      //  we want to pack it into bytes to save air time.
+      lop_tx_buffer[LOP_IX_SDU_REGACK_ADDRESS] = neighbourDescriptor->address[0] + (neighbourDescriptor->address[1]<<4);      // Address.
+      lop_tx_buffer[LOP_IX_SDU_REGACK_ADDRESS+1] = neighbourDescriptor->address[2] + (neighbourDescriptor->address[3]<<4);      
+      lop_tx_buffer[LOP_IX_SDU_REGACK_ADDRESS+2] = neighbourDescriptor->address[4] + (neighbourDescriptor->address[5]<<4);      
+      lop_tx_buffer[LOP_IX_SDU_REGACK_ADDRESS+3] = neighbourDescriptor->address[6] + (neighbourDescriptor->address[7]<<4);      
       
       // Introduce a guard to accomodate for RX/TX switch time according to LOP_01.01§6
       delay(LOP_RTXGUARD);

@@ -23,8 +23,16 @@
 #include "NetTime.h"
 #include "DataLink.h"
 
-// Message Buffer.
-char lop_message_buffer[LOP_MTU];
+// Inbound and outbound Message Buffers.
+char lop_message_buffer_i[LOP_MTU];
+char lop_message_buffer_o[LOP_MTU];
+
+// Address of the source/destination of the current message.
+byte lop_message_buffer_address_i[LOP_ADDRESS_SIZE_NIBBLES];
+byte lop_message_buffer_address_o[LOP_ADDRESS_SIZE_NIBBLES];
+
+// Address assigned to this node.
+byte node_address[LOP_ADDRESS_SIZE_NIBBLES] = { 0xF,0xF,0xF,0xF,0xF,0xF,0xF,0xF };
 
 // If set indicates that the buffer contains an incoming message
 //  otherwise it contains an outgoing message.

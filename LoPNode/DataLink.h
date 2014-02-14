@@ -32,8 +32,11 @@
 #define LOP_LOW_CHANNEL 48                 // Lowest usable radio channel
 #define LOP_HI_CHANNEL  51                 // Highest usable radio channel
 
+#define LOP_ADDRESS_SIZE_NIBBLES 8          // Size in nibbles of an address
+
 // EEPROM Memory map
 const byte EEPROM_RFCH_INNER_NODE = 0x01;        // 0x01  Last known good RF channel
+const byte EEPROM_RFCH_ACT_AS_AP = 0x02;        // 0x02  Act as an Access Point if != 0
 
 // The actual transmitted preamble is 4 bytes, we null terminate it to be able to use
 //  string manipulation functions when comparing etc.
@@ -46,6 +49,9 @@ extern char lop_tx_buffer[];
 
 // RX Buffer.
 extern char lop_rx_buffer[];
+
+// Distance from access point
+extern byte lop_dap;
 
 bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms);
 void sendLoPRANMessage(char *data, int len);
