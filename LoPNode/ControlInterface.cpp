@@ -110,21 +110,24 @@ void process_control_command()
           break;
         }
       }
+      // We are not pointing at the space, the message starts
+      //  on the next char.
+      rx_buf_add_ix++;
     }
     
     if(lop_message_buffer_address_o != 0 || lop_dap != 0)
     {
       // Copy the message body till terination char is found.
       // Start offset of message depends on presence of address. TODO: cleanup!
-      for(int ix=rx_buf_add_ix+1; ix<MAX_CONTROL_MSG_SIZE; ix++)
+      for(int ix=rx_buf_add_ix; ix<MAX_CONTROL_MSG_SIZE; ix++)
       {
-        message_buffer[ix-(rx_buf_add_ix+1)]=control_rx_buffer[ix];
+        message_buffer[ix-(rx_buf_add_ix)]=control_rx_buffer[ix];
         
         // We reached the end of the control message. We need
         //  to null terminate the lop message and we are done.
         if(control_rx_buffer[ix]=='\n')
         {
-          message_buffer[ix-(rx_buf_add_ix+1)]=0;
+          message_buffer[ix-rx_buf_add_ix]=0;
           break;
         }
       }
@@ -186,13 +189,14 @@ void process_control_command()
   {  
     for(int ix=0; ix<LOP_MAX_OUT_NEIGHBOURS; ix++)
     {
-      if(OuterNeighboursList[ix] != 0)
+      int ttl = (int)constrain(LOP_ONL_ALLOCATION_TTL - (millis() - OuterNeighboursList[ix]->last_seen), 0, LOP_ONL_ALLOCATION_TTL);
+      if(OuterNeighboursList[ix] != 0 && ttl > 0)
       {
         Serial.print(OuterNeighboursList[ix]->tx_power);
         Serial.print(",");
         Serial.print(OuterNeighboursList[ix]->resourceMask.slot);  
         Serial.print(",");
-        Serial.print((int)constrain(LOP_ONL_ALLOCATION_TTL - (millis() - OuterNeighboursList[ix]->last_seen), 0, LOP_ONL_ALLOCATION_TTL)); 
+        Serial.print(ttl); 
         Serial.print(",");
         Serial.println(OuterNeighboursList[ix]->address);
       }
