@@ -93,13 +93,10 @@ void inititateCCHTransaction()
       {
         tuneNetwrokTime(lop_rx_buffer[6]);
         
+        lop_message_buffer_o[0] = 0;
         for(int ix=0; ix<lop_rx_buffer[7]; ix++)
         {
           lop_message_buffer_o[ix] = lop_rx_buffer[8+ix];
-          if(lop_message_buffer_o[ix] != 0)
-          {
-            lop_message_buffer_has_rx_message = true;
-          }
         }
         dia_simpleFormTextLog("MSGO", lop_message_buffer_o);
         
@@ -122,24 +119,29 @@ void inititateCCHTransaction()
 
 void serveCCH()
 {
-  pONDescriptor neighbour = getNeighbourDescriptor(getNetworkTime());
+  pONDescriptor neighbourDescriptor = getNeighbourDescriptor(getNetworkTime());
   
-  if(neighbour == 0)
+  if(neighbourDescriptor == 0)
     return;
     
   calculateCCHPipeAddresses();
   radio.openWritingPipe(CCH_PIPE_ADDR_OUT);  
   radio.openReadingPipe(1, CCH_PIPE_ADDR_IN);
-  radio.setPALevel((rf24_pa_dbm_e)(*neighbour).tx_power);
+  radio.setPALevel((rf24_pa_dbm_e)neighbourDescriptor->tx_power);
   radio.startListening();
   
   if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 2))
   {
       if(lop_rx_buffer[5] == (char)0x80)
       {
+        lop_message_buffer_i[0] = 0;
         for(int ix=0; ix<lop_rx_buffer[6]; ix++)
         {
           lop_message_buffer_i[ix] = lop_rx_buffer[7+ix];
+        }
+        if(lop_message_buffer_i[0] != 0)
+        {
+          lop_message_buffer_address_i = neighbourDescriptor->address;
         }
         dia_simpleFormTextLog("MSGI", lop_message_buffer_i);
        
@@ -154,12 +156,12 @@ void serveCCH()
         txBufIndex++;                                  // Current OFF will be filled just before sending
         txBufIndex++;                                  // MSG LEN will be filled up when known
         
-        pONDescriptor neighbourDescriptor = getNeighbourDescriptor(getNetworkTime());
-        
         // See if the outbound message waiting is for the address of the 
         //  node assigned to this slot, if not we just send an empty message
         //  in order to complete the CCH trasaction.
-        if(memcmp((void*)lop_message_buffer_address_o, (void*)neighbourDescriptor->address, LOP_ADDRESS_SIZE_NIBBLES))
+        lop_tx_buffer[7] = 1;
+        lop_tx_buffer[8] = 0;
+        if(lop_message_buffer_address_o == neighbourDescriptor->address)
         {
           for(int ix=0; ix<LOP_MTU; ix++)                // MSG content
           {
@@ -183,7 +185,7 @@ void serveCCH()
         dia_simpleFormTextLog("MSGO", lop_message_buffer_o);
         
         // We got some data from the node, refresh the last seen
-        (*neighbour).last_seen = millis();
+        neighbourDescriptor->last_seen = millis();
       }
   }
 }

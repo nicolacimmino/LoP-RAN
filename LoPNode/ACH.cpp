@@ -73,15 +73,11 @@ boolean registerWithInnerNode()
         inboundTimeSlot.frame = lop_rx_buffer[LOP_IX_SDU_REGACK_FRAME];
         inboundTimeSlot.slot = lop_rx_buffer[LOP_IX_SDU_REGACK_SLOT];
         
-        node_address[0] = lop_rx_buffer[LOP_IX_SDU_REGACK_ADDRESS]&0xF;
-        node_address[1] = lop_rx_buffer[LOP_IX_SDU_REGACK_ADDRESS]>>4;
-        node_address[2] = lop_rx_buffer[LOP_IX_SDU_REGACK_ADDRESS+1]&0xF;
-        node_address[3] = lop_rx_buffer[LOP_IX_SDU_REGACK_ADDRESS+1]>>4;
-        node_address[4] = lop_rx_buffer[LOP_IX_SDU_REGACK_ADDRESS+2]&0xF;
-        node_address[5] = lop_rx_buffer[LOP_IX_SDU_REGACK_ADDRESS+2]>>4;
-        node_address[6] = lop_rx_buffer[LOP_IX_SDU_REGACK_ADDRESS+3]&0xF;
-        node_address[7] = lop_rx_buffer[LOP_IX_SDU_REGACK_ADDRESS+3]>>4;
-        
+        node_address = 0;
+        for(int ix=0; ix<sizeof(node_address); ix++)
+        {
+          node_address += lop_rx_buffer[LOP_IX_SDU_REGACK_ADDRESS+ix] << (ix*4); 
+        }
         
         return true;
       }
@@ -123,12 +119,10 @@ void serveACH()
       lop_tx_buffer[LOP_IX_SDU_REGACK_FRAME] = neighbourDescriptor->resourceMask.frame;  // RMFRAME
       lop_tx_buffer[LOP_IX_SDU_REGACK_SLOT] = neighbourDescriptor->resourceMask.slot;   // RMSLOT
       
-      // While we internally store the address unpacked as nibbles on the air interface
-      //  we want to pack it into bytes to save air time.
-      lop_tx_buffer[LOP_IX_SDU_REGACK_ADDRESS] = neighbourDescriptor->address[0] + (neighbourDescriptor->address[1]<<4);      // Address.
-      lop_tx_buffer[LOP_IX_SDU_REGACK_ADDRESS+1] = neighbourDescriptor->address[2] + (neighbourDescriptor->address[3]<<4);      
-      lop_tx_buffer[LOP_IX_SDU_REGACK_ADDRESS+2] = neighbourDescriptor->address[4] + (neighbourDescriptor->address[5]<<4);      
-      lop_tx_buffer[LOP_IX_SDU_REGACK_ADDRESS+3] = neighbourDescriptor->address[6] + (neighbourDescriptor->address[7]<<4);      
+      lop_tx_buffer[LOP_IX_SDU_REGACK_ADDRESS] = neighbourDescriptor->address & 0xFF;      // Address.
+      lop_tx_buffer[LOP_IX_SDU_REGACK_ADDRESS+1] = neighbourDescriptor->address >>8 & 0xFF;      
+      lop_tx_buffer[LOP_IX_SDU_REGACK_ADDRESS+2] = neighbourDescriptor->address >>16 & 0xFF;      
+      lop_tx_buffer[LOP_IX_SDU_REGACK_ADDRESS+3] = neighbourDescriptor->address >>24 & 0xFF;      
       
       // Introduce a guard to accomodate for RX/TX switch time according to LOP_01.01§6
       delay(LOP_RTXGUARD);

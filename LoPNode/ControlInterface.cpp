@@ -43,21 +43,17 @@ void serveControlInterface()
   // If we are the AP (DAP=0) RX means outbound else it means always outbound.
   char* message_buffer_rx = (lop_dap == 0)?lop_message_buffer_i:lop_message_buffer_o;
   
-  if(lop_message_buffer_has_rx_message)
+  if(message_buffer_rx[0] != 0)
   {
     Serial.print("ATRX ");
     
     // Print the address if we are the AP
     if(lop_dap == 0)
     {
-      for(int ix=0; ix<LOP_ADDRESS_SIZE_NIBBLES; ix++)
-      {
-        Serial.print('0' + lop_message_buffer_address_i[ix]);
-      }
+      Serial.print(lop_message_buffer_address_i);
       Serial.print(" ");
     }
     Serial.println(message_buffer_rx);
-    lop_message_buffer_has_rx_message = false;
     message_buffer_rx[0]=0;
   }
   
@@ -95,31 +91,49 @@ void process_control_command()
     // If we are the AP (DAP=0) TX means outbound else it means always inbound.
     char *message_buffer = (lop_dap == 0)?lop_message_buffer_o:lop_message_buffer_i;
     
-    // Copy the address if we are the AP
+    
+    int rx_buf_add_ix = 5;
+    char address_str[10];
+    lop_message_buffer_address_o = 0;
     if(lop_dap == 0)
     {
-      for(int ix=0; ix<LOP_ADDRESS_SIZE_NIBBLES; ix++)
+      for(; rx_buf_add_ix<15; rx_buf_add_ix++)
       {
-        message_buffer[ix] = '0' - control_rx_buffer[ix+5];
+        if(control_rx_buffer[rx_buf_add_ix] != ' ')
+        {
+           address_str[rx_buf_add_ix-5]=control_rx_buffer[rx_buf_add_ix];
+        }
+        else
+        {
+          address_str[rx_buf_add_ix]=0;
+          lop_message_buffer_address_o = atoi(address_str);
+          break;
+        }
       }
     }
     
-    // Copy the message body till terination char is found.
-    // Start offset of message depends on presence of address. TODO: cleanup!
-    for(int ix=0; ix<MAX_CONTROL_MSG_SIZE; ix++)
+    if(lop_message_buffer_address_o != 0 || lop_dap != 0)
     {
-      int ctrl_buf_ix = ix+5+((lop_dap == 0)?(LOP_ADDRESS_SIZE_NIBBLES+1):0);
-      message_buffer[ix]=control_rx_buffer[ctrl_buf_ix];
-      
-      // We reached the end of the control message. We need
-      //  to null terminate the lop message and we are done.
-      if(control_rx_buffer[ctrl_buf_ix]=='\n')
+      // Copy the message body till terination char is found.
+      // Start offset of message depends on presence of address. TODO: cleanup!
+      for(int ix=rx_buf_add_ix+1; ix<MAX_CONTROL_MSG_SIZE; ix++)
       {
-        message_buffer[ix]=0;
-        break;
+        message_buffer[ix-(rx_buf_add_ix+1)]=control_rx_buffer[ix];
+        
+        // We reached the end of the control message. We need
+        //  to null terminate the lop message and we are done.
+        if(control_rx_buffer[ix]=='\n')
+        {
+          message_buffer[ix-(rx_buf_add_ix+1)]=0;
+          break;
+        }
       }
+      Serial.println("OK");  
     }
-    Serial.println("OK");  
+    else
+    {
+      Serial.println("ERR");
+    }
   }
   else if(strstr(control_rx_buffer, "ATID?") - control_rx_buffer == 0)
   {
@@ -153,15 +167,7 @@ void process_control_command()
   }
   else if(strstr(control_rx_buffer, "ATADD?") - control_rx_buffer == 0)
   {  
-    for(int ix=0; ix<LOP_ADDRESS_SIZE_NIBBLES; ix++)
-    {
-      Serial.print(node_address[ix],HEX);
-      if(ix%2==1 && ix!=LOP_ADDRESS_SIZE_NIBBLES-1)
-      {
-         Serial.print(".");
-      }
-    }
-    Serial.println("");
+    Serial.println(node_address);
     Serial.println("OK");
   }
   else if(strstr(control_rx_buffer, "ATAP1") - control_rx_buffer == 0)
@@ -188,15 +194,7 @@ void process_control_command()
         Serial.print(",");
         Serial.print((int)constrain(LOP_ONL_ALLOCATION_TTL - (millis() - OuterNeighboursList[ix]->last_seen), 0, LOP_ONL_ALLOCATION_TTL)); 
         Serial.print(",");
-        for(int ix=0; ix<LOP_ADDRESS_SIZE_NIBBLES; ix++)
-        {
-          Serial.print(OuterNeighboursList[ix]->address[ix],HEX);
-          if(ix%2==1 && ix!=LOP_ADDRESS_SIZE_NIBBLES-1)
-          {
-             Serial.print(".");
-          }
-        }
-        Serial.println("");
+        Serial.println(OuterNeighboursList[ix]->address);
       }
     }
     Serial.println("OK");
