@@ -69,22 +69,25 @@ void inititateCCHTransaction()
     
     for(int ix=0; ix<LOP_MTU; ix++)                // MSG content
     {
-      lop_tx_buffer[txBufIndex++] = lop_message_buffer_i[ix];
-      // Message is null terminated. 
+      // Message is null terminated but we don't send the null
+      //  as there is already the MSG length
       if(lop_message_buffer_i[ix] == 0)
       {
-        lop_tx_buffer[6] = ix+1;                    // MSG content length
+        lop_tx_buffer[6] = ix;                    // MSG content length
         break;
-      } 
+      }
+      lop_tx_buffer[txBufIndex++] = lop_message_buffer_i[ix]; 
     }
     
     radio.setPALevel((rf24_pa_dbm_e)inbound_tx_power);  
     sendLoPRANMessage(lop_tx_buffer, txBufIndex);
-    dia_simpleFormTextLog("MSGI", lop_message_buffer_i);
+    if(lop_tx_buffer[6]>0)
+    {
+      dia_simpleFormTextLog("MSGI", lop_message_buffer_i);
+    }
     
     // Empty the message buffer.
     lop_message_buffer_i[0] = 0;
-    lop_message_buffer_o[0] = 0;
     
     if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 2))
     {
@@ -93,13 +96,18 @@ void inititateCCHTransaction()
       {
         tuneNetwrokTime(lop_rx_buffer[6]);
         
-        lop_message_buffer_o[0] = 0;
         for(int ix=0; ix<lop_rx_buffer[7]; ix++)
         {
           lop_message_buffer_o[ix] = lop_rx_buffer[8+ix];
         }
-        dia_simpleFormTextLog("MSGO", lop_message_buffer_o);
         
+        // We add null terminator as it's not sent.
+        if(lop_rx_buffer[7]>0)
+        {
+          lop_message_buffer_o[lop_rx_buffer[7]]=0;
+          dia_simpleFormTextLog("MSGO", lop_message_buffer_o);
+        }
+      
         // Reset the TX error count.
         tx_error_count = 0;
       }
@@ -134,17 +142,19 @@ void serveCCH()
   {
       if(lop_rx_buffer[5] == (char)0x80)
       {
-        lop_message_buffer_i[0] = 0;
         for(int ix=0; ix<lop_rx_buffer[6]; ix++)
         {
           lop_message_buffer_i[ix] = lop_rx_buffer[7+ix];
         }
-        if(lop_message_buffer_i[0] != 0)
+        
+        // We add null terminator as it's not sent.
+        if(lop_rx_buffer[6]>0)
         {
+          lop_message_buffer_i[lop_rx_buffer[6]]=0;        
           lop_message_buffer_address_i = neighbourDescriptor->address;
+          dia_simpleFormTextLog("MSGI", lop_message_buffer_i);
         }
-        dia_simpleFormTextLog("MSGI", lop_message_buffer_i);
-       
+        
         int txBufIndex = 5;
         
         // We build the the MSGI message according to ...:
@@ -159,19 +169,19 @@ void serveCCH()
         // See if the outbound message waiting is for the address of the 
         //  node assigned to this slot, if not we just send an empty message
         //  in order to complete the CCH trasaction.
-        lop_tx_buffer[7] = 1;
-        lop_tx_buffer[8] = 0;
+        lop_tx_buffer[7] = 0;
         if(lop_message_buffer_address_o == neighbourDescriptor->address)
         {
           for(int ix=0; ix<LOP_MTU; ix++)                // MSG content
           {
-            lop_tx_buffer[txBufIndex++] = lop_message_buffer_o[ix];
-            // Message is null terminated. 
+            // Message is null terminated but we don't send the null
+            //  as there is already the MSG length
             if(lop_message_buffer_o[ix] == 0)
             {
-              lop_tx_buffer[7] = ix+1;                    // MSG content length
+              lop_tx_buffer[7] = ix;                    // MSG content length
               break;
-            } 
+            }
+            lop_tx_buffer[txBufIndex++] = lop_message_buffer_o[ix]; 
           }
           // Empty the message buffer.
           lop_message_buffer_o[0]=0;
@@ -182,8 +192,10 @@ void serveCCH()
         lop_tx_buffer[6] = getNetworkTime().off;  // OFF
         
         sendLoPRANMessage(lop_tx_buffer, txBufIndex);
-        dia_simpleFormTextLog("MSGO", lop_message_buffer_o);
-        
+        if(lop_tx_buffer[7]>0)
+        {
+          dia_simpleFormTextLog("MSGO", lop_message_buffer_o);
+        }
         // We got some data from the node, refresh the last seen
         neighbourDescriptor->last_seen = millis();
       }

@@ -51,7 +51,7 @@ void setup(void)
   // We sometimes still use serial for debuggin.
   // Keep high speeds and use sparingly as writing to serial puts off all timings.
   Serial.begin(115200);
-  
+ 
   setupDataLink();
   setupControlInterface();
 }

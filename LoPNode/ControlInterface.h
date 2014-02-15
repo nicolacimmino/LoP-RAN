@@ -25,6 +25,7 @@
 
 extern char control_rx_buffer[];
 extern int control_rx_buffer_ix;
+extern boolean rx_notification_enable;
 
 void setupControlInterface();
 void serveControlInterface();

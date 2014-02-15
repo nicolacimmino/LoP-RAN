@@ -30,6 +30,7 @@
 
 char control_rx_buffer[MAX_CONTROL_MSG_SIZE];
 int control_rx_buffer_ix = 0;
+boolean rx_notification_enable = true;
 
 void setupControlInterface()
 {
@@ -38,14 +39,16 @@ void setupControlInterface()
   lop_message_buffer_i[0] = 0;
 }
 
-void serveControlInterface()
+void notifyReceivedMessage() 
 {
   // If we are the AP (DAP=0) RX means outbound else it means always outbound.
   char* message_buffer_rx = (lop_dap == 0)?lop_message_buffer_i:lop_message_buffer_o;
   
   if(message_buffer_rx[0] != 0)
   {
-    Serial.print("ATRX ");
+    // Prefix the message only if this is an unsolicited notification
+    // For ATRX? queries we just reply with address/message.
+    if(rx_notification_enable) Serial.print("ATRX ");
     
     // Print the address if we are the AP
     if(lop_dap == 0)
@@ -55,9 +58,17 @@ void serveControlInterface()
     }
     Serial.println(message_buffer_rx);
     message_buffer_rx[0]=0;
-  }
-  
+  }  
+}
+
+void serveControlInterface()
+{
   long start_time = millis();
+
+  if(rx_notification_enable)
+  {
+    notifyReceivedMessage();
+  }
   
   while(Serial.available()>0)
   {
@@ -86,6 +97,7 @@ void serveControlInterface()
 
 void process_control_command()
 {
+  
   if(strstr(control_rx_buffer, "ATTX ") - control_rx_buffer == 0)
   {
     // If we are the AP (DAP=0) TX means outbound else it means always inbound.
@@ -138,20 +150,28 @@ void process_control_command()
       Serial.println("ERR");
     }
   }
+  
   else if(strstr(control_rx_buffer, "ATID?") - control_rx_buffer == 0)
   {
     Serial.println("LoP-RAN RadioFW 0.1");
     Serial.println("OK"); 
   }
-  else if(strstr(control_rx_buffer, "ATDI0") - control_rx_buffer == 0)
+  else if(strstr(control_rx_buffer, "ATDI") - control_rx_buffer == 0)
   {
-    lop_dia_enabled = false;
+    lop_dia_enabled = (control_rx_buffer[4]=='1');
     Serial.println("OK"); 
   }
-  else if(strstr(control_rx_buffer, "ATDI1") - control_rx_buffer == 0)
-  {  
-      lop_dia_enabled = true;
-      Serial.println("OK"); 
+  else if(strstr(control_rx_buffer, "ATRX") - control_rx_buffer == 0)
+  {
+    if(control_rx_buffer[4]=='?')
+    {
+      notifyReceivedMessage(); 
+    }
+    else
+    {
+      rx_notification_enable = (control_rx_buffer[4]=='1');
+    }
+    Serial.println("OK"); 
   }
   else if(strstr(control_rx_buffer, "ATNT?") - control_rx_buffer == 0)
   {  
@@ -218,6 +238,11 @@ void process_control_command()
     extern int __heap_start, *__brkval; 
     int v; 
     Serial.println((int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval));
+    Serial.println("OK");
+  }
+  else if(strstr(control_rx_buffer, "AT") - control_rx_buffer == 0 
+          && (control_rx_buffer[2]=='\r' || control_rx_buffer[2]=='\n'))
+  {
     Serial.println("OK");
   }
   else
