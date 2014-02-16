@@ -32,12 +32,8 @@ void dia_logTime()
 {
   if(lop_dia_enabled)
   {
-    NetTime currentTime = getNetworkTime();
+    NetTime currentTime = getInnerLinkNetworkTime();
     Serial.print("ATDI ");
-    Serial.print(currentTime.block);
-    Serial.print(":");
-    Serial.print(currentTime.frame);
-    Serial.print(":");
     Serial.print(currentTime.slot);
     Serial.print(".");
     Serial.print(currentTime.off);

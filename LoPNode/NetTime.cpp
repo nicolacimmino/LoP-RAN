@@ -20,54 +20,71 @@
 #include "LoPParams.h"
 #include "ControlInterface.h"
 
-long off_off = 0;
+// Stores the offset between the internal system clock
+//  and the inner link network time.
+long system_clock_offset = 0;
 
-NetTime getNetworkTime(void)
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Get the inner link network time
+//
+// Returns the current inner link network time with slot and off.
+//
+NetTime getInnerLinkNetworkTime(void)
 {
   NetTime time;
-  unsigned long timemS = (millis() - off_off) % 60000;
+  unsigned long timemS = (millis() - system_clock_offset) % (int)LOP_FRAMEDURATION;
   
-  time.off = timemS % 100;
+  time.off = timemS % (int)LOP_SLOTDURATION;
   time.slot = (long)floor(timemS / LOP_SLOTDURATION) % (int)(LOP_FRAMEDURATION / LOP_SLOTDURATION);
-  time.frame = (long)floor(timemS / LOP_FRAMEDURATION)  % 10;
-  time.block = (long)floor(timemS / 10000.0f)  % 6;
   
   return time;
 }
 
-//void setNetworkTime(byte block, byte frame, byte slot)
-void setNetworkTime(NetTime newTime)
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Set the inner link network time
+//
+// Sets the current inner link network time with slot and off.
+//
+void setInnerLinkNetworkTime(NetTime newTime)
 {
-  long wantedMillis = newTime.block * 10000l + newTime.frame * 1000l + newTime.slot * 100l + newTime.off; 
-  long previous_off_off = off_off;
-  off_off = (millis() % 60000) - wantedMillis;
-  dia_simpleFormNumericLog("CLKADJ", 1, previous_off_off - off_off);
+  long wantedMillis = newTime.slot * LOP_SLOTDURATION + newTime.off; 
+  long previous_offset = system_clock_offset;
+  system_clock_offset = (millis() % (int)LOP_FRAMEDURATION) - wantedMillis;
+  dia_simpleFormNumericLog("CLKADJ", 1, previous_offset - system_clock_offset);
 }
 
-void tuneNetwrokTime(int8_t off)
-{
-  int8_t off_tune = (getNetworkTime().off - off);
-  off_off += off_tune;
-  dia_simpleFormNumericLog("CLKTUN", 1, off_tune);
-}
-
-void waitUntil(NetTime time)
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Waits until the specified slot and off is reached.
+//
+void waitUntilInnerLink(NetTime time)
 {
   do
   {
+    // We will sit in this loop most of the time we need to keep the
+    //  control interface alive. Another option was to serve the control
+    //  inteface on an interrupt, but that could interfere more easily 
+    //  with our real-time requirements.
     serveControlInterface();
-  } while(!isTime(time));
+  } while(!isInnerLinkNetworkTime(time));
 }
 
-bool isTime(NetTime mask)
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Return true if the current network time matches the specified slot and off.
+//
+// Any element of the supplied time mask can be set to -1 in which case it will be ignored.
+//
+bool isInnerLinkNetworkTime(NetTime mask)
 {
-  return timeMatchesMask(getNetworkTime(), mask);
+  return timeMatchesMask(getInnerLinkNetworkTime(), mask);
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Return true if the supplied network time matches the specified slot and off.
+//
+// Any element of the supplied time mask can be set to -1 in which case it will be ignored.
+//
 bool timeMatchesMask(NetTime time, NetTime mask)
 {
-  return   (mask.block == -1 || time.block == mask.block) &&
-           (mask.frame == -1 || time.frame == mask.frame) &&
-           (mask.slot == -1 || time.slot == mask.slot) &&
-           (mask.off == -1 || time.off >= mask.off);
+  return (mask.slot == -1 || time.slot == mask.slot) &&
+         (mask.off == -1 || time.off >= mask.off);
 }

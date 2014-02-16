@@ -58,8 +58,6 @@ void broadcastBCH()
     // We build the the BCH SDU according to LOP_01.01§5.1 
     lop_tx_buffer[LOP_IX_SDU_ID] = LOP_SDU_BCH;
     lop_tx_buffer[LOP_IX_SDU_BCH_POW] = power;
-    lop_tx_buffer[LOP_IX_SDU_BCH_BLOCK] = getNetworkTime().block;
-    lop_tx_buffer[LOP_IX_SDU_BCH_FRAME] = getNetworkTime().frame;
     lop_tx_buffer[LOP_IX_SDU_BCH_DAP] = lop_dap;
     
     // And we finally send out the SDU using the current power.
@@ -69,9 +67,7 @@ void broadcastBCH()
    
   // We build the the BCHS (sync) SDU according to LOP_01.01§5.2
   lop_tx_buffer[LOP_IX_SDU_ID] = LOP_SDU_BCHS;
-  lop_tx_buffer[LOP_IX_SDU_BCHS_BLOCK] = getNetworkTime().block;
-  lop_tx_buffer[LOP_IX_SDU_BCHS_FRAME] = getNetworkTime().frame;
-  lop_tx_buffer[LOP_IX_SDU_BCHS_OFF] = getNetworkTime().off;
+  lop_tx_buffer[LOP_IX_SDU_BCHS_OFF] = getInnerLinkNetworkTime().off;
     
   // We use max power for sync so we can reach all nodes that might have heard us
   //  as specified in "BCH Timing" LOP_01.01§5
@@ -149,7 +145,7 @@ void innerNodeScanAndSync()
       // Sync our nettime to the one received by the network. This is still off by the actual
       //  physical layer trasmit time, this in practice is well below 1mS since BCHS messages 
       //  have no ACK and are very short.
-      setNetworkTime((NetTime){lop_rx_buffer[LOP_IX_SDU_BCHS_BLOCK], lop_rx_buffer[LOP_IX_SDU_BCHS_FRAME], 0, lop_rx_buffer[LOP_IX_SDU_BCHS_OFF]});
+      setInnerLinkNetworkTime((NetTime){0, lop_rx_buffer[LOP_IX_SDU_BCHS_OFF]});
       
       // We have a sync.
       dia_simpleFormNumericLog("BCHS", 2, inbound_channel, inbound_tx_power);

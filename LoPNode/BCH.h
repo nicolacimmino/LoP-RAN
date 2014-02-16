@@ -32,12 +32,8 @@
 // +---------+---+---+---+---+---------+---+---+----
 
 #define LOP_IX_SDU_BCH_POW  6
-#define LOP_IX_SDU_BCH_BLOCK  7
-#define LOP_IX_SDU_BCH_FRAME  8
 #define LOP_IX_SDU_BCH_DAP  9
 #define LOP_LEN_SDU_BCH  10
-#define LOP_IX_SDU_BCHS_BLOCK  6
-#define LOP_IX_SDU_BCHS_FRAME  7
 #define LOP_IX_SDU_BCHS_OFF  8
 #define LOP_LEN_SDU_BCHS  9
 

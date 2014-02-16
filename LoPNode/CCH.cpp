@@ -33,17 +33,10 @@ uint64_t CCH_PIPE_ADDR_OUT = 0;
 
 void calculateCCHPipeAddresses()
 {
-  NetTime currentTime = getNetworkTime();
+  NetTime currentTime = getInnerLinkNetworkTime();
   
-  CCH_PIPE_ADDR_IN = 0x51;
-  CCH_PIPE_ADDR_IN = (CCH_PIPE_ADDR_IN << 8) | currentTime.block;
-  CCH_PIPE_ADDR_IN = (CCH_PIPE_ADDR_IN << 8) | currentTime.frame;
-  CCH_PIPE_ADDR_IN = (CCH_PIPE_ADDR_IN << 8) | currentTime.slot;
-  
-  CCH_PIPE_ADDR_OUT = 0x50;
-  CCH_PIPE_ADDR_OUT = (CCH_PIPE_ADDR_OUT << 8) | currentTime.block;
-  CCH_PIPE_ADDR_OUT = (CCH_PIPE_ADDR_OUT << 8) | currentTime.frame;
-  CCH_PIPE_ADDR_OUT = (CCH_PIPE_ADDR_OUT << 8) | currentTime.slot; 
+  CCH_PIPE_ADDR_IN = 0x515500 | currentTime.slot;
+  CCH_PIPE_ADDR_OUT = 0x505500 | currentTime.slot;
 }
 
 void inititateCCHTransaction()
@@ -94,7 +87,7 @@ void inititateCCHTransaction()
       
       if(lop_rx_buffer[5] == (char)0x81)
       {
-        tuneNetwrokTime(lop_rx_buffer[6]);
+        setInnerLinkNetworkTime((NetTime){getInnerLinkNetworkTime().slot, lop_rx_buffer[6]});
         
         for(int ix=0; ix<lop_rx_buffer[7]; ix++)
         {
@@ -127,7 +120,7 @@ void inititateCCHTransaction()
 
 void serveCCH()
 {
-  pONDescriptor neighbourDescriptor = getNeighbourDescriptor(getNetworkTime());
+  pONDescriptor neighbourDescriptor = getNeighbourDescriptor(getInnerLinkNetworkTime());
   
   if(neighbourDescriptor == 0)
     return;
@@ -189,7 +182,7 @@ void serveCCH()
         
         delay(LOP_RTXGUARD);
     
-        lop_tx_buffer[6] = getNetworkTime().off;  // OFF
+        lop_tx_buffer[6] = getInnerLinkNetworkTime().off;  // OFF
         
         sendLoPRANMessage(lop_tx_buffer, txBufIndex);
         if(lop_tx_buffer[7]>0)

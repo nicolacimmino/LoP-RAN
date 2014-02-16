@@ -65,15 +65,15 @@ void loop(void)
   //  BCH and serve ACH only if DAP=0
   if(lop_dap == 0)
   {  
-      waitUntil((NetTime){-1, -1, 0, 0});
+      waitUntilInnerLink((NetTime){0, 0});
       broadcastBCH();
       
-      waitUntil((NetTime){-1, -1, 1, 0});
+      waitUntilInnerLink((NetTime){1, 0});
       serveACH();
       
       for(int slot=2; slot<10; slot++)
       {
-          waitUntil((NetTime){-1, -1, slot, 0});
+          waitUntilInnerLink((NetTime){slot, 0});
           serveCCH();
       }
   }
@@ -81,31 +81,21 @@ void loop(void)
   {
       pinMode(2, OUTPUT);
         
- 
-      if(inner_link_up)
-        waitUntil((NetTime){-1, -1, 0, 0});
-        
-        // Resync to network at every block. This corrects
-        //  drifting caused by clock innacuracies while not
-        //  being too heavy on the network. Note that time
-        //  sync is a receive only operation so the fact that
-        //  all nodes in the net will do it at the same time
-        //  is no cause for congestion.
-        if(!inner_link_up || isTime((NetTime){0,0,0,-1}))
+   
+        if(!inner_link_up)
         {
+          // Attempt to find an inner node and, if found
+          //  sync to the inner link net time. This call blocks
+          //  until a node is found.
           innerNodeScanAndSync();
           
-          // Wait slot 1 (ACH) and register if we are not already.
-          if(!inner_link_up)
-          {
-            waitUntil((NetTime){-1, -1, 1, 10});
-            inner_link_up = registerWithInnerNode();
-          }
+          // Access the found inner node and get the link up.
+          waitUntilInnerLink((NetTime){1, 10});
+          inner_link_up = registerWithInnerNode();
         }
-        
-        if(inner_link_up)
+        else
         {
-          waitUntil(inboundTimeSlot);
+          waitUntilInnerLink(inboundTimeSlot);
           inititateCCHTransaction();
           
           if(tx_error_count > LOP_MAX_TX_ERROR)

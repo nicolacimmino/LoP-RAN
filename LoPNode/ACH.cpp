@@ -69,8 +69,6 @@ boolean registerWithInnerNode()
       if(lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_REGACK && lop_rx_buffer[LOP_IX_SDU_REGACK_TOKEN] == randToken)
       {
         // Store the inbound link time slot assigned to us.
-        inboundTimeSlot.block = lop_rx_buffer[LOP_IX_SDU_REGACK_BLOCK];
-        inboundTimeSlot.frame = lop_rx_buffer[LOP_IX_SDU_REGACK_FRAME];
         inboundTimeSlot.slot = lop_rx_buffer[LOP_IX_SDU_REGACK_SLOT];
         
         node_address = 0;
@@ -83,8 +81,10 @@ boolean registerWithInnerNode()
       }
     }
 
-    // We failed to receive a REGACK, we just wait the next ACH to retry.
-    waitUntil((NetTime){-1, (getNetworkTime().frame + 1) % LOP_FRAMES_PER_BLOCK, 1, -1});    
+    // We failed to receive a REGACK, we just wait the next ACH to retry. We are still in slot 1
+    //  so we cannot call directly wait until slot 1 as the call would return immediately.
+    waitUntilInnerLink((NetTime){ 2, -1});  
+    waitUntilInnerLink((NetTime){ 1, -1});    
   }
   
   // We failed more than LOP_REG_MAX_RETRY, give up. 
@@ -115,8 +115,6 @@ void serveACH()
       // Build the the REG message according to LOP_01.01§6.2
       lop_tx_buffer[LOP_IX_SDU_ID] = LOP_SDU_REGACK;
       lop_tx_buffer[LOP_IX_SDU_REGACK_TOKEN] = lop_rx_buffer[LOP_IX_SDU_REG_TOKEN];        // TOKEN
-      lop_tx_buffer[LOP_IX_SDU_REGACK_BLOCK] = neighbourDescriptor->resourceMask.block;  // RMBLOCK
-      lop_tx_buffer[LOP_IX_SDU_REGACK_FRAME] = neighbourDescriptor->resourceMask.frame;  // RMFRAME
       lop_tx_buffer[LOP_IX_SDU_REGACK_SLOT] = neighbourDescriptor->resourceMask.slot;   // RMSLOT
       
       lop_tx_buffer[LOP_IX_SDU_REGACK_ADDRESS] = neighbourDescriptor->address & 0xFF;      // Address.

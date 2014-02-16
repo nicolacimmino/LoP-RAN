@@ -22,19 +22,16 @@
 
 typedef struct
 {
-  int8_t block;
-  int8_t frame;
   int8_t slot;
   int8_t off; 
 } NetTime, *pNetTime;
 
 
-NetTime getNetworkTime(void);
-void setNetworkTime(NetTime newTime);
-void tuneNetwrokTime(int8_t off);
+NetTime getInnerLinkNetworkTime(void);
+void setInnerLinkNetworkTime(NetTime newTime);
 bool timeMatchesMask(NetTime time, NetTime mask);
-void waitUntil(NetTime time);
-bool isTime(NetTime mask);
+void waitUntilInnerLink(NetTime time);
+bool isInnerLinkNetworkTime(NetTime mask);
 
 #endif
 

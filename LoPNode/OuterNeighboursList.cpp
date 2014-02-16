@@ -46,8 +46,6 @@ pONDescriptor allocateRadioResources(byte tx_power)
       OuterNeighboursList[ix]->tx_power = tx_power;
       OuterNeighboursList[ix]->resourceMask.off = -1;
       OuterNeighboursList[ix]->resourceMask.slot = ix + 2; 
-      OuterNeighboursList[ix]->resourceMask.frame = -1;
-      OuterNeighboursList[ix]->resourceMask.block = -1;
       OuterNeighboursList[ix]->last_seen = millis();
       OuterNeighboursList[ix]->address = ix+1;
       return OuterNeighboursList[ix];
