@@ -97,6 +97,8 @@ void loop(void)
         {
           waitUntilInnerLink(inboundTimeSlot);
           inititateCCHTransaction();
+          //waitUntilInnerLink((NetTime){inboundTimeSlot.slot, LOP_SLOTDURATION-2});
+          delay(100);
           
           if(tx_error_count > LOP_MAX_TX_ERROR)
           {

@@ -35,21 +35,15 @@ void calculateCCHPipeAddresses()
 {
   NetTime currentTime = getInnerLinkNetworkTime();
   
-  CCH_PIPE_ADDR_IN = 0x515500 | currentTime.slot;
-  CCH_PIPE_ADDR_OUT = 0x505500 | currentTime.slot;
+  CCH_PIPE_ADDR_IN =  0x51000200 | currentTime.slot;
+  CCH_PIPE_ADDR_OUT = 0x50000200 | currentTime.slot;
 }
 
 void inititateCCHTransaction()
 {
-    // Purely for test, flash led on slot 9
+    // Purely for test
     digitalWrite(2,1);
-        
-    calculateCCHPipeAddresses();
-    radio.openWritingPipe(CCH_PIPE_ADDR_IN);  
-    radio.openReadingPipe(1, CCH_PIPE_ADDR_OUT);
-  
-    delay(LOP_RTXGUARD);
-    
+ 
     int txBufIndex = 5;
        
     // We build the the MSG message according to ...:
@@ -72,8 +66,20 @@ void inititateCCHTransaction()
       lop_tx_buffer[txBufIndex++] = lop_message_buffer_i[ix]; 
     }
     
-    radio.setPALevel((rf24_pa_dbm_e)inbound_tx_power);  
+    // Set the radio to the power we negotiated during ranging.
+    radio.setPALevel((rf24_pa_dbm_e)inbound_tx_power); 
+ 
+    // Set up the right pipe address for the current network time.
+    calculateCCHPipeAddresses();
+    radio.openWritingPipe(CCH_PIPE_ADDR_IN);  
+    radio.openReadingPipe(1, CCH_PIPE_ADDR_OUT);
+    
+    // Wait what is left of the RTX guard period.
+    delay(constrain(LOP_RTXGUARD-getInnerLinkNetworkTime().off,0,LOP_RTXGUARD));
+    
+    // Send the datagram. 
     sendLoPRANMessage(lop_tx_buffer, txBufIndex);
+    
     if(lop_tx_buffer[6]>0)
     {
       dia_simpleFormTextLog("MSGI", lop_message_buffer_i);
@@ -84,7 +90,6 @@ void inititateCCHTransaction()
     
     if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 2))
     {
-      
       if(lop_rx_buffer[5] == (char)0x81)
       {
         setInnerLinkNetworkTime((NetTime){getInnerLinkNetworkTime().slot, lop_rx_buffer[6]});
@@ -114,7 +119,7 @@ void inititateCCHTransaction()
     {
       tx_error_count++;     
     }
-    
+  
     digitalWrite(2, 0);
 }
 
@@ -179,7 +184,7 @@ void serveCCH()
           // Empty the message buffer.
           lop_message_buffer_o[0]=0;
         }
-        
+       
         delay(LOP_RTXGUARD);
     
         lop_tx_buffer[6] = getInnerLinkNetworkTime().off;  // OFF
