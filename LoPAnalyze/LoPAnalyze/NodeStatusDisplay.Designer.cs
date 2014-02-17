@@ -35,12 +35,12 @@
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.labelAddress = new System.Windows.Forms.Label();
             this.labelDAP = new System.Windows.Forms.Label();
-            this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.SuspendLayout();
             // 
             // timer1
@@ -81,6 +81,10 @@
             // 
             this.columnHeader4.Text = "Address";
             this.columnHeader4.Width = 110;
+            // 
+            // columnHeader5
+            // 
+            this.columnHeader5.Text = "Status";
             // 
             // label1
             // 
@@ -127,15 +131,11 @@
             this.labelDAP.Text = "---";
             this.labelDAP.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
-            // columnHeader5
-            // 
-            this.columnHeader5.Text = "Status";
-            // 
             // NodeStatusDisplay
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(777, 425);
+            this.ClientSize = new System.Drawing.Size(781, 405);
             this.Controls.Add(this.labelAddress);
             this.Controls.Add(this.labelDAP);
             this.Controls.Add(this.label3);
