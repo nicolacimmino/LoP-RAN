@@ -34,4 +34,7 @@ extern NetTime inboundTimeSlot;
 extern byte tx_error_count;
 extern boolean inner_link_up;
 extern uint32_t node_address;
+extern uint8_t lop_outbound_channel;
+extern uint8_t inbound_channel;
+
 #endif

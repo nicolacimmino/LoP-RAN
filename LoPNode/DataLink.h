@@ -29,8 +29,8 @@
 #define LOP_PAYL_SIZE 16                 // NRF24L01 MAC layer payload size
 #define LOP_MTU 256                      // MTU size
 
-#define LOP_LOW_CHANNEL 48                 // Lowest usable radio channel
-#define LOP_HI_CHANNEL  51                 // Highest usable radio channel
+#define LOP_LOW_CHANNEL 49                 // Lowest usable radio channel
+#define LOP_HI_CHANNEL  54                 // Highest usable radio channel
 
 // EEPROM Memory map
 const byte EEPROM_RFCH_INNER_NODE = 0x01;        // 0x01  Last known good RF channel

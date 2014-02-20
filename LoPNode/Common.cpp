@@ -47,3 +47,9 @@ byte tx_error_count = 0;
 
 // Inidcates wether the inner link has been eastablished
 boolean inner_link_up = false;
+
+uint8_t lop_outbound_channel = 50;
+
+// Channel used for commincations towards the inner node.
+uint8_t inbound_channel = 0;
+

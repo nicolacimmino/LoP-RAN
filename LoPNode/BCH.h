@@ -33,12 +33,15 @@
 
 #define LOP_IX_SDU_BCH_POW  6
 #define LOP_IX_SDU_BCH_DAP  9
-#define LOP_LEN_SDU_BCH  10
+#define LOP_IX_SDU_BCH_INFO 10
+#define LOP_IX_SDU_BCH_INFO_NET_TYPE_msb 7
+#define LOP_IX_SDU_BCH_INFO_NODE_FULL_msb 0
+#define LOP_IX_SDU_BCH_INFO_NODE_FULL_MASK 1
+#define LOP_LEN_SDU_BCH  11
+
 #define LOP_IX_SDU_BCHS_OFF  8
 #define LOP_LEN_SDU_BCHS  9
 
-// Channel used for commincations towards the inner node.
-extern uint8_t inbound_channel;
 
 void broadcastBCH();
 void innerNodeScanAndSync();

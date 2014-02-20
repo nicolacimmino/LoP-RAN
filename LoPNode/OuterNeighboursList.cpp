@@ -53,6 +53,19 @@ pONDescriptor allocateRadioResources(byte tx_power)
   }
 }
 
+byte getActiveOuterNeighboursCount()
+{
+  byte cnt = 0;
+  for(int ix=0; ix<LOP_MAX_OUT_NEIGHBOURS; ix++)
+  {
+    if(OuterNeighboursList[ix] != 0 && (millis() - OuterNeighboursList[ix]->last_seen) < LOP_ONL_ALLOCATION_TTL)
+    {
+      cnt++;
+    }
+  }
+  return cnt;
+}
+
 pONDescriptor getNeighbourDescriptor(NetTime time)
 {
   // Find a neighbour allocated for this time slot.

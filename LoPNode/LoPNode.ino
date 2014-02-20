@@ -97,11 +97,12 @@ void loop(void)
         {
           // We wait slot 0 and depending on network  type we broadcast our BCH
           waitUntilInnerLink((NetTime){0, -1});
-          // TODO: add BCH broadcasting here
+          broadcastBCH();
+      
           
           // We wait slot 1 and depending on network  type we serve our ACH
           waitUntilInnerLink((NetTime){1, -1});
-          // TODO: add BCH broadcasting here
+          serveACH();
           
           waitUntilInnerLink(inboundTimeSlot);
           inititateCCHTransaction();

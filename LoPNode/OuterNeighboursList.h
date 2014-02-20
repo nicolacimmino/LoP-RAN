@@ -33,6 +33,7 @@ extern pONDescriptor OuterNeighboursList[];
 void clearOuterNeighboursList();
 pONDescriptor allocateRadioResources(byte tx_power);
 pONDescriptor getNeighbourDescriptor(NetTime time);
+byte getActiveOuterNeighboursCount();
 
 #endif
 

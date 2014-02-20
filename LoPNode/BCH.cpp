@@ -27,9 +27,7 @@
 #include "NetTime.h"
 #include "BCH.h"
 #include "ControlInterface.h"
-
-// Channel used for commincations towards the inner node.
-uint8_t inbound_channel = 0;
+#include "OuterNeighboursList.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Broadcast BCH
@@ -48,7 +46,7 @@ void broadcastBCH()
   delay(LOP_RTXGUARD);
   
   // Setup the BCH phy layer parameters according to LOP_01.01§4
-  radio.setChannel(50);
+  radio.setChannel(lop_outbound_channel);
   radio.openWritingPipe(BCH_PIPE_ADDR);
      
   // To allow outer nodes to perform ranging we step down power from NRF24L01+
@@ -59,6 +57,14 @@ void broadcastBCH()
     lop_tx_buffer[LOP_IX_SDU_ID] = LOP_SDU_BCH;
     lop_tx_buffer[LOP_IX_SDU_BCH_POW] = power;
     lop_tx_buffer[LOP_IX_SDU_BCH_DAP] = lop_dap;
+    
+    #ifdef LOP_ALPHA_NET
+    lop_tx_buffer[LOP_IX_SDU_BCH_INFO] = 0x0 << LOP_IX_SDU_BCH_INFO_NET_TYPE_msb;
+    lop_tx_buffer[LOP_IX_SDU_BCH_INFO] = ((getActiveOuterNeighboursCount() >= LOP_MAX_OUT_NEIGHBOURS)?1:0) << LOP_IX_SDU_BCH_INFO_NODE_FULL_msb;
+    #else
+    #error Missing implementation for current network type.
+    #endif
+
     
     // And we finally send out the SDU using the current power.
     radio.setPALevel((rf24_pa_dbm_e)power);
@@ -110,17 +116,26 @@ void innerNodeScanAndSync()
     //  the chances to get a full BCH broadcast while not spending too much time on the
     //  same radio channel.
     radio.setChannel(inbound_channel);
-    if(!receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_FRAMEDURATION))
+    if((!receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_FRAMEDURATION))
+          || (lop_rx_buffer[LOP_IX_SDU_BCH_INFO] & LOP_IX_SDU_BCH_INFO_NODE_FULL_MASK) != 0)
     {
-      // We got nothing, move to the next channel. We continuously loop all available channels.
-      inbound_channel = (++inbound_channel % (LOP_HI_CHANNEL - LOP_LOW_CHANNEL)) + LOP_LOW_CHANNEL; 
-     
+      // We got nothing, or the node was full move to the next channel. We continuously loop all available channels.
+      inbound_channel++;
+      if(inbound_channel > LOP_HI_CHANNEL || inbound_channel < LOP_LOW_CHANNEL)
+      {
+        inbound_channel =  LOP_LOW_CHANNEL; 
+      }
+      
       dia_simpleFormNumericLog("SCAN", 1, inbound_channel);
 
+      // Reset ranging register.
+      inbound_tx_power = RF24_PA_ERROR;
+  
       continue; 
     }
     else if(lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_BCH)
-    {      
+    {    
+        
       // We got a BCH SDU. This is a good channel so we start ranging.
       
       // Store this as last known good channel, save EEPROM life by not
@@ -133,7 +148,7 @@ void innerNodeScanAndSync()
       if(inbound_tx_power > lop_rx_buffer[LOP_IX_SDU_BCH_POW])
         inbound_tx_power = lop_rx_buffer[LOP_IX_SDU_BCH_POW];
         
-      // Set our DAP as one more of the detected node. This is out current DAP
+      // Set our DAP as one more of the detected node. This is our current DAP
       //  even though the link is not currently yet up (that will happen in the
       //  ACH abd will be signalled by inner_link_up.
       lop_dap = lop_rx_buffer[LOP_IX_SDU_BCH_DAP]+1;
@@ -150,6 +165,9 @@ void innerNodeScanAndSync()
       // We have a sync.
       dia_simpleFormNumericLog("BCHS", 2, inbound_channel, inbound_tx_power);
   
+      // Just for thesting a very rough frequency reuse, that is really not good.
+      lop_outbound_channel = 50 + lop_dap;
+      
       return;
     }
   }// while(true) 

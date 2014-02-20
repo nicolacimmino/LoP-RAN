@@ -73,7 +73,8 @@ void inititateCCHTransaction()
     calculateCCHPipeAddresses();
     radio.openWritingPipe(CCH_PIPE_ADDR_IN);  
     radio.openReadingPipe(1, CCH_PIPE_ADDR_OUT);
-    
+    radio.setChannel(inbound_channel);
+  
     // Wait what is left of the RTX guard period.
     delay(constrain(LOP_RTXGUARD-getInnerLinkNetworkTime().off,0,LOP_RTXGUARD));
     
@@ -134,6 +135,7 @@ void serveCCH()
   radio.openWritingPipe(CCH_PIPE_ADDR_OUT);  
   radio.openReadingPipe(1, CCH_PIPE_ADDR_IN);
   radio.setPALevel((rf24_pa_dbm_e)neighbourDescriptor->tx_power);
+  radio.setChannel(lop_outbound_channel);
   radio.startListening();
   
   if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 2))

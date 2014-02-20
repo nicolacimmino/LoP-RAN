@@ -53,6 +53,7 @@ boolean registerWithInnerNode()
     
     // Setup the ACH phy layer parameters according to LOP_01.01§4        
     radio.setPALevel((rf24_pa_dbm_e)inbound_tx_power);
+    radio.setChannel(inbound_channel);
     radio.openWritingPipe(ACH_PIPE_ADDR_IN);
     radio.openReadingPipe(1, ACH_PIPE_ADDR_OUT);
     
@@ -66,7 +67,7 @@ boolean registerWithInnerNode()
     radio.startListening();
     if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 2))
     {
-      if(lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_REGACK && lop_rx_buffer[LOP_IX_SDU_REGACK_TOKEN] == randToken)
+      if(lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_REGACK && (byte)lop_rx_buffer[LOP_IX_SDU_REGACK_TOKEN] == randToken)
       {
         // Store the inbound link time slot assigned to us.
         inboundTimeSlot.slot = lop_rx_buffer[LOP_IX_SDU_REGACK_SLOT];
@@ -101,7 +102,7 @@ void serveACH()
   // Setup the ACH phy layer parameters according to LOP_01.01§4        
   radio.openWritingPipe(ACH_PIPE_ADDR_OUT);  
   radio.openReadingPipe(1, ACH_PIPE_ADDR_IN);
-  radio.setChannel(50);
+  radio.setChannel(lop_outbound_channel);
   radio.startListening();
    
   if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 2))
