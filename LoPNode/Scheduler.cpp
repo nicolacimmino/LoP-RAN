@@ -63,11 +63,11 @@ void run_regular_schedule()
       
       if(slot == LOP_BCH_SLOT)
       {
-        broadcastBCH();
+        if(lop_dap < LOP_MAX_DAP) broadcastBCH();
       }
       else if(slot == LOP_ACH_SLOT)
       {
-        serveACH();
+        if(lop_dap < LOP_MAX_DAP) serveACH();
       }
       else if(slot == inboundTimeSlot)
       {

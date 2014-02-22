@@ -25,6 +25,7 @@
 #include "LoPDia.h"
 #include "NetTime.h"
 #include "DataLink.h"
+#include "LoPParams.h"
 
 RF24 radio(radio_ce_pin,radio_csn_pin);
 

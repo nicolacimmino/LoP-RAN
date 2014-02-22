@@ -24,12 +24,6 @@
 #define radio_ce_pin 9        // CE pin for the NRF24L01+
 #define radio_csn_pin 10      // CSN pin for the NRF24L01+
 
-#define LOP_PAYL_SIZE 16                 // NRF24L01 MAC layer payload size
-#define LOP_MTU 256                      // MTU size
-
-#define LOP_LOW_CHANNEL 49                 // Lowest usable radio channel
-#define LOP_HI_CHANNEL  54                 // Highest usable radio channel
-
 // EEPROM Memory map
 const byte EEPROM_RFCH_INNER_NODE = 0x01;        // 0x01  Last known good RF channel
 const byte EEPROM_RFCH_ACT_AS_AP = 0x02;        // 0x02  Act as an Access Point if != 0

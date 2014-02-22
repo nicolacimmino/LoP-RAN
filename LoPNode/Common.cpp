@@ -23,6 +23,7 @@
 #include "NetTime.h"
 #include "DataLink.h"
 #include "ControlInterface.h"
+#include "LopParams.h"
 
 // Inbound and outbound Message Buffers.
 char lop_message_buffer_i[LOP_MTU];
