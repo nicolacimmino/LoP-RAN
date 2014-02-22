@@ -22,6 +22,7 @@
 #include <RF24.h>        // Copyright (C) 2011 J. Coliz <maniacbug@ymail.com>, GNU
 #include "NetTime.h"
 #include "DataLink.h"
+#include "ControlInterface.h"
 
 // Inbound and outbound Message Buffers.
 char lop_message_buffer_i[LOP_MTU];
@@ -39,7 +40,7 @@ uint8_t inbound_tx_power = RF24_PA_MAX;
 
 // The mask representing the timeslot assigned to this node
 //  for traffic towards/from the inner node.
-NetTime inboundTimeSlot;
+byte inboundTimeSlot;
 
 // Counter of TX errors.
 // Reset every time a sucessful communication on the CCH is performed.
@@ -53,3 +54,12 @@ uint8_t lop_outbound_channel = 50;
 // Channel used for commincations towards the inner node.
 uint8_t inbound_channel = 0;
 
+// If set the radio will act as a scanner and only monitor
+//  all traffic on a channel.
+boolean scanner_mode = false;
+
+void setupRadio(void)
+{
+  setupDataLink();
+  setupControlInterface(); 
+}

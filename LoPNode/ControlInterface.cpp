@@ -37,6 +37,8 @@ void setupControlInterface()
   // Empty the message buffer.
   lop_message_buffer_o[0] = 0;
   lop_message_buffer_i[0] = 0;
+  
+   Serial.begin(115200);
 }
 
 void notifyReceivedMessage() 

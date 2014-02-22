@@ -21,6 +21,7 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
+#include <RF24.h>        // Copyright (C) 2011 J. Coliz <maniacbug@ymail.com>, GNU
 #include "NetTime.h"
 #include "DataLink.h"
 
@@ -30,11 +31,14 @@ extern uint32_t lop_message_buffer_address_i;
 extern char lop_message_buffer_o[];
 extern uint32_t lop_message_buffer_address_o;
 extern uint8_t inbound_tx_power;
-extern NetTime inboundTimeSlot;
+extern byte inboundTimeSlot;
 extern byte tx_error_count;
 extern boolean inner_link_up;
 extern uint32_t node_address;
 extern uint8_t lop_outbound_channel;
 extern uint8_t inbound_channel;
+extern boolean scanner_mode;
+
+void setupRadio(void);
 
 #endif

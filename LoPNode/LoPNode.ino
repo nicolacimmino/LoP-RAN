@@ -1,4 +1,8 @@
-// LopNode implements a LoP-RAN , a low power radio access network
+// LopNode implements a LoP-RAN , a low power radio access network.
+// This is just the Arduino module, all the code is in the CPP files
+//  in this way it can be easily compiled on other platforms. This file
+//  provides only the entry points for the Arduino runtime (steup and loop).
+//
 //  Copyright (C) 2014 Nicola Cimmino
 //
 //    This program is free software: you can redistribute it and/or modify
@@ -33,89 +37,21 @@
 #include <SPI.h>
 #include <RF24.h>        // Copyright (C) 2011 J. Coliz <maniacbug@ymail.com>, GNU
 #include <EEPROM.h>
+#include "Scheduler.h"
 #include "Common.h"
-#include "LoPParams.h"
-#include "LoPDia.h"
-#include "NetTime.h"
-#include "DataLink.h"
-#include "ACH.h"
-#include "BCH.h"
-#include "CCH.h"
-#include "OuterNeighboursList.h"
-#include "ControlInterface.h"
 
-
-// Board setup.
 void setup(void)
 {
-  // We sometimes still use serial for debuggin.
-  // Keep high speeds and use sparingly as writing to serial puts off all timings.
-  Serial.begin(115200);
- 
-  setupDataLink();
-  setupControlInterface();
+  pinMode(2, OUTPUT);
+  setupRadio();  
 }
-
 
 
 void loop(void)
 {
-  
-  // Currently we support only star network so we broadcast the
-  //  BCH and serve ACH only if DAP=0
-  if(lop_dap == 0)
-  {  
-      waitUntilInnerLink((NetTime){0, 0});
-      broadcastBCH();
-      
-      waitUntilInnerLink((NetTime){1, 0});
-      serveACH();
-      
-      for(int slot=2; slot<10; slot++)
-      {
-          waitUntilInnerLink((NetTime){slot, 0});
-          serveCCH();
-      }
-  }
-  else
-  {
-      pinMode(2, OUTPUT);
-        
-   
-        if(!inner_link_up)
-        {
-          // Attempt to find an inner node and, if found
-          //  sync to the inner link net time. This call blocks
-          //  until a node is found.
-          innerNodeScanAndSync();
-          
-          // Access the found inner node and get the link up.
-          waitUntilInnerLink((NetTime){1, 10});
-          inner_link_up = registerWithInnerNode();
-        }
-        else
-        {
-          // We wait slot 0 and depending on network  type we broadcast our BCH
-          waitUntilInnerLink((NetTime){0, -1});
-          broadcastBCH();
-      
-          
-          // We wait slot 1 and depending on network  type we serve our ACH
-          waitUntilInnerLink((NetTime){1, -1});
-          serveACH();
-          
-          waitUntilInnerLink(inboundTimeSlot);
-          inititateCCHTransaction();
-          //waitUntilInnerLink((NetTime){inboundTimeSlot.slot, LOP_SLOTDURATION-2});
-          //delay(100);
-          
-          if(tx_error_count > LOP_MAX_TX_ERROR)
-          {
-            inner_link_up = false;
-          }
-        }
-           
-   }  
+  // We sit forever in this call, everything
+  //  is timed and scheduled there.
+  runScheduler();
 }
 
 

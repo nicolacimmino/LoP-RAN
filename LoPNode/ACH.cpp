@@ -70,7 +70,7 @@ boolean registerWithInnerNode()
       if(lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_REGACK && (byte)lop_rx_buffer[LOP_IX_SDU_REGACK_TOKEN] == randToken)
       {
         // Store the inbound link time slot assigned to us.
-        inboundTimeSlot.slot = lop_rx_buffer[LOP_IX_SDU_REGACK_SLOT];
+        inboundTimeSlot = lop_rx_buffer[LOP_IX_SDU_REGACK_SLOT];
         
         node_address = 0;
         for(int ix=0; ix<sizeof(node_address); ix++)

@@ -19,6 +19,8 @@
 //    sub chapter of these documents.
 
 #include "Arduino.h"
+#include <SPI.h>
+#include <RF24.h>        // Copyright (C) 2011 J. Coliz <maniacbug@ymail.com>, GNU
 #include <EEPROM.h>
 #include "LoPDia.h"
 #include "NetTime.h"

@@ -21,8 +21,6 @@
 #ifndef __DataLink_h__
 #define __DataLink_h__
 
-#include <RF24.h>        // Copyright (C) 2011 J. Coliz <maniacbug@ymail.com>, GNU
-
 #define radio_ce_pin 9        // CE pin for the NRF24L01+
 #define radio_csn_pin 10      // CSN pin for the NRF24L01+
 
