@@ -21,6 +21,8 @@
 #include <Arduino.h>
 
 void runScheduler(void);
+void run_regular_schedule(void);
+void run_scanner_schedule(void);
 
 #endif
 

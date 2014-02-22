@@ -32,8 +32,16 @@ void dia_logTime()
 {
   if(lop_dia_enabled)
   {
-    NetTime currentTime = getInnerLinkNetworkTime();
     Serial.print("ATDI ");
+    dia_logRawTime();
+  }
+}
+
+void dia_logRawTime()
+{
+  if(lop_dia_enabled)
+  {
+    NetTime currentTime = getInnerLinkNetworkTime();
     Serial.print(currentTime.slot);
     Serial.print(".");
     Serial.print(currentTime.off);
@@ -49,6 +57,14 @@ void dia_logString(char* string)
   {
     Serial.print(string);
     Serial.print(",");
+  }
+}
+
+void dia_logRawString(char* string)
+{
+  if(lop_dia_enabled)
+  {
+    Serial.print(string);
   }
 }
 

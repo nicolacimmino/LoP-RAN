@@ -163,6 +163,11 @@ void process_control_command()
     lop_dia_enabled = (control_rx_buffer[4]=='1');
     Serial.println("OK"); 
   }
+  else if(strstr(control_rx_buffer, "ATSCAN") - control_rx_buffer == 0)
+  {
+    scanner_mode = (control_rx_buffer[6]=='1');
+    Serial.println("OK"); 
+  }
   else if(strstr(control_rx_buffer, "ATRX") - control_rx_buffer == 0)
   {
     if(control_rx_buffer[4]=='?')

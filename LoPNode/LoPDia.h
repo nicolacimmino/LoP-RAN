@@ -32,6 +32,8 @@ void dia_closeLog();
 void dia_simpleFormNumericLog(const char* event, int count, ...);
 void dia_simpleFormTextLog(const char* event, const char* text);
 void dia_logBufferToHex(char *data, uint8_t length);
+void dia_logRawTime();
+void dia_logRawString(char* string);
 
 #endif
 
