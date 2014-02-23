@@ -37,8 +37,8 @@
 
 #define NRF24L01_SPI_BUFFER_SIZE 32
 
-#define NRF24L01_CS_PIN 9
-#define NRF24L01_CE_PIN 10
+#define NRF24L01_CS_PIN 10
+#define NRF24L01_CE_PIN 9
 
 // Commands
 #define NRF24L01_R_REGISTER    0x00
@@ -86,15 +86,17 @@ void writeNRF24L01Register(uint8_t address, uint8_t value);
 void writeNRF24L01Register(uint8_t address, uint8_t value, uint8_t len);
 uint8_t readNRF24L01Register(uint8_t address);
 
+void initializeRadio();
 void powerDownRadio();
 void powerUpRadio();
-void transmitBuffer(uint8_t *buffer, int length);
+void transmitBuffer(char *buffer, int length);
 void setRXExtendedPreamble(uint64_t extended_preamble);
 void setTXExtendedPreamble(uint64_t extended_preamble);
-void setTrasmitPower(uint8_t power);
+void setTransmitPower(uint8_t power);
 void setRFChannel(uint8_t channel);
-void StartReceiving();
-boolean ReadPayload(long timeout_ms, uint8_t *buffer);
+void startReceiving();
+void readPayload(char *buffer);
+boolean isDataAvailable();
 
 extern uint8_t spi_buffer[NRF24L01_SPI_BUFFER_SIZE];
 

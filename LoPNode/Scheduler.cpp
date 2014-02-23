@@ -25,6 +25,7 @@
 #include "CCH.h"
 #include "OuterNeighboursList.h"
 #include "ControlInterface.h"
+#include "NRF24L01Driver.h"
 
 void runScheduler(void)
 {
@@ -123,8 +124,8 @@ void run_scanner_schedule()
       outbound_pipe = CCH_PIPE_ADDR_OUT | slot;
     } 
     
-    radio.openReadingPipe(1, inbound_pipe);
-    radio.startListening();
+    setRXExtendedPreamble(inbound_pipe);
+    startReceiving();
     while(getInnerLinkNetworkTime().off < LOP_SLOTDURATION / 4)
     {
       if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 4))
@@ -138,8 +139,8 @@ void run_scanner_schedule()
       }
     }
     
-    radio.openReadingPipe(1, outbound_pipe);
-    radio.startListening();
+    setRXExtendedPreamble(outbound_pipe);
+    startReceiving();
     if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 4))
     {
       lop_dia_enabled = true;

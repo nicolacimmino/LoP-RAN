@@ -28,6 +28,7 @@
 #include "BCH.h"
 #include "ControlInterface.h"
 #include "OuterNeighboursList.h"
+#include "NRF24L01Driver.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Broadcast BCH
@@ -46,8 +47,8 @@ void broadcastBCH()
   delay(LOP_RTXGUARD);
   
   // Setup the BCH phy layer parameters according to LOP_01.01§4
-  radio.setChannel(lop_outbound_channel);
-  radio.openWritingPipe(BCH_PIPE_ADDR);
+  setRFChannel(lop_outbound_channel);
+  setTXExtendedPreamble(BCH_PIPE_ADDR);
      
   // To allow outer nodes to perform ranging we step down power from NRF24L01+
   //  max power down to minimum. NRF24L01+ supports only 4 power levels.
@@ -67,7 +68,7 @@ void broadcastBCH()
 
     
     // And we finally send out the SDU using the current power.
-    radio.setPALevel((rf24_pa_dbm_e)power);
+    setTransmitPower(power);
     sendLoPRANMessage(lop_tx_buffer, LOP_LEN_SDU_BCH);
   }
    
@@ -77,7 +78,7 @@ void broadcastBCH()
     
   // We use max power for sync so we can reach all nodes that might have heard us
   //  as specified in "BCH Timing" LOP_01.01§5
-  radio.setPALevel(RF24_PA_MAX);
+  setTransmitPower(RF24_PA_MAX);
   sendLoPRANMessage(lop_tx_buffer, LOP_LEN_SDU_BCHS);
          
 }
@@ -103,8 +104,8 @@ void innerNodeScanAndSync()
   inbound_tx_power = RF24_PA_ERROR;
   
   // Listen on the BCH pipe according to LOP_01.01§4    
-  radio.openReadingPipe(1, BCH_PIPE_ADDR);
-  radio.startListening();
+  setRXExtendedPreamble(BCH_PIPE_ADDR);
+  startReceiving();
   
   // Keep scanning unless we are set as an AP from the control interface.
   while(lop_dap != 0)
@@ -115,7 +116,7 @@ void innerNodeScanAndSync()
     // We attempt to receive on a given channel for maximum 180% of a slot so we maximize
     //  the chances to get a full BCH broadcast while not spending too much time on the
     //  same radio channel.
-    radio.setChannel(inbound_channel);
+    setRFChannel(inbound_channel);
     if((!receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_FRAMEDURATION))
           || (lop_rx_buffer[LOP_IX_SDU_BCH_INFO] & LOP_IX_SDU_BCH_INFO_NODE_FULL_MASK) != 0)
     {

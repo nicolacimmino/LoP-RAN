@@ -60,15 +60,20 @@ void initializeRadio()
 
     // Disable Auto ACK.
     writeNRF24L01Register(NRF24L01_EN_AA, 0);
+    
+    // Enable only pipe1 RX (we don't need zero cause we don't use ACK).
+    writeNRF24L01Register(NRF24L01_EN_RXADDR, 0b00000010);
+    
+    powerUpRadio();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Enters in receive mode.
 // Radio must be already in Standby-I when this is invoked.
 //
-void StartReceiving()
+void startReceiving()
 {
-  // Set TX mode (bit 0 of CONFIG goes to one)
+  // Set RX mode (bit 0 of CONFIG goes to one)
   // Since we are in Standby-I we need only 130uS for RX to settle.
   writeNRF24L01Register(NRF24L01_CONFIG, (readNRF24L01Register(NRF24L01_CONFIG) | 0b00000001));
   digitalWrite(NRF24L01_CE_PIN, HIGH);
@@ -76,30 +81,27 @@ void StartReceiving()
 }
 
 
-boolean ReadPayload(long timeout_ms, uint8_t *buffer)
+void readPayload(char *buffer)
 {
-  long started_reading = millis();
-  bool timeout = false;
-  // RX_DR Data Ready flag is on bit 6
-  while ( !(readNRF24L01Register(NRF24L01_STATUS) & 0b01000000) && !timeout)
-  {
-    timeout = (millis() - started_reading > timeout_ms);
-  }
-
-  if(timeout) return false;
-
   // Put the RX_FIFO data into the SPI buffer and then move it to the supplied buffer.	 
   performSPITransaction(NRF24L01_R_RX_PAYLOAD, NRF24L01_PAYLOAD_SIZE); 
-  memcpy(buffer, spi_buffer, NRF24L01_PAYLOAD_SIZE);
-  
-  return true; 
+  memcpy(buffer, spi_buffer, NRF24L01_PAYLOAD_SIZE); 
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Returns true if some data is available in the RX buffer.
+//
+boolean isDataAvailable()
+{
+  // RX_DR Data Ready flag is on bit 6
+  return readNRF24L01Register(NRF24L01_STATUS) & 0b01000000;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Sends the supplied buffer.
 // Radio must be already in Standby-I when this is invoked.
 //
-void transmitBuffer(uint8_t *buffer, int length)
+void transmitBuffer(char *buffer, int length)
 {
   // Set TX mode (bit 0 of CONFIG goes to zero)
   // Since we are in Standby-I we need only 130uS for TX to settle.
@@ -194,7 +196,7 @@ void setRXExtendedPreamble(uint64_t extended_preamble)
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Sets transmit power.
 //
-void setTrasmitPower(uint8_t power)
+void setTransmitPower(uint8_t power)
 {
   // Power is in bit2-1 of RF SETUP
   writeNRF24L01Register(NRF24L01_RF_SETUP, (readNRF24L01Register(NRF24L01_RF_SETUP) & 0b11111001) | ((power & 0b11) << 1)); 

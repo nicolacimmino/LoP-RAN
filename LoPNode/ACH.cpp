@@ -27,7 +27,7 @@
 #include "NetTime.h"
 #include "OuterNeighboursList.h"
 #include "ACH.h"
-
+#include "NRF24L01Driver.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Attempts to register with an inner node in order to get radio resources allocted.
@@ -52,10 +52,10 @@ boolean registerWithInnerNode()
     lop_tx_buffer[LOP_IX_SDU_REG_TOKEN] = randToken;
     
     // Setup the ACH phy layer parameters according to LOP_01.01§4        
-    radio.setPALevel((rf24_pa_dbm_e)inbound_tx_power);
-    radio.setChannel(inbound_channel);
-    radio.openWritingPipe(ACH_PIPE_ADDR_IN);
-    radio.openReadingPipe(1, ACH_PIPE_ADDR_OUT);
+    setTransmitPower(inbound_tx_power);
+    setRFChannel(inbound_channel);
+    setTXExtendedPreamble(ACH_PIPE_ADDR_IN);
+    setRXExtendedPreamble(ACH_PIPE_ADDR_OUT);
     
     // Introduce a guard to accomodate for sligh drift according to LOP_01.01§6
     delay(LOP_RTXGUARD);
@@ -64,7 +64,7 @@ boolean registerWithInnerNode()
     
     // Wait a reply, expect  a REGACK with the same token, ignore anything else
     //  according to according to LOP_01.01§6.2
-    radio.startListening();
+    startReceiving();
     if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 2))
     {
       if(lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_REGACK && (byte)lop_rx_buffer[LOP_IX_SDU_REGACK_TOKEN] == randToken)
@@ -100,10 +100,10 @@ boolean registerWithInnerNode()
 void serveACH()
 {
   // Setup the ACH phy layer parameters according to LOP_01.01§4        
-  radio.openWritingPipe(ACH_PIPE_ADDR_OUT);  
-  radio.openReadingPipe(1, ACH_PIPE_ADDR_IN);
-  radio.setChannel(lop_outbound_channel);
-  radio.startListening();
+  setTXExtendedPreamble(ACH_PIPE_ADDR_OUT);  
+  setRXExtendedPreamble(ACH_PIPE_ADDR_IN);
+  setRFChannel(lop_outbound_channel);
+  startReceiving();
    
   if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 2))
   {
@@ -127,7 +127,7 @@ void serveACH()
       delay(LOP_RTXGUARD);
     
       // Send the PDU using the power negotiated with the outer node.
-      radio.setPALevel((rf24_pa_dbm_e)lop_rx_buffer[LOP_IX_SDU_REG_POW]);  
+      setTransmitPower(lop_rx_buffer[LOP_IX_SDU_REG_POW]);  
       sendLoPRANMessage(lop_tx_buffer, LOP_LEN_SDU_REGACK);
       
       dia_simpleFormNumericLog("REG",lop_rx_buffer[LOP_IX_SDU_REGACK_SLOT]);
