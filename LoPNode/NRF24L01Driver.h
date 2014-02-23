@@ -44,10 +44,8 @@
 #define NRF24L01_R_REGISTER    0x00
 #define NRF24L01_W_REGISTER    0x20
 #define NRF24L01_ACTIVATE      0x50
-#define NRF24L01_R_RX_PL_WID   0x60
 #define NRF24L01_R_RX_PAYLOAD  0x61
 #define NRF24L01_W_TX_PAYLOAD  0xA0
-#define NRF24L01_W_ACK_PAYLOAD 0xA8
 #define NRF24L01_FLUSH_TX      0xE1
 #define NRF24L01_FLUSH_RX      0xE2
 
@@ -80,6 +78,8 @@
 #define NRF24L01_TX_POW_m18dBm  0
 #define NRF24L01_TX_POW_INVALID 4
 
+#define NRF24L01_PAYLOAD_SIZE 32
+
 
 uint8_t performSPITransaction(uint8_t command, uint8_t data_len);
 void writeNRF24L01Register(uint8_t address, uint8_t value);
@@ -88,10 +88,13 @@ uint8_t readNRF24L01Register(uint8_t address);
 
 void powerDownRadio();
 void powerUpRadio();
+void transmitBuffer(uint8_t *buffer, int length);
 void setRXExtendedPreamble(uint64_t extended_preamble);
 void setTXExtendedPreamble(uint64_t extended_preamble);
 void setTrasmitPower(uint8_t power);
 void setRFChannel(uint8_t channel);
+void StartReceiving();
+boolean ReadPayload(long timeout_ms, uint8_t *buffer);
 
 extern uint8_t spi_buffer[NRF24L01_SPI_BUFFER_SIZE];
 

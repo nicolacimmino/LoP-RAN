@@ -63,6 +63,92 @@ void initializeRadio()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
+// Enters in receive mode.
+// Radio must be already in Standby-I when this is invoked.
+//
+void StartReceiving()
+{
+  // Set TX mode (bit 0 of CONFIG goes to one)
+  // Since we are in Standby-I we need only 130uS for RX to settle.
+  writeNRF24L01Register(NRF24L01_CONFIG, (readNRF24L01Register(NRF24L01_CONFIG) | 0b00000001));
+  digitalWrite(NRF24L01_CE_PIN, HIGH);
+  delayMicroseconds(130); 
+}
+
+
+boolean ReadPayload(long timeout_ms, uint8_t *buffer)
+{
+  long started_reading = millis();
+  bool timeout = false;
+  // RX_DR Data Ready flag is on bit 6
+  while ( !(readNRF24L01Register(NRF24L01_STATUS) & 0b01000000) && !timeout)
+  {
+    timeout = (millis() - started_reading > timeout_ms);
+  }
+
+  if(timeout) return false;
+
+  // Put the RX_FIFO data into the SPI buffer and then move it to the supplied buffer.	 
+  performSPITransaction(NRF24L01_R_RX_PAYLOAD, NRF24L01_PAYLOAD_SIZE); 
+  memcpy(buffer, spi_buffer, NRF24L01_PAYLOAD_SIZE);
+  
+  return true; 
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Sends the supplied buffer.
+// Radio must be already in Standby-I when this is invoked.
+//
+void transmitBuffer(uint8_t *buffer, int length)
+{
+  // Set TX mode (bit 0 of CONFIG goes to zero)
+  // Since we are in Standby-I we need only 130uS for TX to settle.
+  writeNRF24L01Register(NRF24L01_CONFIG, (readNRF24L01Register(NRF24L01_CONFIG) & 0b11111110));
+  digitalWrite(NRF24L01_CE_PIN, HIGH);
+  delayMicroseconds(130); 
+  
+  // We are here in Standby-II and will move to TX mode as soon as data is pushed to the TX FIFO.
+  
+  double last_pll_lock = millis();
+  for(int buf_ix=0; buf_ix<length; buf_ix+=NRF24L01_PAYLOAD_SIZE)
+  {
+    memcpy(spi_buffer, buffer+buf_ix, NRF24L01_PAYLOAD_SIZE);
+    performSPITransaction(NRF24L01_W_TX_PAYLOAD, NRF24L01_PAYLOAD_SIZE);
+    
+    // Wait to push more data if we have filled the FIFO
+    // Bit 5 is TX_FIFO_FULL
+    while(readNRF24L01Register(NRF24L01_FIFO_STATUS) & 0b00100000)
+    {
+      delayMicroseconds(100);
+    }
+  
+    // The PLL during TX mode runs in open loop mode, we cannot stay here more than 4mS as the 
+    //  oscillator might drift too much. If we go over 4mS we need to enter Standby-II mode
+    //  and go back to TX mode in order for the oscillator to lock again. To go to Standby-II
+    //  here we pull CE down and wait the TX FIFO to be empty.
+    if(millis() - last_pll_lock > 4)
+    {
+      digitalWrite(NRF24L01_CE_PIN, LOW);
+     
+      // Wait for the FIFO to be empty, so we can enter Standby-II
+      // Bit 4 is TX_FIFO_EMPTY
+      while(!(readNRF24L01Register(NRF24L01_FIFO_STATUS) & 0b00010000))
+      {
+        delayMicroseconds(100);
+      }
+   
+      // Ready to transmit more.
+      digitalWrite(NRF24L01_CE_PIN, HIGH);  
+    } 
+    
+  } 
+  
+  // Back to Standby-I
+  writeNRF24L01Register(NRF24L01_CONFIG, (readNRF24L01Register(NRF24L01_CONFIG) & 0b11111110));
+     
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
 // Powers down the radio, the SPI interface is still active.
 //
 void powerDownRadio()
@@ -170,7 +256,7 @@ uint8_t performSPITransaction(uint8_t command, uint8_t data_len)
     // Then the all buffer.
     for (uint8_t buf_ix=0; buf_ix<data_len; buf_ix++)
     {
-	spi_buffer[buf_ix] = SPI.transfer(spi_buffer[buf_ix]);
+      spi_buffer[buf_ix] = SPI.transfer(spi_buffer[buf_ix]);
     }
     
     // Release the SPI bus.
