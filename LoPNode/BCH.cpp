@@ -52,7 +52,7 @@ void broadcastBCH()
      
   // To allow outer nodes to perform ranging we step down power from NRF24L01+
   //  max power down to minimum. NRF24L01+ supports only 4 power levels.
-  for(byte power=RF24_PA_MAX; (int8_t)power>=RF24_PA_MIN; power--)
+  for(byte power=NRF24L01_TX_POW_0dBm; (int8_t)power>=NRF24L01_TX_POW_m18dBm; power--)
   { 
     // We build the the BCH SDU according to LOP_01.01§5.1 
     lop_tx_buffer[LOP_IX_SDU_ID] = LOP_SDU_BCH;
@@ -78,7 +78,7 @@ void broadcastBCH()
     
   // We use max power for sync so we can reach all nodes that might have heard us
   //  as specified in "BCH Timing" LOP_01.01§5
-  setTransmitPower(RF24_PA_MAX);
+  setTransmitPower(NRF24L01_TX_POW_0dBm);
   sendLoPRANMessage(lop_tx_buffer, LOP_LEN_SDU_BCHS);
          
 }
@@ -101,11 +101,10 @@ void innerNodeScanAndSync()
   inbound_channel = constrain(EEPROM.read(EEPROM_RFCH_INNER_NODE), LOP_LOW_CHANNEL, LOP_HI_CHANNEL);
   
   // We start from an invalid power to indicated ranging is not done.
-  inbound_tx_power = RF24_PA_ERROR;
+  inbound_tx_power = NRF24L01_TX_POW_INVALID;
   
   // Listen on the BCH pipe according to LOP_01.01§4    
   setRXExtendedPreamble(BCH_PIPE_ADDR);
-  startReceiving();
   
   // Keep scanning unless we are set as an AP from the control interface.
   while(lop_dap != 0)
@@ -130,7 +129,7 @@ void innerNodeScanAndSync()
       dia_simpleFormNumericLog("SCAN", 1, inbound_channel);
 
       // Reset ranging register.
-      inbound_tx_power = RF24_PA_ERROR;
+      inbound_tx_power = NRF24L01_TX_POW_INVALID;
   
       continue; 
     }
@@ -154,7 +153,7 @@ void innerNodeScanAndSync()
       //  ACH abd will be signalled by inner_link_up.
       lop_dap = lop_rx_buffer[LOP_IX_SDU_BCH_DAP]+1;
     } 
-    else if(inbound_tx_power != RF24_PA_ERROR  && lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_BCHS)
+    else if(inbound_tx_power != NRF24L01_TX_POW_INVALID  && lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_BCHS)
     {
       // We got a BCHS SDU. 
       

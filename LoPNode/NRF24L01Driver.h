@@ -57,12 +57,14 @@
 #define NRF24L01_EN_AA 0x01
 
 #define NRF24L01_CONFIG      0x00
+#define NRF24L01_CONFIG_PRIM_RX 0
 #define NRF24L01_EN_AA       0x01
 #define NRF24L01_EN_RXADDR   0x02
 #define NRF24L01_SETUP_AW    0x03
 #define NRF24L01_RF_CH       0x05
 #define NRF24L01_RF_SETUP    0x06
 #define NRF24L01_STATUS      0x07
+#define NRF24L01_STATUS_RX_DR 6 
 #define NRF24L01_OBSERVE_TX  0x08
 #define NRF24L01_CD          0x09
 #define NRF24L01_RX_ADDR_P0  0x0A
@@ -71,6 +73,10 @@
 #define NRF24L01_RX_PW_P0    0x11
 #define NRF24L01_RX_PW_P1    0x12
 #define NRF24L01_FIFO_STATUS 0x17
+#define NRF24L01_FIFO_STATUS_RX_EMPTY 1
+#define NRF24L01_FIFO_STATUS_TX_FULL 5
+#define NRF24L01_NOP         0xFF
+
 
 #define NRF24L01_TX_POW_0dBm    3
 #define NRF24L01_TX_POW_m6dBm   2
@@ -83,7 +89,7 @@
 
 uint8_t performSPITransaction(uint8_t command, uint8_t data_len);
 void writeNRF24L01Register(uint8_t address, uint8_t value);
-void writeNRF24L01Register(uint8_t address, uint8_t value, uint8_t len);
+void writeNRF24L01Register(uint8_t address, uint64_t value, uint8_t len);
 uint8_t readNRF24L01Register(uint8_t address);
 
 void initializeRadio();
@@ -95,6 +101,7 @@ void setTXExtendedPreamble(uint64_t extended_preamble);
 void setTransmitPower(uint8_t power);
 void setRFChannel(uint8_t channel);
 void startReceiving();
+void stopReceiving();
 void readPayload(char *buffer);
 boolean isDataAvailable();
 

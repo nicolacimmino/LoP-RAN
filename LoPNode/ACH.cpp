@@ -64,7 +64,6 @@ boolean registerWithInnerNode()
     
     // Wait a reply, expect  a REGACK with the same token, ignore anything else
     //  according to according to LOP_01.01§6.2
-    startReceiving();
     if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 2))
     {
       if(lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_REGACK && (byte)lop_rx_buffer[LOP_IX_SDU_REGACK_TOKEN] == randToken)
@@ -103,7 +102,6 @@ void serveACH()
   setTXExtendedPreamble(ACH_PIPE_ADDR_OUT);  
   setRXExtendedPreamble(ACH_PIPE_ADDR_IN);
   setRFChannel(lop_outbound_channel);
-  startReceiving();
    
   if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 2))
   {

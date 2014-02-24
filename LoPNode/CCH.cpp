@@ -137,7 +137,6 @@ void serveCCH()
   setRXExtendedPreamble(CCH_PIPE_ADDR_IN);
   setTransmitPower(neighbourDescriptor->tx_power);
   setRFChannel(lop_outbound_channel);
-  startReceiving();
   
   if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 2))
   {
