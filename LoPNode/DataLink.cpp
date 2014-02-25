@@ -52,9 +52,7 @@ void setupDataLink()
 
 bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms)
 {
-Serial.println("RX start");
   startReceiving();
-Serial.println("RX start recev");
   
   long started_reading = millis();
   int messagelen = 6;
@@ -73,7 +71,6 @@ Serial.println("RX start recev");
     //  than the supplied buffer can contain.
     if(timeout || (received + LOP_PAYL_SIZE > bufLen))
     {
-      Serial.println("RX end timeout");
       received = 0;
       dia_simpleFormTextLog("RAWRX", "NODATA");
       stopReceiving();
@@ -105,7 +102,6 @@ Serial.println("RX start recev");
   }
   
   stopReceiving();
-Serial.println("RX end");
   return true;
 }
 

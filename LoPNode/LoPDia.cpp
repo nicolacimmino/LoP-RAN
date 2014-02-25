@@ -26,7 +26,7 @@
 
 // Enables the LOP-Diagnostic interface that outputs on serial port
 //  a log of the radio activity.
-boolean lop_dia_enabled = true;
+boolean lop_dia_enabled = false;
 
 void dia_logTime()
 {
