@@ -55,11 +55,11 @@ bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms)
   startReceiving();
   
   long started_reading = millis();
-  int messagelen = 6;
+  uint8_t messagelen = 6;
   boolean timeout = false;
   
   
-  int received = 0;
+  uint8_t received = 0;
   while(received < messagelen)
   {
     while (!(timeout = (millis() - started_reading) > timeout_ms))
@@ -69,7 +69,7 @@ bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms)
     
     // Fail the operation if we timeout or we receive more data
     //  than the supplied buffer can contain.
-    if(timeout || (received + LOP_PAYL_SIZE > bufLen))
+    if(timeout || ((received + LOP_PAYL_SIZE) > bufLen))
     {
       received = 0;
       dia_simpleFormTextLog("RAWRX", "NODATA");
@@ -97,7 +97,7 @@ bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms)
     //  is the 5th byte.
     if(received >= 5)
     {
-       messagelen = data[4];
+       messagelen = (uint8_t)data[4];
     }
   }
   

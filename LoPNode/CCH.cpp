@@ -55,7 +55,7 @@ void inititateCCHTransaction()
     
     txBufIndex++;                                  // MSG LEN will be filled up when known
     
-    for(int ix=0; ix<LOP_MTU; ix++)                // MSG content
+    for(uint32_t ix=0; ix<LOP_MTU; ix++)                // MSG content
     {
       // Message is null terminated but we don't send the null
       //  as there is already the MSG length
