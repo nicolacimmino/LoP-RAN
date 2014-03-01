@@ -28,6 +28,7 @@
 #include "BCH.h"
 #include "ControlInterface.h"
 #include "OuterNeighboursList.h"
+#include "NRF24L01Driver.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Broadcast BCH
@@ -46,12 +47,12 @@ void broadcastBCH()
   delay(LOP_RTXGUARD);
   
   // Setup the BCH phy layer parameters according to LOP_01.01§4
-  radio.setChannel(lop_outbound_channel);
-  radio.openWritingPipe(BCH_PIPE_ADDR);
+  setRFChannel(lop_outbound_channel);
+  setTXExtendedPreamble(BCH_PIPE_ADDR);
      
   // To allow outer nodes to perform ranging we step down power from NRF24L01+
   //  max power down to minimum. NRF24L01+ supports only 4 power levels.
-  for(byte power=RF24_PA_MAX; (int8_t)power>=RF24_PA_MIN; power--)
+  for(byte power=NRF24L01_TX_POW_0dBm; (int8_t)power>=NRF24L01_TX_POW_m18dBm; power--)
   { 
     // We build the the BCH SDU according to LOP_01.01§5.1 
     lop_tx_buffer[LOP_IX_SDU_ID] = LOP_SDU_BCH;
@@ -67,7 +68,7 @@ void broadcastBCH()
 
     
     // And we finally send out the SDU using the current power.
-    radio.setPALevel((rf24_pa_dbm_e)power);
+    setTransmitPower(power);
     sendLoPRANMessage(lop_tx_buffer, LOP_LEN_SDU_BCH);
   }
    
@@ -77,7 +78,7 @@ void broadcastBCH()
     
   // We use max power for sync so we can reach all nodes that might have heard us
   //  as specified in "BCH Timing" LOP_01.01§5
-  radio.setPALevel(RF24_PA_MAX);
+  setTransmitPower(NRF24L01_TX_POW_0dBm);
   sendLoPRANMessage(lop_tx_buffer, LOP_LEN_SDU_BCHS);
          
 }
@@ -100,11 +101,10 @@ void innerNodeScanAndSync()
   inbound_channel = constrain(EEPROM.read(EEPROM_RFCH_INNER_NODE), LOP_LOW_CHANNEL, LOP_HI_CHANNEL);
   
   // We start from an invalid power to indicated ranging is not done.
-  inbound_tx_power = RF24_PA_ERROR;
+  inbound_tx_power = NRF24L01_TX_POW_INVALID;
   
   // Listen on the BCH pipe according to LOP_01.01§4    
-  radio.openReadingPipe(1, BCH_PIPE_ADDR);
-  radio.startListening();
+  setRXExtendedPreamble(BCH_PIPE_ADDR);
   
   // Keep scanning unless we are set as an AP from the control interface.
   while(lop_dap != 0)
@@ -115,7 +115,7 @@ void innerNodeScanAndSync()
     // We attempt to receive on a given channel for maximum 180% of a slot so we maximize
     //  the chances to get a full BCH broadcast while not spending too much time on the
     //  same radio channel.
-    radio.setChannel(inbound_channel);
+    setRFChannel(inbound_channel);
     if((!receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_FRAMEDURATION))
           || (lop_rx_buffer[LOP_IX_SDU_BCH_INFO] & LOP_IX_SDU_BCH_INFO_NODE_FULL_MASK) != 0)
     {
@@ -129,7 +129,7 @@ void innerNodeScanAndSync()
       dia_simpleFormNumericLog("SCAN", 1, inbound_channel);
 
       // Reset ranging register.
-      inbound_tx_power = RF24_PA_ERROR;
+      inbound_tx_power = NRF24L01_TX_POW_INVALID;
   
       continue; 
     }
@@ -153,7 +153,7 @@ void innerNodeScanAndSync()
       //  ACH abd will be signalled by inner_link_up.
       lop_dap = lop_rx_buffer[LOP_IX_SDU_BCH_DAP]+1;
     } 
-    else if(inbound_tx_power != RF24_PA_ERROR  && lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_BCHS)
+    else if(inbound_tx_power != NRF24L01_TX_POW_INVALID  && lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_BCHS)
     {
       // We got a BCHS SDU. 
       

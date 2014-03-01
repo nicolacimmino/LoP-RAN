@@ -27,6 +27,7 @@
 #include "OuterNeighboursList.h"
 #include "NetTime.h"
 #include "CCH.h"
+#include "NRF24L01Driver.h"
 
 uint64_t CCH_PIPE_ADDR_IN = 0;
 uint64_t CCH_PIPE_ADDR_OUT = 0;
@@ -54,7 +55,7 @@ void inititateCCHTransaction()
     
     txBufIndex++;                                  // MSG LEN will be filled up when known
     
-    for(int ix=0; ix<LOP_MTU; ix++)                // MSG content
+    for(uint32_t ix=0; ix<LOP_MTU; ix++)                // MSG content
     {
       // Message is null terminated but we don't send the null
       //  as there is already the MSG length
@@ -67,13 +68,13 @@ void inititateCCHTransaction()
     }
     
     // Set the radio to the power we negotiated during ranging.
-    radio.setPALevel((rf24_pa_dbm_e)inbound_tx_power); 
+    setTransmitPower(inbound_tx_power); 
  
     // Set up the right pipe address for the current network time.
     calculateCCHPipeAddresses();
-    radio.openWritingPipe(CCH_PIPE_ADDR_IN);  
-    radio.openReadingPipe(1, CCH_PIPE_ADDR_OUT);
-    radio.setChannel(inbound_channel);
+    setTXExtendedPreamble(CCH_PIPE_ADDR_IN);  
+    setRXExtendedPreamble(CCH_PIPE_ADDR_OUT);
+    setRFChannel(inbound_channel);
   
     // Wait what is left of the RTX guard period.
     delay(constrain(LOP_RTXGUARD-getInnerLinkNetworkTime().off,0,LOP_RTXGUARD));
@@ -132,11 +133,10 @@ void serveCCH()
     return;
     
   calculateCCHPipeAddresses();
-  radio.openWritingPipe(CCH_PIPE_ADDR_OUT);  
-  radio.openReadingPipe(1, CCH_PIPE_ADDR_IN);
-  radio.setPALevel((rf24_pa_dbm_e)neighbourDescriptor->tx_power);
-  radio.setChannel(lop_outbound_channel);
-  radio.startListening();
+  setTXExtendedPreamble(CCH_PIPE_ADDR_OUT);  
+  setRXExtendedPreamble(CCH_PIPE_ADDR_IN);
+  setTransmitPower(neighbourDescriptor->tx_power);
+  setRFChannel(lop_outbound_channel);
   
   if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 2))
   {

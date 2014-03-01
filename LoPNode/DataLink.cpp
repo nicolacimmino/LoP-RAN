@@ -20,14 +20,12 @@
 
 #include "Arduino.h"
 #include <SPI.h>
-#include <RF24.h>        // Copyright (C) 2011 J. Coliz <maniacbug@ymail.com>, GNU
 #include <EEPROM.h>
 #include "LoPDia.h"
 #include "NetTime.h"
 #include "DataLink.h"
 #include "LoPParams.h"
-
-RF24 radio(radio_ce_pin,radio_csn_pin);
+#include "NRF24L01Driver.h"
 
 // TX Buffer.
 char lop_tx_buffer[LOP_MTU];
@@ -41,15 +39,7 @@ byte lop_dap = 0xFF;
 
 void setupDataLink()
 {
-  // These are fixed parameters in LoP-RAN.
-  radio.begin();
-  radio.setCRCLength(RF24_CRC_8);               // 8 bits CRC
-  radio.setRetries(15,15);                      // Max 15 retries 4mS interval
-  radio.setPayloadSize(LOP_PAYL_SIZE);                      // Payload sise, phisical layer MTU
-  radio.setChannel(EEPROM.read(EEPROM_RFCH_INNER_NODE));   // We start from the last known good channel
-  radio.setDataRate(RF24_250KBPS);              // 250 kbps
-  radio.setPALevel(RF24_PA_MAX);                // We start from max power, ranging will take care to adjust this.
-  radio.setAutoAck(0);                          // Auto ACK enabled  
+  initializeRadio();
   
   // Preamble must always be in the beginning of each 
   //  message. We prefill here the TX buffer so we 
@@ -62,29 +52,32 @@ void setupDataLink()
 
 bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms)
 {
+  startReceiving();
+  
   long started_reading = millis();
-  int messagelen = 6;
-  bool timeout = false;
+  uint8_t messagelen = 6;
+  boolean timeout = false;
   
   
-  int received = 0;
+  uint8_t received = 0;
   while(received < messagelen)
   {
-    while ( !radio.available() && !timeout)
+    while (!(timeout = (millis() - started_reading) > timeout_ms))
     {
-      timeout = (millis() - started_reading > timeout_ms);
+      if(isDataAvailable()) break;
     }
     
     // Fail the operation if we timeout or we receive more data
     //  than the supplied buffer can contain.
-    if(timeout || (received + LOP_PAYL_SIZE > bufLen))
+    if(timeout || ((received + LOP_PAYL_SIZE) > bufLen))
     {
       received = 0;
       dia_simpleFormTextLog("RAWRX", "NODATA");
+      stopReceiving();
       return false;
     }
 	
-    radio.read( data + received , LOP_PAYL_SIZE );
+    readPayload(data + received);
     dia_logTime();
     dia_logString("RAWRX");  
     dia_logBufferToHex(data,data[4]);
@@ -104,10 +97,11 @@ bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms)
     //  is the 5th byte.
     if(received >= 5)
     {
-       messagelen = data[4];
+       messagelen = (uint8_t)data[4];
     }
   }
   
+  stopReceiving();
   return true;
 }
 
@@ -116,20 +110,11 @@ void sendLoPRANMessage(char *data, int len)
 {
   // Write message length.
   data[4]=len;
+  transmitBuffer(data, len);
   
   dia_logTime();
   dia_logString("RAWTX");  
   dia_logBufferToHex(data,len);
   dia_closeLog();
-  
-  int offset=0;
-  radio.stopListening();
-  while(offset < len)
-  {  
-    radio.write(data+offset, LOP_PAYL_SIZE);
-    //delay(1);
-    offset+=LOP_PAYL_SIZE;
-  }
-  radio.startListening();
 }
 

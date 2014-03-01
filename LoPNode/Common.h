@@ -21,7 +21,6 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
-#include <RF24.h>        // Copyright (C) 2011 J. Coliz <maniacbug@ymail.com>, GNU
 #include "NetTime.h"
 #include "DataLink.h"
 

@@ -19,11 +19,11 @@
 //    sub chapter of these documents.
 
 #include <Arduino.h>
-#include <RF24.h>        // Copyright (C) 2011 J. Coliz <maniacbug@ymail.com>, GNU
 #include "NetTime.h"
 #include "DataLink.h"
 #include "ControlInterface.h"
 #include "LopParams.h"
+#include "NRF24L01Driver.h"
 
 // Inbound and outbound Message Buffers.
 char lop_message_buffer_i[LOP_MTU];
@@ -37,7 +37,7 @@ uint64_t lop_message_buffer_address_o;
 uint64_t node_address = 0xFFFFFFFF;
 
 // Lowest usable power to talk to the inner node.
-uint8_t inbound_tx_power = RF24_PA_MAX;
+uint8_t inbound_tx_power = NRF24L01_TX_POW_0dBm;
 
 // The mask representing the timeslot assigned to this node
 //  for traffic towards/from the inner node.

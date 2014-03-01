@@ -21,9 +21,6 @@
 #ifndef __DataLink_h__
 #define __DataLink_h__
 
-#define radio_ce_pin 9        // CE pin for the NRF24L01+
-#define radio_csn_pin 10      // CSN pin for the NRF24L01+
-
 // EEPROM Memory map
 const byte EEPROM_RFCH_INNER_NODE = 0x01;        // 0x01  Last known good RF channel
 const byte EEPROM_RFCH_ACT_AS_AP = 0x02;        // 0x02  Act as an Access Point if != 0
@@ -31,8 +28,6 @@ const byte EEPROM_RFCH_ACT_AS_AP = 0x02;        // 0x02  Act as an Access Point 
 // The actual transmitted preamble is 4 bytes, we null terminate it to be able to use
 //  string manipulation functions when comparing etc.
 const char preamble[5] = {0x55, 0xAA, 0x55, 0xAA, 0x00}; 
-
-extern RF24 radio;
 
 // TX Buffer.
 extern char lop_tx_buffer[];
