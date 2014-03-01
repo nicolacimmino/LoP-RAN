@@ -78,6 +78,10 @@ while(1):
 	
    print raw_packet_data
   
+   # Purge OK replies from buffer
+   if (raw_packet_data.find("OK") == 0) and (raw_packet_data.find("\n") > 0):
+    raw_packet_data=""
+	
    # Current format is ATRX LoPAddress \directive\params\otherparams\\message
    # eg: ATRX 1 \su\192.168.0.250\4000\\This is a test message.
    #
