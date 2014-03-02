@@ -36,11 +36,15 @@ time.sleep(5)
 active_sockets = []
 leased_ips = {}
  
+pending_ping_responses = {}
+
+icmp_raw_socket = socket.socket(socket.AF_INET,socket.SOCK_RAW,socket.IPPROTO_ICMP)
+
 def serveIncomingICMPRequests():
-  s = socket.socket(socket.AF_INET,socket.SOCK_RAW,socket.IPPROTO_ICMP)
+  #s = socket.socket(socket.AF_INET,socket.SOCK_RAW,socket.IPPROTO_ICMP)
   #s.setsockopt(socket.SOL_IP, socket.IP_HDRINCL, 1)
   while True:
-    data, addr = s.recvfrom(1508)
+    data, addr = icmp_raw_socket.recvfrom(1508)
     
     icmp_header = data[20:28]
     icmp_type, icmp_code, checksum, rec_id, sequence = struct.unpack('bbHHH', icmp_header)
@@ -59,10 +63,20 @@ def serveIncomingICMPRequests():
 
       if lop_address != 0:
         ser.write("ATTX " + str(lop_address) + " \\icmp.ping.req\\\\\n")
-                              
         response_packet = icmp_packet.create_response_packet(rec_id, sequence, data[28:])
-        s.sendto(response_packet, (source_address,1))
+        pending_ping_responses[lop_address] = (response_packet, source_address)                    
         
+        #s.sendto(response_packet, (source_address,1))
+        
+def process_icmp_messge(raw_packet_data):
+    # The LoP Address from which the packet came 
+    source_addr = int(raw_packet_data[5:(raw_packet_data[5:].find(" ")+5)])
+    
+    # The directive for the IPGateway is everything from the first \ to the first \\
+    ip_gateway_directive = raw_packet_data[ raw_packet_data.find("\\") + 1 : raw_packet_data.find("\\\\")].split("\\")
+
+    icmp_raw_socket.sendto(pending_ping_responses[source_addr][0], (pending_ping_responses[source_addr][1],1))
+
 def serveIncomingIPTraffic():
  while True:
   readable, writable, errored = select.select(active_sockets, [], [], 0)
@@ -117,6 +131,11 @@ while(1):
 
    print raw_packet_data
   
+   # This is a message for the ICMP subsistem, deliver it there.
+   if (raw_packet_data.find("\\icmp.response\\") > 0) and (raw_packet_data.find("\n") > 0):
+     process_icmp_messge(raw_packet_data)
+     raw_packet_data = ""
+     
    # Purge OK replies from buffer
    if (raw_packet_data.find("OK") == 0) and (raw_packet_data.find("\n") > 0):
     raw_packet_data=""
