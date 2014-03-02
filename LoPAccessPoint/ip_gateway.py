@@ -69,14 +69,18 @@ def serveIncomingICMPRequests():
         #s.sendto(response_packet, (source_address,1))
         
 def process_icmp_messge(raw_packet_data):
+  try:
     # The LoP Address from which the packet came 
     source_addr = int(raw_packet_data[5:(raw_packet_data[5:].find(" ")+5)])
     
     # The directive for the IPGateway is everything from the first \ to the first \\
     ip_gateway_directive = raw_packet_data[ raw_packet_data.find("\\") + 1 : raw_packet_data.find("\\\\")].split("\\")
-
+    
+    icmp_raw_socket.bind((leased_ips[source_addr], 0))
     icmp_raw_socket.sendto(pending_ping_responses[source_addr][0], (pending_ping_responses[source_addr][1],1))
-
+  except:
+    print "Error while processing icmp_message, igoring"
+    
 def serveIncomingIPTraffic():
  while True:
   readable, writable, errored = select.select(active_sockets, [], [], 0)
