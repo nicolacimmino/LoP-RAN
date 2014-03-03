@@ -1,7 +1,7 @@
 Access Point
 ================
 
-The access point is based on a Raspberry PI with a LoP-R(A)N radio connected trough a USB-Serial adapter.
+The access point is based on a Raspberry PI with a LoP-R(A)N radio connected trough a USB-Serial adapter. The access point gives access to nodes to various servcies. The first implemented is IP which provides DHCP, UDP and basic ICMP support.
 
 
 ## Misc notes
