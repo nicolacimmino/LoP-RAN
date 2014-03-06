@@ -48,17 +48,26 @@ void notifyReceivedMessage()
   
   if(message_buffer_rx[0] != 0)
   {
-    // Prefix the message only if this is an unsolicited notification
-    // For ATRX? queries we just reply with address/message.
-    if(rx_notification_enable) Serial.print("ATRX ");
-    
-    // Print the address if we are the AP
-    if(lop_dap == 0)
+    // Respond to icmp_ping requests other stuff we let up to the host.
+    if((strstr(message_buffer_rx, "\\icmp.ping_request\\") - message_buffer_rx) == 0)
     {
-      Serial.print(lop_message_buffer_address_i);
-      Serial.print(" ");
+      strcpy(lop_message_buffer_i, "\\icmp.ping_response\\\\"); 
+      lop_message_buffer_i[21]=0;
     }
-    Serial.println(message_buffer_rx);
+    else
+    {
+      // Prefix the message only if this is an unsolicited notification
+      // For ATRX? queries we just reply with address/message.
+      if(rx_notification_enable) Serial.print("ATRX ");
+      
+      // Print the address if we are the AP
+      if(lop_dap == 0)
+      {
+        Serial.print(lop_message_buffer_address_i);
+        Serial.print(" ");
+      }
+      Serial.println(message_buffer_rx);
+    }
     message_buffer_rx[0]=0;
   }  
 }
