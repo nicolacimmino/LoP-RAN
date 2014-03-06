@@ -70,7 +70,7 @@ def GetTAddressByResponse(r): # Return tuple (IP, Port) or False
         print('Error when interpreting response: %s' % e)
         return False
  
-def perfomSTUNDiscovery(local_port):
+def perfomSTUNDiscovery(local_address, local_port):
  
    
   HOST = "stun.sipgate.net"
@@ -80,7 +80,7 @@ def perfomSTUNDiscovery(local_port):
   try:
       c = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
       c.settimeout(timeout)
-      c.bind(('', local_port))
+      c.bind((local_address, local_port))
   except Exception as e:
       print('Error when creating socket: %s' % e)
       return None

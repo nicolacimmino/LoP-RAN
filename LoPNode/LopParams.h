@@ -35,8 +35,8 @@
   #define ACH_PIPE_ADDR_IN 0x5100000100LL  // ACH inbound pipe
   #define  ACH_PIPE_ADDR_OUT 0x5000000100LL  // ACH outboud pipe
   #define  LOP_RTXGUARD 2                    // RX-TX Guard time
-  #define  LOP_SLOTDURATION 100.0f              // Slot duration in mS
-  #define LOP_FRAMEDURATION 1000.0f               // Frame duration in mS
+  #define  LOP_SLOTDURATION 15.0f              // Slot duration in mS
+  #define LOP_FRAMEDURATION 150.0f               // Frame duration in mS
   #define LOP_SLOTS_COUNT 10                    // Frame duration / slot duration
   #define LOP_ONL_ALLOCATION_TTL 10000          // Maximum TTL for an entry in the ONL
   #define LOP_BCH_SLOT 0

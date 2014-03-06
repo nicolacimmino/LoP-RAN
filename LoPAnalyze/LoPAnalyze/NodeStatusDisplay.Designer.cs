@@ -42,6 +42,8 @@
             this.label3 = new System.Windows.Forms.Label();
             this.labelAddress = new System.Windows.Forms.Label();
             this.labelDAP = new System.Windows.Forms.Label();
+            this.labelIP = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // timer1
@@ -132,11 +134,31 @@
             this.labelDAP.Text = "---";
             this.labelDAP.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
+            // labelIP
+            // 
+            this.labelIP.Location = new System.Drawing.Point(594, 93);
+            this.labelIP.Name = "labelIP";
+            this.labelIP.Size = new System.Drawing.Size(149, 20);
+            this.labelIP.TabIndex = 7;
+            this.labelIP.Text = "---";
+            this.labelIP.TextAlign = System.Drawing.ContentAlignment.TopRight;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(517, 93);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(91, 20);
+            this.label5.TabIndex = 6;
+            this.label5.Text = "IP Address:";
+            // 
             // NodeStatusDisplay
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(781, 405);
+            this.ClientSize = new System.Drawing.Size(781, 401);
+            this.Controls.Add(this.labelIP);
+            this.Controls.Add(this.label5);
             this.Controls.Add(this.labelAddress);
             this.Controls.Add(this.labelDAP);
             this.Controls.Add(this.label3);
@@ -166,5 +188,7 @@
         private System.Windows.Forms.Label labelAddress;
         private System.Windows.Forms.Label labelDAP;
         private System.Windows.Forms.ColumnHeader columnHeader5;
+        private System.Windows.Forms.Label labelIP;
+        private System.Windows.Forms.Label label5;
     }
 }

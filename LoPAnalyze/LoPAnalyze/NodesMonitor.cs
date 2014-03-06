@@ -73,6 +73,9 @@ namespace LoPAnalyze
                             try
                             {
                                 port.Open();
+                                port.WriteTimeout = 500;
+                                port.ReadTimeout = 500;
+ 
                                 port.WriteLine("ATID?");
                                 try
                                 {

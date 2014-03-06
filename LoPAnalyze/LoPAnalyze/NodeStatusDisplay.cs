@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO.Ports;
+using System.Threading;
 
 namespace LoPAnalyze
 {
@@ -23,30 +24,63 @@ namespace LoPAnalyze
 
         }
 
-        public String SerialPortName { get; set; }
+        public String SerialPortName
+        {
+            set
+            {
+                serialPortName = value;
+            }
+
+            get
+            {
+                return serialPortName;
+            }
+        }
+
+        private String serialPortName = null;
 
         private SerialPort serialPort = null;
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            if (!String.IsNullOrEmpty(SerialPortName))
+            String response;
+            if (serialPort == null && !String.IsNullOrEmpty(serialPortName))
+            {
+                serialPort = new SerialPort(serialPortName);
+                serialPort.BaudRate = 115200;
+                serialPort.ReadTimeout = 500;
+                serialPort.NewLine = "\n";
+                serialPort.Open();
+                Thread.Sleep(1000);
+                serialPort.ReadExisting();
+                serialPort.WriteLine("ATRX0");
+                response = serialPort.ReadLine();
+
+                serialPort.WriteLine("ATTX \\dhcp.lease\\\\");
+                response = serialPort.ReadLine();
+               
+            }
+
+            if (serialPort != null)
             {
                 try
                 {
-                    if (serialPort == null)
-                    {
-                        serialPort = new SerialPort(SerialPortName);
-                        serialPort.BaudRate = 115200;
-                        serialPort.ReadTimeout = 500;
-                        serialPort.NewLine = "\n";
-                        serialPort.Open();
-                    }
                     try
                     {
+                     
+                        String bla = serialPort.ReadExisting();
+                        serialPort.WriteLine("ATRX?");
+                        response = serialPort.ReadLine();
+                        if (response.StartsWith("\\icmp.ping_request\\\\"))
+                        {
+                            serialPort.WriteLine("ATTX \\icmp.ping_response\\\\");
+                            response = serialPort.ReadLine();
+                            return;
+                        }
 
                         serialPort.ReadExisting();
                         serialPort.WriteLine("ATID?");
-                        String response = serialPort.ReadLine();
+                        response = serialPort.ReadLine();
                         this.Text = response.Replace("\n", "").Replace("\r", "") + " (" + SerialPortName + ")";
 
                         serialPort.ReadExisting();

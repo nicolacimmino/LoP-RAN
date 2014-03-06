@@ -23,6 +23,7 @@ import MacroIP_DHCP
 import MacroIP_UDP
 import MacroIP_ICMP
 import MacroIP_STUN
+import MacroIP_HTTP
 
 outputMacrosQueue = []
 
@@ -41,7 +42,9 @@ def processMacroIPMacro(clientid, macro):
   if macro.startswith("icmp."):
     MacroIP_ICMP.processMacro(clientid, macro)
         
-
+  if macro.startswith("http."):
+    MacroIP_HTTP.processMacro(clientid, macro)
+  
 # Fetches a macro to be sent to a client of the 
 # host application. 
 def getOutputMacroIPMacro():
@@ -55,6 +58,9 @@ def getOutputMacroIPMacro():
   if(clientid != None):
     outputMacrosQueue.append((clientid, macro))
   (clientid, macro) = MacroIP_STUN.getOutputMacroIPMacro() 
+  if(clientid != None):
+    outputMacrosQueue.append((clientid, macro))
+  (clientid, macro) = MacroIP_HTTP.getOutputMacroIPMacro() 
   if(clientid != None):
     outputMacrosQueue.append((clientid, macro))
     

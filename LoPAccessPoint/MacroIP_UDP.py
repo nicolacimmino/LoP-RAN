@@ -67,10 +67,9 @@ def processMacro(clientid, macro):
     local_port = int(params[1])
     local_address = MacroIP_DHCP.getIP(clientid)
     
-    print "Listening " + local_address + ":" + str(local_port)
-    
     # We cannot listen unless the client has leased an IP
     if local_address != None:
+      print "Listening " + local_address + ":" + str(local_port)
       udpsocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
       udpsocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
       udpsocket.bind((local_address, local_port))

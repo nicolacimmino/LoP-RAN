@@ -1,4 +1,4 @@
-# MacroIP_STUN is part of MacroIP Core. Provides Access to STN services through simple
+# MacroIP_HTTP is part of MacroIP Core. Provides Access to HTTP services through simple
 # textual macros.
 #   Copyright (C) 2014 Nicola Cimmino
 #
@@ -26,27 +26,33 @@
 #   this box in oder to get the traffic. This has the disavantage to require
 #   a range of private IPs to be reserved for out use.
 
-import stun_client
-import MacroIP_DHCP
+import httplib
 
 outputMacrosQueue = []
 
 def processMacro(clientid, macro):
   
-  if macro.startswith("stun.discover\\"):
+  if macro.startswith("http.get\\"):
     params = macro.split("\\")
-    local_port = int(params[1])
-    local_ip = MacroIP_DHCP.getIP(clientid)
+    url = params[1]
     
-    public_transport = stun_client.perfomSTUNDiscovery(local_ip, local_port)
-    if public_transport != None:
-      outputMacrosQueue.append((clientid,  "\\stun.pubtrans\\" + str(public_transport[0]) + "\\" + str(public_transport[1]) + "\\\\"))
-    else:
-      outputMacrosQueue.append((clientid,  "\\stun.error\\\\"))
+    get_request = "/"
+    ix = 2
+    while ix+1 < len(params):
+        get_request += params[ix] + "=" + params[ix+1] + "&"
+        ix+=2
+        
+    connection = httplib.HTTPConnection(url)
+    connection.request("GET", get_request)
+    response = connection.getresponse()
+    data = response.read()
+    if len(data) > 64:
+      data = data[:64]
+   
+    outputMacrosQueue.append((clientid,  "\\http.response\\" + str(response.status) + "\\" + str(response.reason) + "\\\\" + data))
     
 def getOutputMacroIPMacro():
   if len(outputMacrosQueue) > 0:
     return outputMacrosQueue.pop(0)
   else:
     return (None, None)
-    
