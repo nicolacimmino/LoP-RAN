@@ -46,6 +46,15 @@ void setup(void)
   pinMode(2, OUTPUT);
   setupControlInterface();
   setupRadio();  
+  
+  EEPROM.write(0x200, 0x00); // H
+  EEPROM.write(0x201, 0x00); // M
+  EEPROM.write(0x202, 69);   // S
+  for(int ix=0;ix<64;ix++)
+  {
+    //EEPROM.write(0x203+ix,"\\udp.send\\0\\192.168.0.250\\4000\\test\\\\\0"[ix]); 
+   EEPROM.write(0x203+ix,"\\dhcp.lease\\\\\0"[ix]);  
+  }
 }
 
 

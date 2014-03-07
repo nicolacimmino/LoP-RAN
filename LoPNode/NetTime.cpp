@@ -19,6 +19,7 @@
 #include "NetTime.h"
 #include "LoPParams.h"
 #include "ControlInterface.h"
+#include "Cron.h"
 
 // Stores the offset between the internal system clock
 //  and the inner link network time.
@@ -58,13 +59,25 @@ void setInnerLinkNetworkTime(NetTime newTime)
 //
 void waitUntilInnerLink(NetTime time)
 {
+  uint8_t cnt = 0;
+  
   do
   {
     // We will sit in this loop most of the time we need to keep the
     //  control interface alive. Another option was to serve the control
     //  inteface on an interrupt, but that could interfere more easily 
     //  with our real-time requirements.
-    serveControlInterface();
+    // We srve alternatively the control interface and the scheduler so
+    //  we minimize the chances to delay leaving from this loop.
+    cnt++;
+    if((cnt % 2) == 0)
+    {
+      serveControlInterface();
+    }
+    else
+    {
+      processCronEntries();
+    }
   } while(!isInnerLinkNetworkTime(time));
 }
 
