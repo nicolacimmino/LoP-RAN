@@ -26,7 +26,7 @@
 #   this box in oder to get the traffic. This has the disavantage to require
 #   a range of private IPs to be reserved for out use.
 
-import httplib
+import urllib
 
 outputMacrosQueue = []
 
@@ -35,21 +35,12 @@ def processMacro(clientid, macro):
   if macro.startswith("http.get\\"):
     params = macro.split("\\")
     url = params[1]
-    
-    get_request = "/"
-    ix = 2
-    while ix+1 < len(params):
-        get_request += params[ix] + "=" + params[ix+1] + "&"
-        ix+=2
-        
-    connection = httplib.HTTPConnection(url)
-    connection.request("GET", get_request)
-    response = connection.getresponse()
-    data = response.read()
+    httpresp = urllib.urlopen(url)
+    data = httpresp.read()
     if len(data) > 64:
       data = data[:64]
    
-    outputMacrosQueue.append((clientid,  "\\http.response\\" + str(response.status) + "\\" + str(response.reason) + "\\\\" + data))
+    outputMacrosQueue.append((clientid,  "\\http.response\\\\" + data))
     
 def getOutputMacroIPMacro():
   if len(outputMacrosQueue) > 0:

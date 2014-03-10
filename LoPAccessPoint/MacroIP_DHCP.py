@@ -30,17 +30,20 @@
 addresses_pool = [ "192.168.0.200", "192.168.0.201", "192.168.0.202", "192.168.0.203", "192.168.0.204", 
                     "192.168.0.205", "192.168.0.206", "192.168.0.207", "192.168.0.208", "192.168.0.209" ]
 
-leased_ips = {}
 outputMacrosQueue = []
+
+import sqlite3
+databasefile = 'loprandb.sqlite'
 
 def processMacro(clientid, macro):
   
   if macro.startswith("dhcp.lease\\"):
     # For now we have a very simple "DHCP" sevice, just always assing IP based on client ID.
     # This works only for proof of concept as we won't have ids above 9 anywat.
-    leased_ips[clientid] = addresses_pool[clientid]
-    print "Leased: " + leased_ips[clientid] + " to " + str(clientid)
-    outputMacrosQueue.append((clientid,  "\\dhcp.ip\\" + str(leased_ips[clientid]) + "\\\\"))
+    ip_address = addresses_pool[clientid]
+    setLeasedIP(clientid, ip_address)
+    print "Leased: " + ip_address + " to " + str(clientid)
+    outputMacrosQueue.append((clientid,  "\\dhcp.ip\\" + str(ip_address) + "\\\\"))
     
 def getOutputMacroIPMacro():
   if len(outputMacrosQueue) > 0:
@@ -49,15 +52,37 @@ def getOutputMacroIPMacro():
     return (None, None)
     
 def getIP(clientid):
-  if clientid in leased_ips.keys():
-    return leased_ips[clientid]
-  else:
-    return None
+  dbconnection = sqlite3.connect(databasefile)
+  cursor = dbconnection.cursor()
+  arguments = (clientid,)
+  cursor.execute('SELECT * FROM dhcp_leases WHERE client_id=?', arguments)
+  dbconnection.close()
+  return cursor.fetchone()['ip_address']
+  
     
-def getClientID(local_ip):
-  for clientid in leased_ips:
-    if leased_ips[clientid] == local_ip:
-      return clientid
+def getClientID(ipaddress):
+  dbconnection = sqlite3.connect(databasefile)
+  cursor = dbconnection.cursor()
+  arguments = (ipaddress,)
+  cursor.execute('SELECT client_id FROM dhcp_leases WHERE ip_address=?', arguments)
+  result = cursor.fetchone()
+  if result != None:
+    clientid = result[0]
+  else:
+    clientid = 0
+  dbconnection.close()
+  return clientid
+ 
+def setLeasedIP(clientid, ipaddress):
+  exiting_clientid = getClientID(ipaddress)
+  dbconnection = sqlite3.connect(databasefile)
+  cursor = dbconnection.cursor()
+  arguments = (clientid, ipaddress)
+  if exiting_clientid == 0:
+    cursor.execute('INSERT INTO dhcp_leases (client_id, ip_address) VALUES (?, ?) ', arguments)
+  else:
+    cursor.execute('UPDATE dhcp_leases SET client_id=?, timestamp=CURRENT_TIMESTAMP where ip_address=? ', arguments)
   
-  return 0
-  
+  dbconnection.commit()
+  dbconnection.close()
+ 

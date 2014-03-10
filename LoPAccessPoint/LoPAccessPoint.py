@@ -20,9 +20,11 @@
 
 import serial
 import MacroIP
+import traceback
+import sys
 
 # This is stuff that will come from a config file.
-serial_device_name = "/dev/ttyUSB1"
+serial_device_name = "/dev/ttyUSB0"
 serial_speed = 115200
 serial_open = False
 
@@ -89,4 +91,4 @@ while True:
     serial_open = False
   except:
     print "Error processing serial data. Ignoring command."
-    raise
+    traceback.print_exc(file=sys.stdout)

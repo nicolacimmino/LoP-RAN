@@ -24,6 +24,7 @@ import MacroIP_UDP
 import MacroIP_ICMP
 import MacroIP_STUN
 import MacroIP_HTTP
+import MacroIP_FSBC
 
 outputMacrosQueue = []
 
@@ -44,7 +45,10 @@ def processMacroIPMacro(clientid, macro):
         
   if macro.startswith("http."):
     MacroIP_HTTP.processMacro(clientid, macro)
-  
+
+  if macro.startswith("fsbc."):
+    MacroIP_FSBC.processMacro(clientid, macro)
+    
 # Fetches a macro to be sent to a client of the 
 # host application. 
 def getOutputMacroIPMacro():
@@ -61,6 +65,9 @@ def getOutputMacroIPMacro():
   if(clientid != None):
     outputMacrosQueue.append((clientid, macro))
   (clientid, macro) = MacroIP_HTTP.getOutputMacroIPMacro() 
+  if(clientid != None):
+    outputMacrosQueue.append((clientid, macro))
+  (clientid, macro) = MacroIP_FSBC.getOutputMacroIPMacro() 
   if(clientid != None):
     outputMacrosQueue.append((clientid, macro))
     

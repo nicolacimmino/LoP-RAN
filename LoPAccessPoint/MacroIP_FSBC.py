@@ -1,4 +1,4 @@
-# MacroIP_ICMP is part of MacroIP Core. Provides Access to ICMP traffic through simple
+# MacroIP_FSBC is part of MacroIP Core. Provides Access to FSBC services through simple
 # textual macros.
 #   Copyright (C) 2014 Nicola Cimmino
 #
@@ -26,56 +26,41 @@
 #   this box in oder to get the traffic. This has the disavantage to require
 #   a range of private IPs to be reserved for out use.
 
-import time
-import socket
-import select
-import struct
-import icmp_packet
-import MacroIP_DHCP
-from threading import Thread
-
 outputMacrosQueue = []
-pending_ping_responses = {}
-
-icmp_raw_socket = socket.socket(socket.AF_INET,socket.SOCK_RAW,socket.IPPROTO_ICMP)
-
-
-def serveIncomingICMPRequests():
-  while True:
-    data, addr = icmp_raw_socket.recvfrom(1600)
-    
-    icmp_header = data[20:28]
-    icmp_type, icmp_code, checksum, rec_id, sequence = struct.unpack('bbHHH', icmp_header)
- 
-    if icmp_type==8 and icmp_code==0:
-    
-      source_address = addr[0]
-      source_address_s = str(addr[0]) 
-      dest_address_s = '%i.%i.%i.%i' % (ord(data[16]), ord(data[17]), ord(data[18]), ord(data[19]))   
-      
-      clientid = MacroIP_DHCP.getClientID(dest_address_s)
-   
-      if clientid != 0:
-        response_packet = icmp_packet.create_response_packet(rec_id, sequence, data[28:])
-        pending_ping_responses[clientid] = (response_packet, source_address)
-        outputMacrosQueue.append((clientid,  "\\icmp.ping_request\\\\"))
+fsbc_clients = {}
 
 def processMacro(clientid, macro):
   
-  # Send macro  
-  if macro.startswith("icmp.ping_response\\"):
-    try: 
-      icmp_raw_socket.bind((MacroIP_DHCP.getIP(clientid), 0))
-      icmp_raw_socket.sendto(pending_ping_responses[clientid][0], (pending_ping_responses[clientid][1],1))
-    except:
-      print "Error while processing icmp_message, igoring"
+  if macro.startswith("fsbc.register\\"):
+    params = macro.split("\\")
+    uniqueid = params[1]
+    setUniqueID(clientid, uniqueid)
+    outputMacrosQueue.append((clientid,  "\\fsbc.ok\\\\"))
 
-def startActivity():
-  thread = Thread( target = serveIncomingICMPRequests )
-  thread.start()
-      
+  if macro.startswith("fsbc.send\\"):
+    params = macro.split("\\")
+    uniqueid = params[1]
+    data_to_send = macro[ macro.find("\\\\") + 2:]
+    fsbc_clients[clientid].sendMessage(uniqueid, data_to_send)
+    outputMacrosQueue.append((clientid,  "\\fsbc.ok\\\\"))
+
+def process_fsbc_message(destinationid, senderid, message, replyreuested, connectiontype):
+    outputMacrosQueue.append((getClientID(destinationid),  "\\fsbc.msg\\" + senderid + "\\" + message + "\\\\"))
+
 def getOutputMacroIPMacro():
   if len(outputMacrosQueue) > 0:
     return outputMacrosQueue.pop(0)
   else:
     return (None, None)
+    
+      
+def getClientID(uniqueid):
+  for clientid in fsbc_clients.keys():
+    if fsbc_clients[clientid].uniqueid == uniqueid:
+      return clientid
+  return 0
+  
+def setUniqueID(clientid, uniqueid):
+  fsbc = fsbc(uniqueid, process_fsbc_message)
+  fsbc_clients[clientid] = fsbc
+    
