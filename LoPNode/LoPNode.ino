@@ -40,21 +40,31 @@
 #include "Common.h"
 #include "NRF24L01Driver.h"
 #include "ControlInterface.h"
-
+#include "Cron.h"
 void setup(void)
 {
+  // For demo purposes we have a LED between D5 and D6
+  pinMode(5, OUTPUT);
+  pinMode(6, OUTPUT);
+  digitalWrite(5,0);
+  digitalWrite(6,0);
+  
   pinMode(2, OUTPUT);
   setupControlInterface();
   setupRadio();  
   
-  EEPROM.write(0x200, 0x00); // H
-  EEPROM.write(0x201, 0x00); // M
-  EEPROM.write(0x202, 69);   // S
+  EEPROM.write(EEPROM_CRON_BASE + EEPROM_CRON_HOURS_OFFSET, 0xFF);   // H
+  
+  /* For testing purpose prepare a cron entry in EEPROM while we don't have
+    AT commands for that.
+  EEPROM.write(EEPROM_CRON_BASE + EEPROM_CRON_HOURS_OFFSET, 0x00);   // H
+  EEPROM.write(EEPROM_CRON_BASE + EEPROM_CRON_MINUTES_OFFSET, 0x00); // M
+  EEPROM.write(EEPROM_CRON_BASE + EEPROM_CRON_SECONDS_OFFSET, 69);   // S
   for(int ix=0;ix<64;ix++)
   {
-    //EEPROM.write(0x203+ix,"\\udp.send\\0\\192.168.0.250\\4000\\test\\\\\0"[ix]); 
-   EEPROM.write(0x203+ix,"\\dhcp.lease\\\\\0"[ix]);  
+    EEPROM.write(EEPROM_CRON_BASE+EEPROM_CRON_TASK_OFFSET+ix,"\\http.get\\http://iotp2p.net:4000/api/node/aW90cDJwdG/alive\\\\\0"[ix]); 
   }
+  */
 }
 
 

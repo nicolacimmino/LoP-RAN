@@ -54,6 +54,14 @@ void notifyReceivedMessage()
       strcpy(lop_message_buffer_i, "\\icmp.ping_response\\\\"); 
       lop_message_buffer_i[21]=0;
     }
+    else if((strstr(message_buffer_rx, "\\msgp2p.msg\\0000\\\\LED=1") - message_buffer_rx) == 0)
+    {
+      digitalWrite(6,1);
+    }
+    else if((strstr(message_buffer_rx, "\\msgp2p.msg\\0000\\\\LED=0") - message_buffer_rx) == 0)
+    {
+      digitalWrite(6,0);
+    }
     else
     {
       // Prefix the message only if this is an unsolicited notification

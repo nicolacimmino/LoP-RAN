@@ -36,42 +36,39 @@ void processCronEntries()
     }
     lastCronCheck = millis();
     
-    for(uint16_t ix=EEPROM_CRON_BASE; ix<EEPROM_CRON_END; ix+=EEPROM_CRON_SIZE)
+    // An entry in CRON table has this format (bytes):
+    // |HOURS|MINUTES|SECONDS|COMMAND0|....|
+    //
+    // Each of HOURS, MINUTES, SECONDS has the following format (bits):
+    // |/|*|bit5|bit4|bit3|bit2|bit1|bit0|
+    //  / bit indicates a /notation. e.g. /5 -> Every 5
+    //  * bit indicates don't care, any (value is ignored then)
+    // If both / and * are clear it indicates an exact mactch. e.g. 5 at 5 minutes
+    //
+    // If all bits of the HOURS byte are set (0xFF) the entry is not in use.
+    if(EEPROM.read(EEPROM_CRON_BASE) != 0xFF)
     {
-      // An entry in CRON table has this format (bytes):
-      // |HOURS|MINUTES|SECONDS|COMMAND0|....|
-      //
-      // Each of HOURS, MINUTES, SECONDS has the following format (bits):
-      // |/|*|bit5|bit4|bit3|bit2|bit1|bit0|
-      //  / bit indicates a /notation. e.g. /5 -> Every 5
-      //  * bit indicates don't care, any (value is ignored then)
-      // If both / and * are clear it indicates an exact mactch. e.g. 5 at 5 minutes
-      //
-      // If all bits of the HOURS byte are set (0xFF) the entry is not in use.
-      if(EEPROM.read(ix) != 0xFF)
+      // No RTC at the moment, we just process seconds according to current 
+      //   internal clock.
+      uint8_t seconds = (millis()/1000) % 60;
+      
+      bool match = true;
+      if(EEPROM.read(EEPROM_CRON_BASE+EEPROM_CRON_SECONDS_OFFSET) & _BV(EEPROM_CRON_SLASH_BIT) != 0)
       {
-        // No RTC at the moment, we just process seconds according to current 
-        //   internal clock.
-        uint8_t seconds = (millis()/1000) % 60;
-        
-        bool match = true;
-        if(EEPROM.read(ix+EEPROM_CRON_SECONDS_OFFSET) & _BV(EEPROM_CRON_SLASH_BIT) != 0)
+          match = match & (seconds % ((EEPROM.read(EEPROM_CRON_BASE+EEPROM_CRON_SECONDS_OFFSET) & EEPROM_CRON_VAL_MASK)) == 0);
+      }
+      
+      if(match)
+      {
+        // If we are the AP (DAP=0) TX means outbound else it means always inbound.
+        char *message_buffer = (lop_dap == 0)?lop_message_buffer_o:lop_message_buffer_i;
+        for(int cix=0; cix<EEPROM_CRON_SIZE; cix++)
         {
-            match = match & (seconds % ((EEPROM.read(ix+EEPROM_CRON_SECONDS_OFFSET) & EEPROM_CRON_VAL_MASK)) == 0);
-        }
-        
-        if(match)
-        {
-          // If we are the AP (DAP=0) TX means outbound else it means always inbound.
-          char *message_buffer = (lop_dap == 0)?lop_message_buffer_o:lop_message_buffer_i;
-          for(int cix=0; cix<EEPROM_CRON_SIZE; cix++)
+          message_buffer[cix]=EEPROM.read(EEPROM_CRON_BASE+cix+EEPROM_CRON_TASK_OFFSET);
+          
+          if(message_buffer[cix]=='\0')
           {
-            message_buffer[cix]=EEPROM.read(ix+cix+EEPROM_CRON_TASK_OFFSET);
-            
-            if(message_buffer[cix]=='\0')
-            {
-              break;
-            }
+            break;
           }
         }
       }

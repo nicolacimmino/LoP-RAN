@@ -28,6 +28,7 @@
 #include "OuterNeighboursList.h"
 #include "ACH.h"
 #include "NRF24L01Driver.h"
+#include "StartupSequence.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Attempts to register with an inner node in order to get radio resources allocted.
@@ -76,6 +77,8 @@ boolean registerWithInnerNode()
         {
           node_address += lop_rx_buffer[LOP_IX_SDU_REGACK_ADDRESS+ix] << (ix*4); 
         }
+        
+        startupOnNetRegistration();
         
         return true;
       }
