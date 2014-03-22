@@ -1,4 +1,4 @@
-# MacroIP_FSBC is part of MacroIP Core. Provides Access to FSBC services through simple
+# MacroIP_MSGP2P is part of MacroIP Core. Provides Access to msgp2p services through simple
 # textual macros.
 #   Copyright (C) 2014 Nicola Cimmino
 #
@@ -26,26 +26,33 @@
 #   this box in oder to get the traffic. This has the disavantage to require
 #   a range of private IPs to be reserved for out use.
 
+from msgp2p import msgp2p
+
 outputMacrosQueue = []
-fsbc_clients = {}
+msgp2p_clients = {}
 
 def processMacro(clientid, macro):
   
-  if macro.startswith("fsbc.register\\"):
+  if macro.startswith("msgp2p.register\\"):
+    print "Reg received"
     params = macro.split("\\")
-    uniqueid = params[1]
-    setUniqueID(clientid, uniqueid)
-    outputMacrosQueue.append((clientid,  "\\fsbc.ok\\\\"))
+    localUID = params[1]
+    setUniqueID(clientid, localUID)
+    outputMacrosQueue.append((clientid,  "\\msgp2p.ok\\\\"))
 
-  if macro.startswith("fsbc.send\\"):
+  if macro.startswith("msgp2p.send\\"):
     params = macro.split("\\")
-    uniqueid = params[1]
+    remoteUID = params[1]
     data_to_send = macro[ macro.find("\\\\") + 2:]
-    fsbc_clients[clientid].sendMessage(uniqueid, data_to_send)
-    outputMacrosQueue.append((clientid,  "\\fsbc.ok\\\\"))
+    msgp2p_clients[clientid].sendMessage(remoteUID, data_to_send)
+    outputMacrosQueue.append((clientid,  "\\msgp2p.ok\\\\"))
 
-def process_fsbc_message(destinationid, senderid, message, replyreuested, connectiontype):
-    outputMacrosQueue.append((getClientID(destinationid),  "\\fsbc.msg\\" + senderid + "\\" + message + "\\\\"))
+def process_msgp2p_message(localUID, remoteUID, message, logicalchannel):
+    print "Received message :" 
+    print remoteUID
+    print localUID
+    print message
+    outputMacrosQueue.append((getClientID(localUID),  "\\msgp2p.msg\\" + remoteUID + "\\\\" + message))
 
 def getOutputMacroIPMacro():
   if len(outputMacrosQueue) > 0:
@@ -54,13 +61,18 @@ def getOutputMacroIPMacro():
     return (None, None)
     
       
-def getClientID(uniqueid):
-  for clientid in fsbc_clients.keys():
-    if fsbc_clients[clientid].uniqueid == uniqueid:
+def getClientID(uid):
+  for clientid in msgp2p_clients.keys():
+    if msgp2p_clients[clientid] != None and msgp2p_clients[clientid].localUID == uid:
       return clientid
   return 0
   
-def setUniqueID(clientid, uniqueid):
-  fsbc = fsbc(uniqueid, process_fsbc_message)
-  fsbc_clients[clientid] = fsbc
+def setUniqueID(clientid, localUID):
+  # If this localUID is bound to another clientid unbind it first
+  # otherwise there will be multiple instances listening to the same UID.
+  for cid in msgp2p_clients.keys():
+    if msgp2p_clients[cid] != None and msgp2p_clients[cid].localUID == localUID:
+      msgp2p_clients[cid].stoplistening = True
+      msgp2p_clients[cid] = None
+  msgp2p_clients[clientid] = msgp2p(localUID, process_msgp2p_message)
     

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # LoPAccessPoint. Provides Access Point functionality in LoP-R(A)N.
 #   Copyright (C) 2014 Nicola Cimmino
 #
@@ -24,7 +25,7 @@ import traceback
 import sys
 
 # This is stuff that will come from a config file.
-serial_device_name = "/dev/ttyUSB0"
+serial_device_name = "/dev/ttyUSB2"
 serial_speed = 115200
 serial_open = False
 
@@ -86,9 +87,13 @@ while True:
     if lop_address != None:
       ser.write("ATTX " + str(lop_address) + " " + macro + "\n")
       
-  except OSError:
+  except (OSError, serial.serialutil.SerialException):
     print "Error in serial communication. Attempting serial restart."
     serial_open = False
+    if serial_device_name == "/dev/ttyUSB1":
+      serial_device_name = "/dev/ttyUSB0"
+    else:
+      serial_device_name = "/dev/ttyUSB1"
   except:
     print "Error processing serial data. Ignoring command."
     traceback.print_exc(file=sys.stdout)
