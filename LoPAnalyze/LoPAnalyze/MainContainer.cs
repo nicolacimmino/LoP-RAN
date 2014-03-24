@@ -23,25 +23,25 @@ namespace LoPAnalyze
             NodesMonitor.StartMonitoring();
         }
 
-        void NodesMonitor_NewNodeFound(string portName)
+        void NodesMonitor_NewNodeFound(LoPNode lopNpde)
         {
-            if(this.InvokeRequired)
+            if (this.InvokeRequired)
             {
-                this.Invoke(new Action(() => { NodesMonitor_NewNodeFound(portName); }));
+                this.Invoke(new Action(() => { NodesMonitor_NewNodeFound(lopNpde); }));
                 return;
             }
-          if(!statusDisplayForms.Keys.Contains(portName))
-          {
-              // We don't have yet a form for this port, create it.
-              // Otherwise ignore the event as the form will notice the
-              //    device coming back online.
-              NodeStatusDisplay newForm = new NodeStatusDisplay();
-              statusDisplayForms.Add(portName, newForm);
-              newForm.MdiParent = this;
-              newForm.Show();
-              newForm.SerialPortName = portName;
+            if (!statusDisplayForms.Keys.Contains(lopNpde))
+            {
+                // We don't have yet a form for this port, create it.
+                // Otherwise ignore the event as the form will notice the
+                //    device coming back online.
+                LoPNodeInterface newForm = new LoPNodeInterface();
+                statusDisplayForms.Add(lopNpde, newForm);
+                newForm.MdiParent = this;
+                newForm.Show();
+                newForm.LoPNode = lopNpde;
 
-          }
+            }
         }
 
         private void MainContainer_FormClosing(object sender, FormClosingEventArgs e)
@@ -49,7 +49,7 @@ namespace LoPAnalyze
             NodesMonitor.StopMonitoring();
         }
 
-        Dictionary<string, NodeStatusDisplay> statusDisplayForms = new Dictionary<string, NodeStatusDisplay>();
+        Dictionary<LoPNode, LoPNodeInterface> statusDisplayForms = new Dictionary<LoPNode, LoPNodeInterface>();
 
     }
 }

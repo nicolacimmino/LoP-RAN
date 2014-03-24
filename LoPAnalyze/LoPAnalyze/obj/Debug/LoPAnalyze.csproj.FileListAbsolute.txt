@@ -8,3 +8,4 @@ C:\Users\nicola\Documents\git\LoP-RAN\LoPAnalyze\LoPAnalyze\bin\Debug\LoPAnalyze
 C:\Users\nicola\Documents\git\LoP-RAN\LoPAnalyze\LoPAnalyze\obj\Debug\LoPAnalyze.exe
 C:\Users\nicola\Documents\git\LoP-RAN\LoPAnalyze\LoPAnalyze\obj\Debug\LoPAnalyze.pdb
 C:\Users\nicola\Documents\git\LoP-RAN\LoPAnalyze\LoPAnalyze\obj\Debug\LoPAnalyze.NodeStatusDisplay.resources
+C:\Users\nicola\Documents\git\LoP-RAN\LoPAnalyze\LoPAnalyze\obj\Debug\LoPAnalyze.LoPNodeInterface.resources

@@ -84,7 +84,10 @@ namespace LoPAnalyze
                                     {
                                         if (NewNodeFound != null)
                                         {
-                                            NewNodeFound(portName);
+                                            LoPNode lopNode = new LoPNode();
+                                            lopNode.SerialPortName = portName;
+                                            port.Close();
+                                            NewNodeFound(lopNode);
                                         }
                                         knownPorts.Add(portName);
                                     }
@@ -122,7 +125,7 @@ namespace LoPAnalyze
 
         private static List<string> knownPorts = new List<string>();
 
-        public delegate void NewNodeFoundEventDelegate(String portName);
+        public delegate void NewNodeFoundEventDelegate(LoPNode lopNode);
 
         public static event NewNodeFoundEventDelegate NewNodeFound;
 
