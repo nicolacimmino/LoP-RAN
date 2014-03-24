@@ -21,6 +21,7 @@
 #include "Arduino.h"
 #include <EEPROM.h>
 #include "Common.h"
+#include "EEPROMMap.h"
 #include "LoPDia.h"
 #include "LoPParams.h"
 #include "DataLink.h"

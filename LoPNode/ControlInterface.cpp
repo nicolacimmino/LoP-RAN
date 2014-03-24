@@ -21,6 +21,7 @@
 #include <Arduino.h>
 #include <Serial.h>
 #include <EEPROM.h>
+#include "EEPROMMap.h"
 #include "Common.h"
 #include "ControlInterface.h"
 #include "LoPDia.h"
@@ -185,6 +186,28 @@ void process_control_command()
     scanner_mode = (control_rx_buffer[6]=='1');
     Serial.println("OK"); 
   }
+  else if(strstr(control_rx_buffer, "ATCFGR") - control_rx_buffer == 0)
+  {
+    char * pEnd;
+    unsigned long address = strtoul(control_rx_buffer+7, &pEnd, 10);
+    unsigned long cnt = strtoul(pEnd, 0, 10);
+    for(int ix=0; ix<cnt;ix++)
+    {
+      Serial.print(EEPROM.read(address), DEC);
+      address++;
+      Serial.print(" ");
+    }
+    Serial.println("");
+    Serial.println("OK");
+  }
+  else if(strstr(control_rx_buffer, "ATCFGW") - control_rx_buffer == 0)
+  {
+    char * pEnd;
+    unsigned long address = strtoul(control_rx_buffer+7, &pEnd, 10);
+    unsigned long value = strtoul(pEnd, 0, 10);
+    EEPROM.write(address,value);
+    Serial.println("OK");
+  }
   else if(strstr(control_rx_buffer, "ATRX") - control_rx_buffer == 0)
   {
     if(control_rx_buffer[4]=='?')
@@ -261,7 +284,7 @@ void process_control_command()
     //  the heap is empty in which case it will be __heap_start.
     extern int __heap_start, *__brkval; 
     int v; 
-    Serial.println((int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval));
+    Serial.println((int)&v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval), DEC);
     Serial.println("OK");
   }
   else if(strstr(control_rx_buffer, "AT") - control_rx_buffer == 0 

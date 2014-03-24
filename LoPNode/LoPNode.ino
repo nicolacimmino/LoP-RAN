@@ -36,6 +36,7 @@
 
 #include <SPI.h>
 #include <EEPROM.h>
+#include "EEPROMMap.h"
 #include "Scheduler.h"
 #include "Common.h"
 #include "NRF24L01Driver.h"

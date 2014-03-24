@@ -21,6 +21,7 @@
 #include "Arduino.h"
 #include <SPI.h>
 #include <EEPROM.h>
+#include "EEPROMMap.h"
 #include "LoPDia.h"
 #include "NetTime.h"
 #include "DataLink.h"

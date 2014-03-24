@@ -29,7 +29,7 @@
   #define LOP_LOW_CHANNEL 49                 // Lowest usable radio channel
   #define LOP_HI_CHANNEL  54                 // Highest usable radio channel
   #define LOP_PAYL_SIZE 32                 // NRF24L01 MAC layer payload size
-  #define LOP_MTU 256                      // MTU size
+  #define LOP_MTU 128                      // MTU size
   #define LOP_REG_MAX_RETRY 3
   #define BCH_PIPE_ADDR  0x5000000001LL     // BCH Pipe Address (outbound only)
   #define ACH_PIPE_ADDR_IN 0x5100000100LL  // ACH inbound pipe

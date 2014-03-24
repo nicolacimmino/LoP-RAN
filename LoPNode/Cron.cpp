@@ -20,6 +20,7 @@
 //    sub chapter of these documents.
 
 #include <EEPROM.h>
+#include "EEPROMMap.h"
 #include "Cron.h"
 #include "Common.h"
 

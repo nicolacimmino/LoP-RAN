@@ -1,4 +1,4 @@
-// DataLink is part of LoP-RAN , provides implementation of L2 functionality.
+// EEPROMMap is part of LoP-RAN , defines EEPROM memory usage.
 //  Copyright (C) 2014 Nicola Cimmino
 //
 //    This program is free software: you can redistribute it and/or modify
@@ -18,26 +18,19 @@
 //    This source code referes, where apllicable, to the chapter and 
 //    sub chapter of these documents.
 
-#ifndef __DataLink_h__
-#define __DataLink_h__
 
+#define EEPROM_RFCH_INNER_NODE  0x01            // Last known good RF channel
+#define EEPROM_RFCH_ACT_AS_AP   0x02            // Act as an Access Point if != 0
+#define EEPROM_NID_BASE         0x03            // Base of the Network Identifier (8 bytes up to 0x0A)
 
-// The actual transmitted preamble is 4 bytes, we null terminate it to be able to use
-//  string manipulation functions when comparing etc.
-const char preamble[5] = {0x55, 0xAA, 0x55, 0xAA, 0x00}; 
+#define EEPROM_CRON_BASE        0x0200
+#define EEPROM_CRON_END         0x03FF
+#define EEPROM_CRON_SIZE        0x80            // Size of a single cron entry.
 
-// TX Buffer.
-extern char lop_tx_buffer[];
-
-// RX Buffer.
-extern char lop_rx_buffer[];
-
-// Distance from access point
-extern byte lop_dap;
-
-bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms);
-void sendLoPRANMessage(char *data, int len);
-void setupDataLink();
-
-#endif
-
+#define EEPROM_CRON_HOURS_OFFSET 0
+#define EEPROM_CRON_MINUTES_OFFSET 1
+#define EEPROM_CRON_SECONDS_OFFSET 2
+#define EEPROM_CRON_TASK_OFFSET 3
+#define EEPROM_CRON_STAR_BIT 7
+#define EEPROM_CRON_SLASH_BIT 6
+#define EEPROM_CRON_VAL_MASK 0b00111111
