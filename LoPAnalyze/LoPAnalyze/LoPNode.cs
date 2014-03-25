@@ -45,9 +45,19 @@ namespace LoPAnalyze
                 return false;
             }
         }
-        private String sendCommand(String command)
+
+        private void sendCommand(String command)
         {
             if(ensureConnection())
+            {
+                serialPort.WriteLine(command);
+                waitOK();
+            }
+        }
+
+        private String sendQuery(String command)
+        {
+            if (ensureConnection())
             {
                 serialPort.WriteLine(command);
                 return readResponse();
@@ -72,9 +82,22 @@ namespace LoPAnalyze
             return null;
         }
 
+        private void waitOK()
+        {
+            if (ensureConnection())
+            {
+                String response = "";
+                while (!response.Contains("OK"))
+                {
+                    response = serialPort.ReadLine();
+                    response = response.Replace("\n", "").Replace("\r", "");
+                }
+            }
+        }
+
         public byte ReadConfiguration(UInt16 address)
         {
-            String response = sendCommand("ATCFGR " + address.ToString());
+            String response = sendQuery("ATCFGR " + address.ToString());
             if(!String.IsNullOrEmpty(response))
             {
                 return byte.Parse(response);
@@ -85,7 +108,7 @@ namespace LoPAnalyze
 
         public List<byte> ReadConfiguration(UInt16 address, int amount)
         {
-            String response = sendCommand("ATCFGR " + address.ToString() + " " + amount.ToString());
+            String response = sendQuery("ATCFGR " + address.ToString() + " " + amount.ToString());
             if (!String.IsNullOrEmpty(response))
             {
                 List<byte> res = new List<byte>();
@@ -100,6 +123,15 @@ namespace LoPAnalyze
             }
 
             return null;
+        }
+
+        public void WriteConfiguration(int address, List<Byte> values)
+        {
+            foreach(byte value in values)
+            {
+                sendCommand("ATCFGW " + address.ToString() + " " + value.ToString());
+                address++;
+            }
         }
     }
 }
