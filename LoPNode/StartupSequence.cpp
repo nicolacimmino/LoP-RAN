@@ -17,7 +17,8 @@
 //
 #include "Arduino.h"
 #include "Common.h"
-
+#include "EEPROMMap.h"
+#include <EEPROM.h>
 uint8_t last_startup_step = 0;
 
 void processStartupSequence()
@@ -25,7 +26,24 @@ void processStartupSequence()
   
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Invoke every time the node performs a successfull network entry.
+//
 void startupOnNetRegistration()
 {
-  strcpy(lop_message_buffer_i, "\\msgp2p.register\\A2BXJV2ZMIDCL2IPRINBE44SQFNXU3WHO\\\0"); 
+  // Register to the msgp2p network.
+  strcpy(lop_message_buffer_i, "\\msgp2p.register\\");
+  for(int address=EEPROM_mp2p_UID_BASE; address<EEPROM_mp2p_UID_BASE+EEPROM_mp2p_UID_LEN; address++)
+  {
+    byte value = EEPROM.read(address);
+    if(value != 0)
+    {
+      lop_message_buffer_i[17+(address-EEPROM_mp2p_UID_BASE)] = value;
+    }
+    else
+    {
+      strcpy(lop_message_buffer_i+17+(address-EEPROM_mp2p_UID_BASE), "\\\\0"); 
+      break;   
+    }
+  }
 }
