@@ -59,10 +59,8 @@ namespace LoPNodeUtilityGUI
             inputControlsUpdateFunctions.Add(textBoxNID1, (Action)(() => { this.writeNID(textBoxNID1, 1); }));
             inputControlsUpdateFunctions.Add(textBoxNID2, (Action)(() => { this.writeNID(textBoxNID2, 2); }));
             inputControlsUpdateFunctions.Add(textBoxNID3, (Action)(() => { this.writeNID(textBoxNID3, 3); }));
-            inputControlsUpdateFunctions.Add(textBoxNID4, (Action)(() => { this.writeNID(textBoxNID4, 4); }));
-            inputControlsUpdateFunctions.Add(textBoxNID5, (Action)(() => { this.writeNID(textBoxNID5, 5); }));
-            inputControlsUpdateFunctions.Add(textBoxNID6, (Action)(() => { this.writeNID(textBoxNID6, 6); }));
-            inputControlsUpdateFunctions.Add(textBoxNID7, (Action)(() => { this.writeNID(textBoxNID7, 7); }));
+            inputControlsUpdateFunctions.Add(checkBoxSeed, (Action)(() => { this.writeSeed(checkBoxSeed.Checked); }));
+
 
             // Prevent form resizing even when double clicking the top bar.
             this.MinimumSize = this.Size;
@@ -83,6 +81,9 @@ namespace LoPNodeUtilityGUI
                 fetchmsgp2pUID();
                 fetchNID();
                 fetchCron();
+                fetchSeed();
+
+                this.Text = String.Format("LoP Node ( {0} )", lopNode.SerialPortName);
             }
         }
 
@@ -133,7 +134,7 @@ namespace LoPNodeUtilityGUI
         /// </summary>
         private void fetchmsgp2pUID()
         {
-            List<Byte> value = lopNode.ReadConfiguration(11, 40);
+            List<Byte> value = lopNode.ReadConfiguration(EEPROM_mp2p_UID_BASE, 40);
             String uid = System.Text.ASCIIEncoding.Default.GetString(value.ToArray<Byte>());
             textBoxmsgp2pUID.Text = uid;
             textBoxmsgp2pUID.Tag = false;
@@ -149,7 +150,7 @@ namespace LoPNodeUtilityGUI
             {
                 values.Add(0);
             }
-            lopNode.WriteConfiguration(11, values);
+            lopNode.WriteConfiguration(EEPROM_mp2p_UID_BASE, values);
         }
 
         /// <summary>
@@ -157,23 +158,15 @@ namespace LoPNodeUtilityGUI
         /// </summary>
         private void fetchNID()
         {
-            List<Byte> values = lopNode.ReadConfiguration(3, 8);
+            List<Byte> values = lopNode.ReadConfiguration(EEPROM_NID_BASE, 4);
             textBoxNID0.Text = values[0].ToString();
             textBoxNID1.Text = values[1].ToString();
             textBoxNID2.Text = values[2].ToString();
             textBoxNID3.Text = values[3].ToString();
-            textBoxNID4.Text = values[4].ToString();
-            textBoxNID5.Text = values[5].ToString();
-            textBoxNID6.Text = values[6].ToString();
-            textBoxNID7.Text = values[7].ToString();
             textBoxNID0.Tag = false;
             textBoxNID1.Tag = false;
             textBoxNID2.Tag = false;
             textBoxNID3.Tag = false;
-            textBoxNID4.Tag = false;
-            textBoxNID5.Tag = false;
-            textBoxNID6.Tag = false;
-            textBoxNID7.Tag = false;
         }
 
         /// <summary>
@@ -184,7 +177,7 @@ namespace LoPNodeUtilityGUI
         private void writeNID(TextBox nidTextBox, int nidPosition)
         {
             byte value = byte.Parse(nidTextBox.Text);
-            lopNode.WriteConfiguration(3 + nidPosition, value);
+            lopNode.WriteConfiguration(EEPROM_NID_BASE + nidPosition, value);
         }
 
         /// <summary>
@@ -192,7 +185,7 @@ namespace LoPNodeUtilityGUI
         /// </summary>
         private void fetchCron()
         {
-            List<Byte> values = lopNode.ReadConfiguration(0x200, 0x80);
+            List<Byte> values = lopNode.ReadConfiguration(EEPROM_CRON_BASE, EEPROM_CRON_SIZE);
             listViewCron.Items.Clear();
             ListViewItem newItem = listViewCron.Items.Add(cronValueToString(values[0]));
             if (values[0] != 0xFF)
@@ -239,6 +232,24 @@ namespace LoPNodeUtilityGUI
         }
 
         /// <summary>
+        /// Fetches the value of a flag indicating should this node act as a seed.
+        /// </summary>
+        private void fetchSeed()
+        {
+            Byte value = lopNode.ReadConfiguration(EEPROM_RFCH_ACT_AS_SEED);
+            checkBoxSeed.Checked = (value == 1);
+        }
+
+        /// <summary>
+        /// Writes the the flag indicating should this node act as a seed.
+        /// </summary>
+        private void writeSeed(bool status)
+        {
+            lopNode.WriteConfiguration(EEPROM_RFCH_ACT_AS_SEED, (byte)((checkBoxSeed.Checked) ? 1 : 0));
+        }
+
+
+        /// <summary>
         /// This will be invoked by the leave of any input control. If an update handle function
         ///     is associated with it and the content has changed since the last update it will
         ///     trigger the update function.
@@ -269,6 +280,20 @@ namespace LoPNodeUtilityGUI
         }
 
         /// <summary>
+        /// A checkbx of the config group changed. In this case we send
+        ///     immediately the new setting to the hardware since this
+        ///     control has only two states it's pointless to wait for
+        ///     focus lost.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void configCheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            Control senderControl = sender as Control;
+            inputControlsUpdateFunctions[senderControl].Invoke();
+        }
+
+        /// <summary>
         /// This is the config bytes view contextual menu to reload the view content.
         /// </summary>
         /// <param name="sender"></param>
@@ -278,6 +303,13 @@ namespace LoPNodeUtilityGUI
             fetchConfigBytes();
         }
 
+
+        const int EEPROM_RFCH_ACT_AS_SEED = 0x02;            // Act as anetwork seed if != 0
+        const int EEPROM_NID_BASE = 0x03;            // Base of the Network Identifier (8 bytes up to 0x0A)
+        const int EEPROM_mp2p_UID_BASE = 0x0B;            // Base of the msgp2p UID (max 40 bytes up to 0x33)
+        const int EEPROM_mp2p_UID_LEN = 40;
+        const int EEPROM_CRON_BASE = 0x0200;
+        const int EEPROM_CRON_SIZE = 0x80;            // Size of a single cron entry.
 
     }
 }

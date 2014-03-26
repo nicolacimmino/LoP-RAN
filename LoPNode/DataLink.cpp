@@ -48,7 +48,7 @@ void setupDataLink()
   strncpy(lop_tx_buffer, preamble, 4);
   
   // Initialize lop_dap according to our role
-  lop_dap=(EEPROM.read(EEPROM_RFCH_ACT_AS_AP)==1)?0:0xFF;
+  lop_dap=(EEPROM.read(EEPROM_RFCH_ACT_AS_SEED)==1)?0:0xFF;
 }
 
 bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms)

@@ -243,13 +243,13 @@ void process_control_command()
   else if(strstr(control_rx_buffer, "ATAP1") - control_rx_buffer == 0)
   {  
     lop_dap = 0;
-    EEPROM.write(EEPROM_RFCH_ACT_AS_AP, 1);
+    EEPROM.write(EEPROM_RFCH_ACT_AS_SEED, 1);
     Serial.println("OK");
   }
   else if(strstr(control_rx_buffer, "ATAP0") - control_rx_buffer == 0)
   {  
     lop_dap = 0xFF;
-    EEPROM.write(EEPROM_RFCH_ACT_AS_AP, 0);
+    EEPROM.write(EEPROM_RFCH_ACT_AS_SEED, 0);
     Serial.println("OK");
   }
   else if(strstr(control_rx_buffer, "ATONL?") - control_rx_buffer == 0)

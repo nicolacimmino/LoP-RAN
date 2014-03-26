@@ -39,7 +39,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.IsMdiContainer = true;
             this.Name = "MainContainer";
-            this.Text = "MainContainer";
+            this.Text = "LoP Node Utility";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainContainer_FormClosing);
             this.Load += new System.EventHandler(this.MainContainer_Load);
             this.ResumeLayout(false);

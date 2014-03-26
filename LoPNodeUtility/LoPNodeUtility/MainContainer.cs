@@ -37,9 +37,9 @@ namespace LoPNodeUtilityGUI
     public partial class MainContainer : Form
     {
         /// <summary>
-        /// A collection of all forms currently open and the node they are associated to.
+        /// A collection of all forms currently open and the serial port of the node they are associated to.
         /// </summary>
-        Dictionary<LoPNode, LoPNodeInterface> statusDisplayForms = new Dictionary<LoPNode, LoPNodeInterface>();
+        Dictionary<String, LoPNodeInterface> statusDisplayForms = new Dictionary<String, LoPNodeInterface>();
 
         /// <summary>
         /// 
@@ -78,10 +78,10 @@ namespace LoPNodeUtilityGUI
             // We don't have yet a form for this port, create it.
             // Otherwise ignore the event as the form will notice the
             //    device coming back online.
-            if (!statusDisplayForms.Keys.Contains(lopNpde))
+            if (!statusDisplayForms.Keys.Contains(lopNpde.SerialPortName))
             {
                 LoPNodeInterface newForm = new LoPNodeInterface();
-                statusDisplayForms.Add(lopNpde, newForm);
+                statusDisplayForms.Add(lopNpde.SerialPortName, newForm);
                 newForm.MdiParent = this;
                 newForm.Show();
                 newForm.LoPNode = lopNpde;

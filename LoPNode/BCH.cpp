@@ -67,6 +67,10 @@ void broadcastBCH()
     #error Missing implementation for current network type.
     #endif
 
+    for(int ix=0; ix<LOP_IX_SDU_BCH_NID_LEN; ix++)
+    {
+      lop_tx_buffer[LOP_IX_SDU_BCH_NID_BASE+ix] = EEPROM.read(EEPROM_NID_BASE+ix);
+    }
     
     // And we finally send out the SDU using the current power.
     setTransmitPower(power);
@@ -137,7 +141,18 @@ void innerNodeScanAndSync()
     else if(lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_BCH)
     {    
         
-      // We got a BCH SDU. This is a good channel so we start ranging.
+      // We got a BCH SDU. This is a good channel so we start ranging if the NID matches
+      bool nidMatch = true;
+      for(int ix=0; ix<LOP_IX_SDU_BCH_NID_LEN; ix++)
+      {
+        if(lop_rx_buffer[LOP_IX_SDU_BCH_NID_BASE+ix] != EEPROM.read(EEPROM_NID_BASE+ix))
+        {
+           nidMatch = false;
+        }
+      }
+      
+      // Not the right NID, ignore and continue SCAN
+      if(!nidMatch) continue;
       
       // Store this as last known good channel, save EEPROM life by not
       //  writing over if there is no change.

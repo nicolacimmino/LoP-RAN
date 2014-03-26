@@ -156,7 +156,7 @@ namespace LoPNodeUtility
         /// <returns></returns>
         public byte ReadConfiguration(UInt16 address)
         {
-            String response = sendQuery("ATCFGR " + address.ToString());
+            String response = sendQuery("ATCFGR " + address.ToString() + " 1");
             if (!String.IsNullOrEmpty(response))
             {
                 return byte.Parse(response);
@@ -181,7 +181,14 @@ namespace LoPNodeUtility
                 {
                     if (value != "")
                     {
-                        res.Add(byte.Parse(value));
+                        try
+                        {
+                            res.Add(byte.Parse(value));
+                        }
+                        catch(Exception)
+                        {
+                            res.Add(0);
+                        }
                     }
                 }
                 return res;

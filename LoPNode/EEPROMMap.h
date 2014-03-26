@@ -20,7 +20,7 @@
 
 
 #define EEPROM_RFCH_INNER_NODE  0x01            // Last known good RF channel
-#define EEPROM_RFCH_ACT_AS_AP   0x02            // Act as an Access Point if != 0
+#define EEPROM_RFCH_ACT_AS_SEED 0x02            // Act as anetwork seed if != 0
 #define EEPROM_NID_BASE         0x03            // Base of the Network Identifier (8 bytes up to 0x0A)
 #define EEPROM_mp2p_UID_BASE    0x0B            // Base of the msgp2p UID (max 40 bytes up to 0x33)
 #define EEPROM_mp2p_UID_LEN     40

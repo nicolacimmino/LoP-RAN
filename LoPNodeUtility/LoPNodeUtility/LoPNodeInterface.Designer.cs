@@ -35,16 +35,14 @@
             this.reloadConfigBytesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.checkBoxSeed = new System.Windows.Forms.CheckBox();
             this.label3 = new System.Windows.Forms.Label();
             this.listViewCron = new System.Windows.Forms.ListView();
             this.columnHeaderHours = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderMinutes = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderSeconds = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderEvent = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.textBoxNID7 = new System.Windows.Forms.TextBox();
-            this.textBoxNID6 = new System.Windows.Forms.TextBox();
-            this.textBoxNID5 = new System.Windows.Forms.TextBox();
-            this.textBoxNID4 = new System.Windows.Forms.TextBox();
             this.textBoxNID3 = new System.Windows.Forms.TextBox();
             this.textBoxNID2 = new System.Windows.Forms.TextBox();
             this.textBoxNID1 = new System.Windows.Forms.TextBox();
@@ -56,6 +54,7 @@
             this.contextMenuConfigBytes.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage2.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             this.tabPageRawConfig.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -99,12 +98,9 @@
             // 
             // tabPage2
             // 
+            this.tabPage2.Controls.Add(this.groupBox1);
             this.tabPage2.Controls.Add(this.label3);
             this.tabPage2.Controls.Add(this.listViewCron);
-            this.tabPage2.Controls.Add(this.textBoxNID7);
-            this.tabPage2.Controls.Add(this.textBoxNID6);
-            this.tabPage2.Controls.Add(this.textBoxNID5);
-            this.tabPage2.Controls.Add(this.textBoxNID4);
             this.tabPage2.Controls.Add(this.textBoxNID3);
             this.tabPage2.Controls.Add(this.textBoxNID2);
             this.tabPage2.Controls.Add(this.textBoxNID1);
@@ -119,6 +115,27 @@
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Smart Node";
             this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.checkBoxSeed);
+            this.groupBox1.Location = new System.Drawing.Point(622, 60);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(300, 316);
+            this.groupBox1.TabIndex = 2;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Config Flags";
+            // 
+            // checkBoxSeed
+            // 
+            this.checkBoxSeed.AutoSize = true;
+            this.checkBoxSeed.Location = new System.Drawing.Point(18, 35);
+            this.checkBoxSeed.Name = "checkBoxSeed";
+            this.checkBoxSeed.Size = new System.Drawing.Size(73, 24);
+            this.checkBoxSeed.TabIndex = 0;
+            this.checkBoxSeed.Text = "Seed";
+            this.checkBoxSeed.UseVisualStyleBackColor = true;
+            this.checkBoxSeed.CheckedChanged += new System.EventHandler(this.configCheckbox_CheckedChanged);
             // 
             // label3
             // 
@@ -159,42 +176,6 @@
             // 
             this.columnHeaderEvent.Text = "Event";
             this.columnHeaderEvent.Width = 250;
-            // 
-            // textBoxNID7
-            // 
-            this.textBoxNID7.Location = new System.Drawing.Point(549, 60);
-            this.textBoxNID7.Name = "textBoxNID7";
-            this.textBoxNID7.Size = new System.Drawing.Size(52, 26);
-            this.textBoxNID7.TabIndex = 10;
-            this.textBoxNID7.TextChanged += new System.EventHandler(this.inputControl_TextChanged);
-            this.textBoxNID7.Leave += new System.EventHandler(this.inputControl_Leave);
-            // 
-            // textBoxNID6
-            // 
-            this.textBoxNID6.Location = new System.Drawing.Point(491, 60);
-            this.textBoxNID6.Name = "textBoxNID6";
-            this.textBoxNID6.Size = new System.Drawing.Size(52, 26);
-            this.textBoxNID6.TabIndex = 9;
-            this.textBoxNID6.TextChanged += new System.EventHandler(this.inputControl_TextChanged);
-            this.textBoxNID6.Leave += new System.EventHandler(this.inputControl_Leave);
-            // 
-            // textBoxNID5
-            // 
-            this.textBoxNID5.Location = new System.Drawing.Point(433, 60);
-            this.textBoxNID5.Name = "textBoxNID5";
-            this.textBoxNID5.Size = new System.Drawing.Size(52, 26);
-            this.textBoxNID5.TabIndex = 8;
-            this.textBoxNID5.TextChanged += new System.EventHandler(this.inputControl_TextChanged);
-            this.textBoxNID5.Leave += new System.EventHandler(this.inputControl_Leave);
-            // 
-            // textBoxNID4
-            // 
-            this.textBoxNID4.Location = new System.Drawing.Point(375, 60);
-            this.textBoxNID4.Name = "textBoxNID4";
-            this.textBoxNID4.Size = new System.Drawing.Size(52, 26);
-            this.textBoxNID4.TabIndex = 7;
-            this.textBoxNID4.TextChanged += new System.EventHandler(this.inputControl_TextChanged);
-            this.textBoxNID4.Leave += new System.EventHandler(this.inputControl_Leave);
             // 
             // textBoxNID3
             // 
@@ -241,10 +222,10 @@
             this.label2.TabIndex = 2;
             this.label2.Text = "NID:";
             // 
-            // textBoxUID
+            // textBoxmsgp2pUID
             // 
             this.textBoxmsgp2pUID.Location = new System.Drawing.Point(143, 92);
-            this.textBoxmsgp2pUID.Name = "textBoxUID";
+            this.textBoxmsgp2pUID.Name = "textBoxmsgp2pUID";
             this.textBoxmsgp2pUID.Size = new System.Drawing.Size(458, 26);
             this.textBoxmsgp2pUID.TabIndex = 1;
             this.textBoxmsgp2pUID.TextChanged += new System.EventHandler(this.inputControl_TextChanged);
@@ -287,6 +268,8 @@
             this.tabControl1.ResumeLayout(false);
             this.tabPage2.ResumeLayout(false);
             this.tabPage2.PerformLayout();
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             this.tabPageRawConfig.ResumeLayout(false);
             this.tabPageRawConfig.PerformLayout();
             this.ResumeLayout(false);
@@ -303,10 +286,6 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox textBoxNID0;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.TextBox textBoxNID7;
-        private System.Windows.Forms.TextBox textBoxNID6;
-        private System.Windows.Forms.TextBox textBoxNID5;
-        private System.Windows.Forms.TextBox textBoxNID4;
         private System.Windows.Forms.TextBox textBoxNID3;
         private System.Windows.Forms.TextBox textBoxNID2;
         private System.Windows.Forms.TextBox textBoxNID1;
@@ -318,5 +297,7 @@
         private System.Windows.Forms.ColumnHeader columnHeaderMinutes;
         private System.Windows.Forms.ColumnHeader columnHeaderSeconds;
         private System.Windows.Forms.ColumnHeader columnHeaderEvent;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.CheckBox checkBoxSeed;
     }
 }
