@@ -28,12 +28,29 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.IO.Ports;
 
-namespace LoPAnalyze
+namespace LoPNodeUtility
 {
+    /// <summary>
+    /// This class is abstract as we don't want multiple instances monitoring ports.
+    /// To start just call the static method NodesMonitor.StartMonitoring() after registering
+    ///     to the NewNodeFound event.
+    /// </summary>
     abstract class NodesMonitor
     {
+        /// <summary>
+        /// This is the thread in which the monitoring happens 
+        /// continually in bacground.
+        /// </summary>
         private static Thread monitoringThread = null;
 
+        /// <summary>
+        /// Ports for which we have already found if they are connected to node or not.
+        /// </summary>
+        private static List<string> knownPorts = new List<string>();
+
+        /// <summary>
+        /// Starts monitoring for new nodes being connected.
+        /// </summary>
         public static void StartMonitoring()
         {
             if(NodesMonitor.monitoringThread == null)
@@ -43,6 +60,9 @@ namespace LoPAnalyze
             }
         }
 
+        /// <summary>
+        /// Stops monitoring for new nodes being connected.
+        /// </summary>
         public static void StopMonitoring()
         {
             if(NodesMonitor.monitoringThread != null)
@@ -54,6 +74,8 @@ namespace LoPAnalyze
 
         /// <summary>
         /// This loop runs in its own thread for the all life span of the application.
+        /// Every time a new serial port is detected an attempt is made to communicate with it.
+        /// If the device turns out to be a LoP-RAN node an event is rasied.
         /// </summary>
         private static void monitoringLoop()
         {
@@ -104,7 +126,8 @@ namespace LoPAnalyze
                             catch(Exception)
                             {
                                 // Port might not be ready yet so open throws even if
-                                //  the port is listed as available.
+                                //  the port is listed as available. We don't do anything
+                                //  next round the port will likely be ready.
                             }
                         }
                     }
@@ -119,14 +142,20 @@ namespace LoPAnalyze
             }
             catch(ThreadAbortException)
             {
-
+                // Thread has been killed, monitoring stopped. We don't have special cleanup to do here for now.
             }
         }
 
-        private static List<string> knownPorts = new List<string>();
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="lopNode"></param>
         public delegate void NewNodeFoundEventDelegate(LoPNode lopNode);
 
+        /// <summary>
+        /// Event informing that a node was found. Provides a ready instance of
+        ///     a LoPNode initialized for that node.
+        /// </summary>
         public static event NewNodeFoundEventDelegate NewNodeFound;
 
     }

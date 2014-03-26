@@ -1,4 +1,4 @@
-﻿namespace LoPAnalyze
+﻿namespace LoPNodeUtilityGUI
 {
     partial class MainContainer
     {

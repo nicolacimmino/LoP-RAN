@@ -7,7 +7,7 @@
     <ProjectGuid>{F6A021DE-8DBF-4EA4-9262-497FFF6FE5B1}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LoPAnalyze</RootNamespace>
+    <RootNamespace>LoPNodeUtilityGUI</RootNamespace>
     <AssemblyName>LoPAnalyze</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -61,12 +61,6 @@
       <DependentUpon>MainContainer.cs</DependentUpon>
     </Compile>
     <Compile Include="NodesMonitor.cs" />
-    <Compile Include="NodeStatusDisplay.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="NodeStatusDisplay.Designer.cs">
-      <DependentUpon>NodeStatusDisplay.cs</DependentUpon>
-    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="LoPNodeInterface.resx">
@@ -74,9 +68,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="MainContainer.resx">
       <DependentUpon>MainContainer.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="NodeStatusDisplay.resx">
-      <DependentUpon>NodeStatusDisplay.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -86,6 +77,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

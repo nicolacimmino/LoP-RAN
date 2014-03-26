@@ -1,4 +1,4 @@
-﻿namespace LoPAnalyze
+﻿namespace LoPNodeUtilityGUI
 {
     partial class LoPNodeInterface
     {
@@ -50,7 +50,7 @@
             this.textBoxNID1 = new System.Windows.Forms.TextBox();
             this.textBoxNID0 = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.textBoxUID = new System.Windows.Forms.TextBox();
+            this.textBoxmsgp2pUID = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.tabPageRawConfig = new System.Windows.Forms.TabPage();
             this.contextMenuConfigBytes.SuspendLayout();
@@ -110,7 +110,7 @@
             this.tabPage2.Controls.Add(this.textBoxNID1);
             this.tabPage2.Controls.Add(this.textBoxNID0);
             this.tabPage2.Controls.Add(this.label2);
-            this.tabPage2.Controls.Add(this.textBoxUID);
+            this.tabPage2.Controls.Add(this.textBoxmsgp2pUID);
             this.tabPage2.Controls.Add(this.label1);
             this.tabPage2.Location = new System.Drawing.Point(4, 29);
             this.tabPage2.Name = "tabPage2";
@@ -119,7 +119,6 @@
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Smart Node";
             this.tabPage2.UseVisualStyleBackColor = true;
-            this.tabPage2.Click += new System.EventHandler(this.tabPage2_Click);
             // 
             // label3
             // 
@@ -244,12 +243,12 @@
             // 
             // textBoxUID
             // 
-            this.textBoxUID.Location = new System.Drawing.Point(143, 92);
-            this.textBoxUID.Name = "textBoxUID";
-            this.textBoxUID.Size = new System.Drawing.Size(458, 26);
-            this.textBoxUID.TabIndex = 1;
-            this.textBoxUID.TextChanged += new System.EventHandler(this.inputControl_TextChanged);
-            this.textBoxUID.Leave += new System.EventHandler(this.inputControl_Leave);
+            this.textBoxmsgp2pUID.Location = new System.Drawing.Point(143, 92);
+            this.textBoxmsgp2pUID.Name = "textBoxUID";
+            this.textBoxmsgp2pUID.Size = new System.Drawing.Size(458, 26);
+            this.textBoxmsgp2pUID.TabIndex = 1;
+            this.textBoxmsgp2pUID.TextChanged += new System.EventHandler(this.inputControl_TextChanged);
+            this.textBoxmsgp2pUID.Leave += new System.EventHandler(this.inputControl_Leave);
             // 
             // label1
             // 
@@ -284,7 +283,6 @@
             this.Name = "LoPNodeInterface";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.Text = "LoPNodeInterface";
-            this.Load += new System.EventHandler(this.LoPNodeInterface_Load);
             this.contextMenuConfigBytes.ResumeLayout(false);
             this.tabControl1.ResumeLayout(false);
             this.tabPage2.ResumeLayout(false);
@@ -301,7 +299,7 @@
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPageRawConfig;
         private System.Windows.Forms.TabPage tabPage2;
-        private System.Windows.Forms.TextBox textBoxUID;
+        private System.Windows.Forms.TextBox textBoxmsgp2pUID;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox textBoxNID0;
         private System.Windows.Forms.Label label2;
