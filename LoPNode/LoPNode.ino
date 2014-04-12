@@ -54,12 +54,13 @@ void setup(void)
   setupControlInterface();
   setupRadio();  
   
+  /*
   EEPROM.write(EEPROM_CRON_BASE + EEPROM_CRON_HOURS_OFFSET, 0xFF);   // H
   
-  /* For testing purpose prepare a cron entry in EEPROM while we don't have
-    AT commands for that.
-  EEPROM.write(EEPROM_CRON_BASE + EEPROM_CRON_HOURS_OFFSET, 0x00);   // H
-  EEPROM.write(EEPROM_CRON_BASE + EEPROM_CRON_MINUTES_OFFSET, 0x00); // M
+  //For testing purpose prepare a cron entry in EEPROM while we don't have
+  //  AT commands for that.
+  EEPROM.write(EEPROM_CRON_BASE + EEPROM_CRON_HOURS_OFFSET, 0x80);   // H
+  EEPROM.write(EEPROM_CRON_BASE + EEPROM_CRON_MINUTES_OFFSET, 0x80); // M
   EEPROM.write(EEPROM_CRON_BASE + EEPROM_CRON_SECONDS_OFFSET, 69);   // S
   for(int ix=0;ix<64;ix++)
   {
