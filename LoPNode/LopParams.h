@@ -38,7 +38,7 @@
   #define  LOP_SLOTDURATION 15.0f              // Slot duration in mS
   #define LOP_FRAMEDURATION 150.0f               // Frame duration in mS
   #define LOP_SLOTS_COUNT 10                    // Frame duration / slot duration
-  #define LOP_ONL_ALLOCATION_TTL 10000          // Maximum TTL for an entry in the ONL
+  #define LOP_ONL_ALLOCATION_TTL 1000          // Maximum TTL for an entry in the ONL
   #define LOP_BCH_SLOT 0
   #define LOP_ACH_SLOT 1
   #define  LOP_MAX_OUT_NEIGHBOURS 8          // Maximum outer neighbours

@@ -32,18 +32,21 @@ void processStartupSequence()
 void startupOnNetRegistration()
 {
   // Register to the msgp2p network.
-  strcpy(lop_message_buffer_i, "\\msgp2p.register\\");
-  for(int address=EEPROM_mp2p_UID_BASE; address<EEPROM_mp2p_UID_BASE+EEPROM_mp2p_UID_LEN; address++)
+  if(EEPROM.read(EEPROM_mp2p_UID_BASE) != 0)
   {
-    byte value = EEPROM.read(address);
-    if(value != 0)
+    strcpy(lop_message_buffer_i, "\\msgp2p.register\\");
+    for(int address=EEPROM_mp2p_UID_BASE; address<EEPROM_mp2p_UID_BASE+EEPROM_mp2p_UID_LEN; address++)
     {
-      lop_message_buffer_i[17+(address-EEPROM_mp2p_UID_BASE)] = value;
-    }
-    else
-    {
-      strcpy(lop_message_buffer_i+17+(address-EEPROM_mp2p_UID_BASE), "\\\\0"); 
-      break;   
+      byte value = EEPROM.read(address);
+      if(value != 0)
+      {
+        lop_message_buffer_i[17+(address-EEPROM_mp2p_UID_BASE)] = value;
+      }
+      else
+      {
+        strcpy(lop_message_buffer_i+17+(address-EEPROM_mp2p_UID_BASE), "\\\\0"); 
+        break;   
+      }
     }
   }
 }

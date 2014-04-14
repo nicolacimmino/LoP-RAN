@@ -23,6 +23,6 @@
 void runScheduler(void);
 void run_regular_schedule(void);
 void run_scanner_schedule(void);
-
+extern void userCode(void);
 #endif
 

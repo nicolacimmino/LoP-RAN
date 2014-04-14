@@ -79,6 +79,10 @@ void run_regular_schedule()
           break;
         }
       }
+      else if(slot == LOP_SLOTS_COUNT-1)
+      {
+        userCode();
+      }      
       else
       {
         serveCCH();

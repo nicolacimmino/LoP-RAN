@@ -73,7 +73,10 @@ pONDescriptor getNeighbourDescriptor(NetTime time)
   {
     if(timeMatchesMask(time, (*OuterNeighboursList[ix]).resourceMask))
     {
-      return OuterNeighboursList[ix];
+      if(OuterNeighboursList[ix] != 0 && (millis() - OuterNeighboursList[ix]->last_seen) < LOP_ONL_ALLOCATION_TTL)
+      {
+        return OuterNeighboursList[ix];
+      }
     }
   }
   
