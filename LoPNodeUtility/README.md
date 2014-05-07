@@ -1,4 +1,5 @@
-==LoP-RAN Node Utility==
+LoP-RAN Node Utility
+=======
 
 This is a companion utility for LoP-RAN nodes. It's a windows desktop application that allows to easily setup the node configuration as well as to interact with its diagnostic interface for network problems troubleshooting.
 
