@@ -143,7 +143,7 @@ void transmitBuffer(char *buffer, int length)
   // We are here in Standby-II and will move to TX mode as soon as data is pushed to the TX FIFO.
   // Technically we enter this status after 130uS but we can just start to fill the TX FIFO.
   
-  double last_pll_lock = millis();
+  unsigned long last_pll_lock = millis();
   for(int buf_ix=0; buf_ix<length; buf_ix+=NRF24L01_PAYLOAD_SIZE)
   {
     memcpy(spi_buffer, buffer+buf_ix, NRF24L01_PAYLOAD_SIZE);

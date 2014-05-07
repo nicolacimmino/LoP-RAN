@@ -83,7 +83,7 @@ void notifyReceivedMessage()
 
 void serveControlInterface()
 {
-  long start_time = millis();
+  unsigned long start_time = millis();
 
   if(rx_notification_enable)
   {

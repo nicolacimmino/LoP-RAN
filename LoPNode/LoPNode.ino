@@ -67,6 +67,7 @@ void setup(void)
     EEPROM.write(EEPROM_CRON_BASE+EEPROM_CRON_TASK_OFFSET+ix,"\\http.get\\http://iotp2p.net:4000/api/node/aW90cDJwdG/alive\\\\\0"[ix]); 
   }
   */
+  pinMode(A5, INPUT);
 }
 
 
@@ -77,6 +78,33 @@ void loop(void)
   runScheduler();
 }
 
+bool lastDoorStatus = false;
+
+// User code invoked at every frame.
+// Must run witing one timeslot.
+//
+void userCode()
+{
+  return;
+  if(lastDoorStatus && digitalRead(A5)==LOW)
+  {
+    char *message_buffer = (lop_dap == 0)?lop_message_buffer_o:lop_message_buffer_i; 
+    for(int cix=0; cix<74; cix++)
+    {
+      message_buffer[cix]="\\http.get\\http://nicolacimmino.com/coeli/pushover.php?msg=Door%20Closed\\\\\0"[cix]; 
+    }
+    lastDoorStatus = false;
+  }
+  else if(!lastDoorStatus && digitalRead(A5)==HIGH)
+  {
+    char *message_buffer = (lop_dap == 0)?lop_message_buffer_o:lop_message_buffer_i;
+    for(int cix=0; cix<72; cix++)
+    {
+      message_buffer[cix]="\\http.get\\http://nicolacimmino.com/coeli/pushover.php?msg=Door%20Open\\\\\0"[cix]; 
+    }
+    lastDoorStatus = true;
+  }
+}
 
 
 

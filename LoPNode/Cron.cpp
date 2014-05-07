@@ -24,7 +24,7 @@
 #include "Cron.h"
 #include "Common.h"
 
-long lastCronCheck = 0;
+unsigned long lastCronCheck = 0;
 
 void processCronEntries()
 {

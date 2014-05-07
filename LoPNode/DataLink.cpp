@@ -55,7 +55,7 @@ bool receiveLoPRANMessage(char *data, uint32_t bufLen, int timeout_ms)
 {
   startReceiving();
   
-  long started_reading = millis();
+  unsigned long started_reading = millis();
   uint8_t messagelen = 6;
   boolean timeout = false;
   

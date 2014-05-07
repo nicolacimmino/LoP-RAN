@@ -24,7 +24,7 @@ typedef struct
 {
   byte tx_power;
   NetTime resourceMask;
-  double last_seen;
+  unsigned long last_seen;
   uint32_t address;
 } ONDescriptor, *pONDescriptor;
 
