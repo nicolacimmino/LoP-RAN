@@ -41,6 +41,6 @@ Each node gets an address that is unique inside the network. This address is use
 
 The picture below shows a LoP-RAN node (in the circle top right), an Access Point and a shell that is pinging the node on a local network.
 
-[Node and AP](https://raw.github.com/nicolacimmino/LoP-RAN/develop/Documentation/node_ap_pin.jpg)
+[Node and AP](https://raw.github.com/nicolacimmino/LoP-RAN/develop/Documentation/node_ap_ping.jpg)
 
 
