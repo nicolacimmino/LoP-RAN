@@ -38,8 +38,10 @@ Given the goal of the network to transfer messages from an access point to any n
 
 Each node gets an address that is unique inside the network. This address is used to identify message originating from and destined to the node. The address is a self routing address, that is, an address that contains all the needed information to route the message to the recipient. In this way the nodes involved in the routing don't need to store large routing tables and their load is reduced.
 
+Other
+=====
 
-The picture below shows a LoP-RAN node (in the circle top right), an Access Point and a shell that is pinging the node on a local network.
+The picture below shows a LoP-RAN node (in the circle top right), an Access Point and a shell that is pinging the node on a local network. You can see that the RTT is around 500 mS, this is because the Alpha Net (the configuration used in testing) has rather large time slots so it introduces considerable lag. Depending on the deployment tpye and the nodes needs this can be smaller or even larger.
 
 ![Node and AP](https://raw.github.com/nicolacimmino/LoP-RAN/develop/Documentation/node_ap_ping.jpg)
 
