@@ -10,6 +10,8 @@ LoP-RAN is a low-power low-cost radio access network that allows devices with ex
 Core functions
 =======
 
+Below is a summary of the core functions. If you are interested in detailed specs of the actual readio interface please see this project wiki and in particular the document <https://github.com/nicolacimmino/LoP-RAN/wiki/LOP_01.1-Radio-Interface>.
+
 LoP-RAN is concerned only with two very basic core functions namely the delivery of a message from any node to the access point and the delivery of a message from the access point to any node. The following ancillary functions are also part of LoP-RAN and are needed to support the core functions:
 
 - Nodes discovery
