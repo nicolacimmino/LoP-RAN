@@ -38,7 +38,7 @@ Given the goal of the network to transfer messages from an access point to any n
 
 **Addressing and routing**
 
-Each node gets an address that is unique inside the network. This address is used to identify message originating from and destined to the node. The address is a self routing address, that is, an address that contains all the needed information to route the message to the recipient. In this way the nodes involved in the routing don't need to store large routing tables and their load is reduced.
+Each node gets an address that is unique inside the network. This address is used to identify message originating from and destined to the node. The address is a self routing address, that is, an address that contains all the needed information to route the message to the recipient. In this way the nodes involved in the routing don't need to store large routing tables and their load is reduced. See the wiki chapter on addressing (https://github.com/nicolacimmino/LoP-RAN/wiki/Addressing) for further details.
 
 Other
 =====
