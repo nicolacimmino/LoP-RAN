@@ -200,14 +200,31 @@ void process_control_command()
   else if (strcasestr(control_rx_buffer, "ATCFGR") - control_rx_buffer == 0)
   {
     char *pEnd;
-    unsigned long address = strtoul(control_rx_buffer + 7, &pEnd, 10);
+    unsigned long addressBase = strtoul(control_rx_buffer + 7, &pEnd, 10);
     unsigned long cnt = strtoul(pEnd, 0, 10);
-    for (int ix = 0; ix < cnt; ix++)
+    
+    
+    for (uint16_t addressOffset = 0; addressOffset < cnt; addressOffset++)
     {
-      Serial.print(EEPROM.read(address), DEC);
-      address++;
-      Serial.print(" ");
+        uint16_t actualAddress = addressBase + addressOffset;
+        
+        byte value = EEPROM.read(actualAddress);
+
+        if (addressOffset % 16 == 0)
+        {
+            for (int8_t ix = 4; ix >= 0; ix--)
+            {
+                Serial.print((actualAddress >> (ix * 4)) & 0xF, HEX);
+            }
+            Serial.print(" ");
+        }
+
+        Serial.print(value >> 4, HEX);
+        Serial.print(value & 0xF, HEX);
+
+        Serial.print((addressOffset % 16 == 16 - 1) ? "\r\n" : ".");
     }
+    
     Serial.println("");
     Serial.println("OK");
   }
