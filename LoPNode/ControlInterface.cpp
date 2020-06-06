@@ -19,7 +19,6 @@
 //    sub chapter of these documents.
 
 #include <Arduino.h>
-#include <Serial.h>
 #include <EEPROM.h>
 #include "EEPROMMap.h"
 #include "Common.h"

@@ -19,7 +19,7 @@
 //    along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 // Tested on a pro-mini with ATMega168 5V @16MHz and a nano.
-// 
+//
 // Connections:
 //
 // Warning! There are at least two types of radio modules, these pins are for a specific one used in protos.
@@ -44,16 +44,25 @@
 #include "Cron.h"
 void setup(void)
 {
+  // EEPROM.write(EEPROM_NID_BASE + 0, 0x05); // NID
+  // EEPROM.write(EEPROM_NID_BASE + 1, 0x05);
+  // EEPROM.write(EEPROM_NID_BASE + 2, 0x05);
+  // EEPROM.write(EEPROM_NID_BASE + 3, 0x05);
+  // EEPROM.write(EEPROM_NID_BASE + 4, 0x05);
+  // EEPROM.write(EEPROM_NID_BASE + 5, 0x05);
+  // EEPROM.write(EEPROM_NID_BASE + 6, 0x05);
+  // EEPROM.write(EEPROM_NID_BASE + 7, 0x05);
+
   // For demo purposes we have a LED between D5 and D6
   pinMode(5, OUTPUT);
   pinMode(6, OUTPUT);
-  digitalWrite(5,0);
-  digitalWrite(6,0);
-  
+  digitalWrite(5, 0);
+  digitalWrite(6, 0);
+
   pinMode(2, OUTPUT);
   setupControlInterface();
-  setupRadio();  
-  
+  setupRadio();
+
   /*
   EEPROM.write(EEPROM_CRON_BASE + EEPROM_CRON_HOURS_OFFSET, 0xFF);   // H
   
@@ -70,7 +79,6 @@ void setup(void)
   pinMode(A5, INPUT);
 }
 
-
 void loop(void)
 {
   // We sit forever in this call, everything
@@ -85,9 +93,4 @@ bool lastDoorStatus = false;
 //
 void userCode()
 {
- 
 }
-
-
-
-

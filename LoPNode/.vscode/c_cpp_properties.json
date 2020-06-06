@@ -1,0 +1,33 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "C:\\Users\\nicola\\AppData\\Local\\Arduino15\\packages\\esp8266\\tools\\**",
+                "C:\\Users\\nicola\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.5.2\\**",
+                "C:\\Users\\nicola\\Documents\\Arduino\\libraries\\Adafruit_VL53L0X\\src",
+                "C:\\Users\\nicola\\Documents\\Arduino\\libraries\\VL53L0X",
+                "C:\\Users\\nicola\\Documents\\Arduino\\libraries\\FastLED",
+                "C:\\Program Files (x86)\\Arduino\\tools\\**",
+                "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\**",
+                "C:\\Users\\nicola\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.6.23\\**",
+                "C:\\Users\\nicola\\AppData\\Local\\Arduino15\\packages\\arduino\\tools\\**",
+                "C:\\Users\\nicola\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.1\\**",
+                "C:\\Users\\nicola\\AppData\\Local\\Arduino15\\packages\\SparkFun\\hardware\\avr\\1.1.12\\**"
+            ],
+            "browse": {
+                "path": [
+                    "C:\\Users\\nicola\\Documents\\Arduino\\libraries\\FastLED",
+                    "C:\\Program Files (x86)\\Arduino\\tools\\**",
+                    "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\**"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "intelliSenseMode": "msvc-x64",
+            "forcedInclude": [
+                "C:\\Users\\nicola\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.1\\cores\\arduino\\Arduino.h"
+            ]
+        }
+    ],
+    "version": 4
+}
