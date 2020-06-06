@@ -15,7 +15,7 @@
 //    along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 // LoP-RAN Specifications are available at https://github.com/nicolacimmino/LoP-RAN/wiki
-//    This source code referes, where apllicable, to the chapter and 
+//    This source code referes, where apllicable, to the chapter and
 //    sub chapter of these documents.
 
 #include <Arduino.h>
@@ -37,106 +37,118 @@ void setupControlInterface()
   // Empty the message buffer.
   lop_message_buffer_o[0] = 0;
   lop_message_buffer_i[0] = 0;
-  
-   Serial.begin(115200);
+
+  Serial.begin(115200);
 }
 
-void notifyReceivedMessage() 
+void notifyReceivedMessage()
 {
   // If we are the AP (DAP=0) RX means outbound else it means always outbound.
-  char* message_buffer_rx = (lop_dap == 0)?lop_message_buffer_i:lop_message_buffer_o;
-  
-  if(message_buffer_rx[0] != 0)
+  char *message_buffer_rx = (lop_dap == 0) ? lop_message_buffer_i : lop_message_buffer_o;
+
+  if (message_buffer_rx[0] != 0)
   {
     // Respond to icmp_ping requests other stuff we let up to the host.
-    if((strstr(message_buffer_rx, "\\icmp.ping_request\\") - message_buffer_rx) == 0)
+    if ((strcasestr(message_buffer_rx, "\\icmp.ping_request\\") - message_buffer_rx) == 0)
     {
-      strcpy(lop_message_buffer_i, "\\icmp.ping_response\\\\"); 
-      lop_message_buffer_i[21]=0;
+      strcpy(lop_message_buffer_i, "\\icmp.ping_response\\\\");
+      lop_message_buffer_i[21] = 0;
     }
-    else if((strstr(message_buffer_rx, "\\msgp2p.msg\\0000\\\\LED=1") - message_buffer_rx) == 0)
+    else if ((strcasestr(message_buffer_rx, "\\msgp2p.msg\\0000\\\\LED=1") - message_buffer_rx) == 0)
     {
-      digitalWrite(6,1);
+      digitalWrite(6, 1);
     }
-    else if((strstr(message_buffer_rx, "\\msgp2p.msg\\0000\\\\LED=0") - message_buffer_rx) == 0)
+    else if ((strcasestr(message_buffer_rx, "\\msgp2p.msg\\0000\\\\LED=0") - message_buffer_rx) == 0)
     {
-      digitalWrite(6,0);
+      digitalWrite(6, 0);
     }
     else
     {
       // Prefix the message only if this is an unsolicited notification
       // For ATRX? queries we just reply with address/message.
-      if(rx_notification_enable) Serial.print("ATRX ");
-      
+      if (rx_notification_enable)
+        Serial.print("ATRX ");
+
       // Print the address if we are the AP
-      if(lop_dap == 0)
+      if (lop_dap == 0)
       {
         Serial.print(lop_message_buffer_address_i);
         Serial.print(" ");
       }
       Serial.println(message_buffer_rx);
     }
-    message_buffer_rx[0]=0;
-  }  
+    message_buffer_rx[0] = 0;
+  }
 }
+
+#define TERMINAL_KEY_ESC 0x1B
+#define TERMINAL_KEY_BACKSPACE 0x7F
 
 void serveControlInterface()
 {
   unsigned long start_time = millis();
 
-  if(rx_notification_enable)
+  if (rx_notification_enable)
   {
     notifyReceivedMessage();
   }
-  
-  while(Serial.available()>0)
+
+  while (Serial.available() > 0)
   {
-    control_rx_buffer[control_rx_buffer_ix++] = Serial.read();
+    char c = Serial.read();
+
+    if (c == TERMINAL_KEY_BACKSPACE)
+    {
+      control_rx_buffer[control_rx_buffer_ix] = 0;
+      control_rx_buffer_ix--;
+      continue;
+    }
+
+    control_rx_buffer[control_rx_buffer_ix++] = c;
 
     // We have a terminator process the command.
-    if(control_rx_buffer[control_rx_buffer_ix-1]=='\n' 
-        || control_rx_buffer[control_rx_buffer_ix-1]=='\r')
+    if (control_rx_buffer[control_rx_buffer_ix - 1] == '\n' || control_rx_buffer[control_rx_buffer_ix - 1] == '\r')
     {
-       // Make sure the terminator is \n cause we rely on that later
-       //  (some terminals send \r)
-       control_rx_buffer[control_rx_buffer_ix-1]='\n';
-       process_control_command();
+      // Make sure the terminator is \n cause we rely on that later
+      //  (some terminals send \r)
+      control_rx_buffer[control_rx_buffer_ix - 1] = '\n';
+
+      process_control_command();
     }
-    
+
     // We have filled the rx buffer and no termination received.
     // We have a misbehaving host, just ignore the message.
-    if(control_rx_buffer_ix>=MAX_CONTROL_MSG_SIZE)
+    if (control_rx_buffer_ix >= MAX_CONTROL_MSG_SIZE)
     {
-        control_rx_buffer_ix = 0;
-        break;
+      control_rx_buffer_ix = 0;
+      break;
     }
-    
-  }  
+  }
 }
 
 void process_control_command()
 {
-  
-  if(strstr(control_rx_buffer, "ATTX ") - control_rx_buffer == 0)
+  Serial.println("");
+
+  if (strcasestr(control_rx_buffer, "ATTX ") - control_rx_buffer == 0)
   {
     // If we are the AP (DAP=0) TX means outbound else it means always inbound.
-    char *message_buffer = (lop_dap == 0)?lop_message_buffer_o:lop_message_buffer_i;
-    
-    
+    char *message_buffer = (lop_dap == 0) ? lop_message_buffer_o : lop_message_buffer_i;
+
     int rx_buf_add_ix = 5;
     char address_str[10];
     lop_message_buffer_address_o = 0;
-    if(lop_dap == 0)
+    if (lop_dap == 0)
     {
-      for(; rx_buf_add_ix<15; rx_buf_add_ix++)
+      for (; rx_buf_add_ix < 15; rx_buf_add_ix++)
       {
-        if(control_rx_buffer[rx_buf_add_ix] != ' ')
+        if (control_rx_buffer[rx_buf_add_ix] != ' ')
         {
-           address_str[rx_buf_add_ix-5]=control_rx_buffer[rx_buf_add_ix];
+          address_str[rx_buf_add_ix - 5] = control_rx_buffer[rx_buf_add_ix];
         }
         else
         {
-          address_str[rx_buf_add_ix]=0;
+          address_str[rx_buf_add_ix] = 0;
           lop_message_buffer_address_o = atoi(address_str);
           break;
         }
@@ -145,52 +157,52 @@ void process_control_command()
       //  on the next char.
       rx_buf_add_ix++;
     }
-    
-    if(lop_message_buffer_address_o != 0 || lop_dap != 0)
+
+    if (lop_message_buffer_address_o != 0 || lop_dap != 0)
     {
       // Copy the message body till terination char is found.
       // Start offset of message depends on presence of address. TODO: cleanup!
-      for(int ix=rx_buf_add_ix; ix<MAX_CONTROL_MSG_SIZE; ix++)
+      for (int ix = rx_buf_add_ix; ix < MAX_CONTROL_MSG_SIZE; ix++)
       {
-        message_buffer[ix-(rx_buf_add_ix)]=control_rx_buffer[ix];
-        
+        message_buffer[ix - (rx_buf_add_ix)] = control_rx_buffer[ix];
+
         // We reached the end of the control message. We need
         //  to null terminate the lop message and we are done.
-        if(control_rx_buffer[ix]=='\n')
+        if (control_rx_buffer[ix] == '\n')
         {
-          message_buffer[ix-rx_buf_add_ix]=0;
+          message_buffer[ix - rx_buf_add_ix] = 0;
           break;
         }
       }
-      Serial.println("OK");  
+      Serial.println("OK");
     }
     else
     {
       Serial.println("ERR");
     }
   }
-  
-  else if(strstr(control_rx_buffer, "ATID?") - control_rx_buffer == 0)
+
+  else if (strcasestr(control_rx_buffer, "ATID?") - control_rx_buffer == 0)
   {
     Serial.println("LoP-RAN RadioFW 0.1");
-    Serial.println("OK"); 
+    Serial.println("OK");
   }
-  else if(strstr(control_rx_buffer, "ATDI") - control_rx_buffer == 0)
+  else if (strcasestr(control_rx_buffer, "ATDI") - control_rx_buffer == 0)
   {
-    lop_dia_enabled = (control_rx_buffer[4]=='1');
-    Serial.println("OK"); 
+    lop_dia_enabled = (control_rx_buffer[4] == '1');
+    Serial.println("OK");
   }
-  else if(strstr(control_rx_buffer, "ATSCAN") - control_rx_buffer == 0)
+  else if (strcasestr(control_rx_buffer, "ATSCAN") - control_rx_buffer == 0)
   {
-    scanner_mode = (control_rx_buffer[6]=='1');
-    Serial.println("OK"); 
+    scanner_mode = (control_rx_buffer[6] == '1');
+    Serial.println("OK");
   }
-  else if(strstr(control_rx_buffer, "ATCFGR") - control_rx_buffer == 0)
+  else if (strcasestr(control_rx_buffer, "ATCFGR") - control_rx_buffer == 0)
   {
-    char * pEnd;
-    unsigned long address = strtoul(control_rx_buffer+7, &pEnd, 10);
+    char *pEnd;
+    unsigned long address = strtoul(control_rx_buffer + 7, &pEnd, 10);
     unsigned long cnt = strtoul(pEnd, 0, 10);
-    for(int ix=0; ix<cnt;ix++)
+    for (int ix = 0; ix < cnt; ix++)
     {
       Serial.print(EEPROM.read(address), DEC);
       address++;
@@ -199,78 +211,78 @@ void process_control_command()
     Serial.println("");
     Serial.println("OK");
   }
-  else if(strstr(control_rx_buffer, "ATCFGW") - control_rx_buffer == 0)
+  else if (strcasestr(control_rx_buffer, "ATCFGW") - control_rx_buffer == 0)
   {
-    char * pEnd;
-    unsigned long address = strtoul(control_rx_buffer+7, &pEnd, 10);
+    char *pEnd;
+    unsigned long address = strtoul(control_rx_buffer + 7, &pEnd, 10);
     unsigned long value = strtoul(pEnd, 0, 10);
-    EEPROM.write(address,value);
+    EEPROM.write(address, value);
     Serial.println("OK");
   }
-  else if(strstr(control_rx_buffer, "ATRX") - control_rx_buffer == 0)
+  else if (strcasestr(control_rx_buffer, "ATRX") - control_rx_buffer == 0)
   {
-    if(control_rx_buffer[4]=='?')
+    if (control_rx_buffer[4] == '?')
     {
-      notifyReceivedMessage(); 
+      notifyReceivedMessage();
     }
     else
     {
-      rx_notification_enable = (control_rx_buffer[4]=='1');
+      rx_notification_enable = (control_rx_buffer[4] == '1');
     }
-    Serial.println("OK"); 
-  }
-  else if(strstr(control_rx_buffer, "ATNT?") - control_rx_buffer == 0)
-  {  
-    Serial.println((inner_link_up)?"1":"0");
     Serial.println("OK");
   }
-  else if(strstr(control_rx_buffer, "ATIPW?") - control_rx_buffer == 0)
-  {  
+  else if (strcasestr(control_rx_buffer, "ATNT?") - control_rx_buffer == 0)
+  {
+    Serial.println((inner_link_up) ? "1" : "0");
+    Serial.println("OK");
+  }
+  else if (strcasestr(control_rx_buffer, "ATIPW?") - control_rx_buffer == 0)
+  {
     Serial.println(inbound_tx_power);
     Serial.println("OK");
   }
-  else if(strstr(control_rx_buffer, "ATDAP?") - control_rx_buffer == 0)
-  {  
+  else if (strcasestr(control_rx_buffer, "ATDAP?") - control_rx_buffer == 0)
+  {
     Serial.println(lop_dap);
     Serial.println("OK");
   }
-  else if(strstr(control_rx_buffer, "ATADD?") - control_rx_buffer == 0)
-  {  
+  else if (strcasestr(control_rx_buffer, "ATADD?") - control_rx_buffer == 0)
+  {
     Serial.println(node_address);
     Serial.println("OK");
   }
-  else if(strstr(control_rx_buffer, "ATAP1") - control_rx_buffer == 0)
-  {  
+  else if (strcasestr(control_rx_buffer, "ATAP1") - control_rx_buffer == 0)
+  {
     lop_dap = 0;
     EEPROM.write(EEPROM_RFCH_ACT_AS_SEED, 1);
     Serial.println("OK");
   }
-  else if(strstr(control_rx_buffer, "ATAP0") - control_rx_buffer == 0)
-  {  
+  else if (strcasestr(control_rx_buffer, "ATAP0") - control_rx_buffer == 0)
+  {
     lop_dap = 0xFF;
     EEPROM.write(EEPROM_RFCH_ACT_AS_SEED, 0);
     Serial.println("OK");
   }
-  else if(strstr(control_rx_buffer, "ATONL?") - control_rx_buffer == 0)
-  {  
-    for(int ix=0; ix<LOP_MAX_OUT_NEIGHBOURS; ix++)
+  else if (strcasestr(control_rx_buffer, "ATONL?") - control_rx_buffer == 0)
+  {
+    for (int ix = 0; ix < LOP_MAX_OUT_NEIGHBOURS; ix++)
     {
       int ttl = (int)constrain(LOP_ONL_ALLOCATION_TTL - (millis() - OuterNeighboursList[ix]->last_seen), 0, LOP_ONL_ALLOCATION_TTL);
-      if(OuterNeighboursList[ix] != 0 && ttl > 0)
+      if (OuterNeighboursList[ix] != 0 && ttl > 0)
       {
         Serial.print(OuterNeighboursList[ix]->tx_power);
         Serial.print(",");
-        Serial.print(OuterNeighboursList[ix]->resourceMask.slot);  
+        Serial.print(OuterNeighboursList[ix]->resourceMask.slot);
         Serial.print(",");
-        Serial.print(ttl); 
+        Serial.print(ttl);
         Serial.print(",");
         Serial.println(OuterNeighboursList[ix]->address);
       }
     }
     Serial.println("OK");
   }
-  else if(strstr(control_rx_buffer, "ATME?") - control_rx_buffer == 0)
-  {  
+  else if (strcasestr(control_rx_buffer, "ATME?") - control_rx_buffer == 0)
+  {
     // The below chunk of code calculates amount of free memory.
     // This code is found in several forums and blogs but I never found
     //  an attribution for it, so I cannot give proper credit.
@@ -278,16 +290,15 @@ void process_control_command()
     //  grows from the bottom of memory up and the heap from the top down.
     // The code creates an int, which will be created on the stack as it is
     //  a local variable, so the address of v will be the current top of the
-    //  stack. It will then subtract this address from the current highest 
+    //  stack. It will then subtract this address from the current highest
     //  heap address that is found in the system variable __brkval unless
     //  the heap is empty in which case it will be __heap_start.
-    extern int __heap_start, *__brkval; 
-    int v; 
-    Serial.println((int)&v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval), DEC);
+    extern int __heap_start, *__brkval;
+    int v;
+    Serial.println((int)&v - (__brkval == 0 ? (int)&__heap_start : (int)__brkval), DEC);
     Serial.println("OK");
   }
-  else if(strstr(control_rx_buffer, "AT") - control_rx_buffer == 0 
-          && (control_rx_buffer[2]=='\r' || control_rx_buffer[2]=='\n'))
+  else if (strcasestr(control_rx_buffer, "AT") - control_rx_buffer == 0 && (control_rx_buffer[2] == '\r' || control_rx_buffer[2] == '\n'))
   {
     Serial.println("OK");
   }
@@ -295,7 +306,7 @@ void process_control_command()
   {
     Serial.println("ERR");
   }
-  
-  // Reset reveiving pointer to beginning of buffer.
-  control_rx_buffer_ix=0;
+
+  // Reset receiving pointer to beginning of buffer.
+  control_rx_buffer_ix = 0;
 }

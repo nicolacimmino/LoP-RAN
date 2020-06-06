@@ -52,6 +52,7 @@ void setup(void)
   // EEPROM.write(EEPROM_NID_BASE + 5, 0x05);
   // EEPROM.write(EEPROM_NID_BASE + 6, 0x05);
   // EEPROM.write(EEPROM_NID_BASE + 7, 0x05);
+  EEPROM.write(EEPROM_mp2p_UID_BASE, 0); // Keep IP stuff off for now.
 
   // For demo purposes we have a LED between D5 and D6
   pinMode(5, OUTPUT);
