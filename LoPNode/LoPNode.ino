@@ -42,16 +42,17 @@
 #include "NRF24L01Driver.h"
 #include "ControlInterface.h"
 #include "Cron.h"
+
 void setup(void)
 {
-  // EEPROM.write(EEPROM_NID_BASE + 0, 0x05); // NID
-  // EEPROM.write(EEPROM_NID_BASE + 1, 0x05);
-  // EEPROM.write(EEPROM_NID_BASE + 2, 0x05);
-  // EEPROM.write(EEPROM_NID_BASE + 3, 0x05);
-  // EEPROM.write(EEPROM_NID_BASE + 4, 0x05);
-  // EEPROM.write(EEPROM_NID_BASE + 5, 0x05);
-  // EEPROM.write(EEPROM_NID_BASE + 6, 0x05);
-  // EEPROM.write(EEPROM_NID_BASE + 7, 0x05);
+  EEPROM.write(EEPROM_NID_BASE + 0, 0x05); // NID
+  EEPROM.write(EEPROM_NID_BASE + 1, 0x05);
+  EEPROM.write(EEPROM_NID_BASE + 2, 0x05);
+  EEPROM.write(EEPROM_NID_BASE + 3, 0x05);
+  EEPROM.write(EEPROM_NID_BASE + 4, 0x05);
+  EEPROM.write(EEPROM_NID_BASE + 5, 0x05);
+  EEPROM.write(EEPROM_NID_BASE + 6, 0x05);
+  EEPROM.write(EEPROM_NID_BASE + 7, 0x05);
   EEPROM.write(EEPROM_mp2p_UID_BASE, 0); // Keep IP stuff off for now.
 
   // For demo purposes we have a LED between D5 and D6
@@ -60,7 +61,7 @@ void setup(void)
   digitalWrite(5, 0);
   digitalWrite(6, 0);
 
-  pinMode(2, OUTPUT);
+  pinMode(PIN_ACT, OUTPUT);
   setupControlInterface();
   setupRadio();
 

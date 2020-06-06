@@ -2,5 +2,5 @@
     "board": "arduino:avr:nano",
     "configuration": "cpu=atmega328old",
     "sketch": "LoPNode.ino",
-    "port": "COM23"
+    "port": "COM3"
 }

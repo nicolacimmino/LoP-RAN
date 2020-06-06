@@ -24,6 +24,8 @@
 #include "NetTime.h"
 #include "DataLink.h"
 
+#define PIN_ACT 2
+
 // Message Buffer.
 extern char lop_message_buffer_i[];
 extern uint32_t lop_message_buffer_address_i;
