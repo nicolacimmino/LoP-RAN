@@ -27,6 +27,7 @@
 #include "OuterNeighboursList.h"
 #include "LoPParams.h"
 #include "DataLink.h"
+#include "L4.h"
 
 char control_rx_buffer[MAX_CONTROL_MSG_SIZE];
 int control_rx_buffer_ix = 0;
@@ -132,54 +133,20 @@ void process_control_command()
 
   if (strcasestr(control_rx_buffer, "ATTX ") - control_rx_buffer == 0)
   {
-    // If we are the AP (DAP=0) TX means outbound else it means always inbound.
-    char *message_buffer = (lop_dap == 0) ? lop_message_buffer_o : lop_message_buffer_i;
+    // Waste the command for now
+    strtok(control_rx_buffer, " ");
 
-    int rx_buf_add_ix = 5;
-    char address_str[10];
-    lop_message_buffer_address_o = 0;
-    if (lop_dap == 0)
-    {
-      for (; rx_buf_add_ix < 15; rx_buf_add_ix++)
-      {
-        if (control_rx_buffer[rx_buf_add_ix] != ' ')
-        {
-          address_str[rx_buf_add_ix - 5] = control_rx_buffer[rx_buf_add_ix];
-        }
-        else
-        {
-          address_str[rx_buf_add_ix] = 0;
-          lop_message_buffer_address_o = atoi(address_str);
-          break;
-        }
-      }
-      // We are not pointing at the space, the message starts
-      //  on the next char.
-      rx_buf_add_ix++;
-    }
+    uint8_t address = atoi(strtok(NULL, " "));
+Serial.println(address);    
+    char *message = strtok(NULL, "\n");
 
-    if (lop_message_buffer_address_o != 0 || lop_dap != 0)
-    {
-      // Copy the message body till terination char is found.
-      // Start offset of message depends on presence of address. TODO: cleanup!
-      for (int ix = rx_buf_add_ix; ix < MAX_CONTROL_MSG_SIZE; ix++)
-      {
-        message_buffer[ix - (rx_buf_add_ix)] = control_rx_buffer[ix];
-
-        // We reached the end of the control message. We need
-        //  to null terminate the lop message and we are done.
-        if (control_rx_buffer[ix] == '\n')
-        {
-          message_buffer[ix - rx_buf_add_ix] = 0;
-          break;
-        }
-      }
-      Serial.println("OK");
-    }
-    else
+    if (!sendMessage(address, message, strlen(message)))
     {
       Serial.println("ERR");
+      return;
     }
+
+    Serial.println("OK");
   }
 
   else if (strcasestr(control_rx_buffer, "ATID?") - control_rx_buffer == 0)
@@ -202,29 +169,28 @@ void process_control_command()
     char *pEnd;
     unsigned long addressBase = strtoul(control_rx_buffer + 7, &pEnd, 10);
     unsigned long cnt = strtoul(pEnd, 0, 10);
-    
-    
+
     for (uint16_t addressOffset = 0; addressOffset < cnt; addressOffset++)
     {
-        uint16_t actualAddress = addressBase + addressOffset;
-        
-        byte value = EEPROM.read(actualAddress);
+      uint16_t actualAddress = addressBase + addressOffset;
 
-        if (addressOffset % 16 == 0)
+      byte value = EEPROM.read(actualAddress);
+
+      if (addressOffset % 16 == 0)
+      {
+        for (int8_t ix = 4; ix >= 0; ix--)
         {
-            for (int8_t ix = 4; ix >= 0; ix--)
-            {
-                Serial.print((actualAddress >> (ix * 4)) & 0xF, HEX);
-            }
-            Serial.print(" ");
+          Serial.print((actualAddress >> (ix * 4)) & 0xF, HEX);
         }
+        Serial.print(" ");
+      }
 
-        Serial.print(value >> 4, HEX);
-        Serial.print(value & 0xF, HEX);
+      Serial.print(value >> 4, HEX);
+      Serial.print(value & 0xF, HEX);
 
-        Serial.print((addressOffset % 16 == 16 - 1) ? "\r\n" : ".");
+      Serial.print((addressOffset % 16 == 16 - 1) ? "\r\n" : ".");
     }
-    
+
     Serial.println("");
     Serial.println("OK");
   }
