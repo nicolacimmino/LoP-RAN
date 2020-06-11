@@ -42,6 +42,7 @@
 #include "src/NRF24L01Driver.h"
 #include "src/ControlInterface.h"
 #include "src/Cron.h"
+#include "src/L4.h"
 
 void setup(void)
 {
@@ -55,30 +56,9 @@ void setup(void)
   // EEPROM.write(EEPROM_NID_BASE + 7, 0x05);
   // EEPROM.write(EEPROM_mp2p_UID_BASE, 0); // Keep IP stuff off for now.
 
-  // For demo purposes we have a LED between D5 and D6
-  // pinMode(5, OUTPUT);
-  // pinMode(6, OUTPUT);
-  // digitalWrite(5, 0);
-  // digitalWrite(6, 0);
-
   pinMode(PIN_ACT, OUTPUT);
   setupControlInterface();
   setupRadio();
-
-  /*
-  EEPROM.write(EEPROM_CRON_BASE + EEPROM_CRON_HOURS_OFFSET, 0xFF);   // H
-  
-  //For testing purpose prepare a cron entry in EEPROM while we don't have
-  //  AT commands for that.
-  EEPROM.write(EEPROM_CRON_BASE + EEPROM_CRON_HOURS_OFFSET, 0x80);   // H
-  EEPROM.write(EEPROM_CRON_BASE + EEPROM_CRON_MINUTES_OFFSET, 0x80); // M
-  EEPROM.write(EEPROM_CRON_BASE + EEPROM_CRON_SECONDS_OFFSET, 69);   // S
-  for(int ix=0;ix<64;ix++)
-  {
-    EEPROM.write(EEPROM_CRON_BASE+EEPROM_CRON_TASK_OFFSET+ix,"\\http.get\\http://iotp2p.net:4000/api/node/aW90cDJwdG/alive\\\\\0"[ix]); 
-  }
-  */
-  //pinMode(A5, INPUT);
 }
 
 void loop(void)
@@ -89,8 +69,24 @@ void loop(void)
 }
 
 // User code invoked at every frame.
-// Must run witing one timeslot.
+// Must run witin one timeslot.
 //
 void userCode()
 {
+  static unsigned long lastPing = 0;
+
+  if (millis() - lastPing < 1000)
+  {
+    return;
+  }
+
+  if (lop_dap != 0 && inner_link_up)
+  {
+    char message[16];
+    sprintf(message, "PING %i", millis()/1000);
+
+    sendMessage(0, message, strlen(message));
+  }
+
+  lastPing = millis();
 }

@@ -16,12 +16,8 @@ byte controlATIDq()
     Serial.println("  SLOT-DUR:  " STR(LOP_SLOTDURATION) " mS");
     Serial.println("  FRAME-DUR: " STR(LOP_FRAMEDURATION) " mS");
     Serial.println("Network:");
-    Serial.println("  ONL-MAX:   " STR(LOP_MAX_OUT_NEIGHBOURS));
-    Serial.println("  ONL-TTL:   " STR(LOP_ONL_ALLOCATION_TTL) " mS");
-    Serial.print("  LKGCH:     ");
-    Serial.println(EEPROM.read(EEPROM_RFCH_INNER_NODE));
     Serial.print("  AP:        ");
-    Serial.println(EEPROM.read(EEPROM_RFCH_ACT_AS_SEED));
+    Serial.println((lop_dap == 0) ? "YES" : "NO");
     Serial.print("  NID:       ");
     for (byte ix = 0; ix < 8; ix++)
     {
@@ -29,6 +25,20 @@ byte controlATIDq()
         Serial.print(".");
     }
     Serial.println((char)0x7F);
+
+    Serial.println("  ONL-MAX:   " STR(LOP_MAX_OUT_NEIGHBOURS));
+    Serial.println("  ONL-TTL:   " STR(LOP_ONL_ALLOCATION_TTL) " mS");
+
+    if (lop_dap != 0)
+    {
+        Serial.print("  LKGCH:     ");
+        Serial.println(EEPROM.read(EEPROM_RFCH_INNER_NODE));
+    }
+    else
+    {
+        Serial.print("  OBCH:      ");
+        Serial.println(lop_outbound_channel);
+    }
 
     if (inner_link_up)
     {
@@ -54,7 +64,7 @@ byte controlATIDq()
             break;
         }
     }
-    else
+    else if (lop_dap != 0)
     {
         Serial.println("  LINK:      DOWN");
         Serial.println("  NADD:      ---");
@@ -64,7 +74,3 @@ byte controlATIDq()
 
     return ERROR_NONE;
 }
-
-#define EEPROM_RFCH_INNER_NODE 0x01  // Last known good RF channel
-#define EEPROM_RFCH_ACT_AS_SEED 0x02 // Act as anetwork seed if != 0
-#define EEPROM_NID_BASE 0x03         // Base of the Network Identifier (8 bytes up to 0x0A

@@ -3,8 +3,8 @@
 
 byte controlATCFGW()
 {
-    uint16_t address = atoi(strtok(NULL, " "));
-    uint8_t value = atoi(strtok(NULL, "\n"));
+    unsigned long address = strtol(strtok(NULL, " "), NULL, 0);
+    unsigned long value = strtol(strtok(NULL, "\n"), NULL, 0);
 
     EEPROM.write(address, value);
 

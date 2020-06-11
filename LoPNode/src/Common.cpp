@@ -15,10 +15,12 @@
 //    along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 // LoP-RAN Specifications are available at https://github.com/nicolacimmino/LoP-RAN/wiki
-//    This source code referes, where apllicable, to the chapter and 
+//    This source code referes, where apllicable, to the chapter and
 //    sub chapter of these documents.
 
 #include <Arduino.h>
+#include <EEPROM.h>
+#include "EEPROMMap.h"
 #include "NetTime.h"
 #include "DataLink.h"
 #include "ControlInterface.h"
@@ -50,7 +52,7 @@ byte tx_error_count = 0;
 // Inidcates wether the inner link has been eastablished
 boolean inner_link_up = false;
 
-uint8_t lop_outbound_channel = 50;
+uint8_t lop_outbound_channel = constrain(EEPROM.read(EEPROM_AP_CHANNEL), LOP_LOW_CHANNEL, LOP_HI_CHANNEL);
 
 // Channel used for commincations towards the inner node.
 uint8_t inbound_channel = 0;

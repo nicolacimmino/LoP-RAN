@@ -3,8 +3,8 @@
 
 byte controlATCFGR()
 {
-    unsigned long addressBase = atoi(strtok(NULL, " "));
-    unsigned long cnt = atoi(strtok(NULL, "\n"));
+    unsigned long addressBase = strtol(strtok(NULL, " "), NULL, 0);
+    unsigned long cnt = strtol(strtok(NULL, "\n"), NULL, 0);
 
     for (uint16_t addressOffset = 0; addressOffset < cnt; addressOffset++)
     {
