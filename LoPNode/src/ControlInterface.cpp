@@ -133,158 +133,103 @@ void process_control_command()
 {
   Serial.println("");
 
-  char *command = strtok(control_rx_buffer, " ?\n");
+  char *command = strtok(control_rx_buffer, " \n");
+
+  byte result = 0;
 
   if (strcasecmp(command, "ATTX") == 0)
   {
-    if (controlATTX())
-    {
-      Serial.println("ERR");
-      return;
-    }
-
-    Serial.println("OK");
+    result = controlATTX();
   }
-
   else if (strcasecmp(command, "ATID?") == 0)
   {
-    Serial.println("LoP-RAN RadioFW 0.1");
-    Serial.println("OK");
+    result = controlATIDq();
   }
-  else if (strcasecmp(command, "ATDI") == 0)
+  else if (strcasecmp(command, "ATDI1") == 0)
   {
-    lop_dia_enabled = (control_rx_buffer[4] == '1');
-    Serial.println("OK");
+    result = controlATDIn(true);
   }
-  else if (strcasecmp(command, "ATSCAN") == 0)
+  else if (strcasecmp(command, "ATDI1") == 0)
   {
-    scanner_mode = (control_rx_buffer[6] == '1');
-    Serial.println("OK");
+    result = controlATDIn(false);
+  }
+  else if (strcasecmp(command, "ATSCAN1") == 0)
+  {
+    result = controlATSCANn(true);
+  }
+  else if (strcasecmp(command, "ATSCAN0") == 0)
+  {
+    result = controlATSCANn(false);
   }
   else if (strcasecmp(command, "ATCFGR") == 0)
   {
-    char *pEnd;
-    unsigned long addressBase = strtoul(control_rx_buffer + 7, &pEnd, 10);
-    unsigned long cnt = strtoul(pEnd, 0, 10);
-
-    for (uint16_t addressOffset = 0; addressOffset < cnt; addressOffset++)
-    {
-      uint16_t actualAddress = addressBase + addressOffset;
-
-      byte value = EEPROM.read(actualAddress);
-
-      if (addressOffset % 16 == 0)
-      {
-        for (int8_t ix = 4; ix >= 0; ix--)
-        {
-          Serial.print((actualAddress >> (ix * 4)) & 0xF, HEX);
-        }
-        Serial.print(" ");
-      }
-
-      Serial.print(value >> 4, HEX);
-      Serial.print(value & 0xF, HEX);
-
-      Serial.print((addressOffset % 16 == 16 - 1) ? "\r\n" : ".");
-    }
-
-    Serial.println("");
-    Serial.println("OK");
+    result = controlATCFGR();
   }
   else if (strcasecmp(command, "ATCFGW") == 0)
   {
-    char *pEnd;
-    unsigned long address = strtoul(control_rx_buffer + 7, &pEnd, 10);
-    unsigned long value = strtoul(pEnd, 0, 10);
-    EEPROM.write(address, value);
-    Serial.println("OK");
+    result = controlATCFGW();
   }
   else if (strcasecmp(command, "ATRX") == 0)
   {
-    if (control_rx_buffer[4] == '?')
-    {
-      notifyReceivedMessage();
-    }
-    else
-    {
-      rx_notification_enable = (control_rx_buffer[4] == '1');
-    }
-    Serial.println("OK");
+    result = controlATRX();
+  }
+  else if (strcasecmp(command, "ATRX1") == 0)
+  {
+    result = controlATRXn(true);
+  }
+  else if (strcasecmp(command, "ATRX0") == 0)
+  {
+    result = controlATRXn(false);
+  }
+  else if (strcasecmp(command, "ATRX?") == 0)
+  {
+    result = controlATRXq();
   }
   else if (strcasecmp(command, "ATNT?") == 0)
   {
-    Serial.println((inner_link_up) ? "1" : "0");
-    Serial.println("OK");
+    result = controlATNTq();
   }
   else if (strcasecmp(command, "ATIPW?") == 0)
   {
-    Serial.println(inbound_tx_power);
-    Serial.println("OK");
+    result = controlATIPWq();
   }
   else if (strcasecmp(command, "ATDAP?") == 0)
   {
-    Serial.println(lop_dap);
-    Serial.println("OK");
+    result = controlATDAPq();
   }
   else if (strcasecmp(command, "ATADD?") == 0)
   {
-    Serial.println(node_address);
-    Serial.println("OK");
+    result = controlATADDq();
   }
   else if (strcasecmp(command, "ATAP1") == 0)
   {
-    lop_dap = 0;
-    EEPROM.write(EEPROM_RFCH_ACT_AS_SEED, 1);
-    Serial.println("OK");
+    result = controlATAPn(true);
   }
   else if (strcasecmp(command, "ATAP0") == 0)
   {
-    lop_dap = 0xFF;
-    EEPROM.write(EEPROM_RFCH_ACT_AS_SEED, 0);
-    Serial.println("OK");
+    result = controlATAPn(false);
   }
   else if (strcasecmp(command, "ATONL?") == 0)
   {
-    for (int ix = 0; ix < LOP_MAX_OUT_NEIGHBOURS; ix++)
-    {
-      int ttl = (int)constrain(LOP_ONL_ALLOCATION_TTL - (millis() - OuterNeighboursList[ix]->last_seen), 0, LOP_ONL_ALLOCATION_TTL);
-      if (OuterNeighboursList[ix] != 0 && ttl > 0)
-      {
-        Serial.print(OuterNeighboursList[ix]->tx_power);
-        Serial.print(",");
-        Serial.print(OuterNeighboursList[ix]->resourceMask.slot);
-        Serial.print(",");
-        Serial.print(ttl);
-        Serial.print(",");
-        Serial.println(OuterNeighboursList[ix]->address);
-      }
-    }
-    Serial.println("OK");
-  }
-  else if (strcasecmp(command, "ATME?") == 0)
-  {
-    // The below chunk of code calculates amount of free memory.
-    // This code is found in several forums and blogs but I never found
-    //  an attribution for it, so I cannot give proper credit.
-    // To uderstand what goes on here we need to remember that the stack
-    //  grows from the bottom of memory up and the heap from the top down.
-    // The code creates an int, which will be created on the stack as it is
-    //  a local variable, so the address of v will be the current top of the
-    //  stack. It will then subtract this address from the current highest
-    //  heap address that is found in the system variable __brkval unless
-    //  the heap is empty in which case it will be __heap_start.
-    extern int __heap_start, *__brkval;
-    int v;
-    Serial.println((int)&v - (__brkval == 0 ? (int)&__heap_start : (int)__brkval), DEC);
-    Serial.println("OK");
+    result = controlATONLq();
   }
   else if (strcasecmp(command, "AT") == 0)
+  {
+    result = ERROR_NONE;
+  }
+  else
+  {
+    result = ERROR_UNKNOWN_COMMAND;
+  }
+
+  if (result == ERROR_NONE)
   {
     Serial.println("OK");
   }
   else
   {
-    Serial.println("ERR");
+    Serial.print("ERR:");
+    Serial.println(result);
   }
 
   // Reset receiving pointer to beginning of buffer.

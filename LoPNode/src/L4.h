@@ -23,6 +23,9 @@
 
 #include <Arduino.h>
 #include "Errors.h"
+#include "Common.h"
+#include "LopParams.h"
+#include "LoPDia.h"
 
 byte sendMessage(uint8_t address, char *message, uint8_t messageLength);
 

@@ -30,6 +30,7 @@ extern boolean rx_notification_enable;
 void setupControlInterface();
 void serveControlInterface();
 void process_control_command();
+void notifyReceivedMessage();
 
 #endif
 

@@ -24,6 +24,7 @@
 #define __LOP_ERRORS__
 
 #define ERROR_NONE 0
-#define ERROR_ADDRESS_INVALID 1
+#define ERROR_UNKNOWN_COMMAND 1
+#define ERROR_ADDRESS_INVALID 2
 
 #endif

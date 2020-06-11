@@ -15,16 +15,39 @@
 //    along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 // LoP-RAN Specifications are available at https://github.com/nicolacimmino/LoP-RAN/wiki
-//    This source code referes, where apllicable, to the chapter and 
+//    This source code referes, where apllicable, to the chapter and
 //    sub chapter of these documents.
 
 #ifndef __CONTROLINTERFACE_COMMANDS_H__
 #define __CONTROLINTERFACE_COMMANDS_H__
 
 #include <Arduino.h>
+#include <Arduino.h>
+#include <EEPROM.h>
+#include "../Errors.h"
+#include "../Common.h"
+#include "../LopParams.h"
+#include "../LoPDia.h"
+#include "../DataLink.h"
+#include "../EEPROMMap.h"
+#include "../OuterNeighboursList.h"
 #include "../L4.h"
+#include "../ControlInterface.h"
 
+byte controlATAPn(bool enabled);
+byte controlATCFGR();
+byte controlATCFGW();
+byte controlATADDq();
+byte controlATDAPq();
+byte controlATDIn(bool enabled);
+byte controlATIDq();
+byte controlATNTq();
+byte controlATONLq();
+byte controlATPWq();
+byte controlATRX();
+byte controlATRXn(bool enabled);
+byte controlATRXq();
+byte controlATSCANn(bool enabled);
 byte controlATTX();
 
 #endif
-
