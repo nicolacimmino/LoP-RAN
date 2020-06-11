@@ -1,6 +1,7 @@
 
 #include "ControlInterfaceCommands.h"
 #include "../LopParams.h"
+#include "../NRF24L01Driver.h"
 
 byte controlATIDq()
 {
@@ -28,12 +29,38 @@ byte controlATIDq()
         Serial.print(".");
     }
     Serial.println((char)0x7F);
-    Serial.print("  NADD:      ");
-    Serial.println(node_address);
-    Serial.print("  DAP:       ");
-    Serial.println(lop_dap);
-    Serial.print("  ITXPW:     ");
-    Serial.println(inbound_tx_power);
+
+    if (inner_link_up)
+    {
+        Serial.println("  LINK:      UP");
+        Serial.print("  NADD:      ");
+        Serial.println(node_address);
+        Serial.print("  DAP:       ");
+        Serial.println(lop_dap);
+        Serial.print("  ITXPW:     ");
+        switch (inbound_tx_power)
+        {
+        case NRF24L01_TX_POW_0dBm:
+            Serial.println("0 dBm");
+            break;
+        case NRF24L01_TX_POW_m6dBm:
+            Serial.println("-6 dBm");
+            break;
+        case NRF24L01_TX_POW_m12dBm:
+            Serial.println("-12 dBm");
+            break;
+        case NRF24L01_TX_POW_m18dBm:
+            Serial.println("-18 dBm");
+            break;
+        }
+    }
+    else
+    {
+        Serial.println("  LINK:      DOWN");
+        Serial.println("  NADD:      ---");
+        Serial.println("  DAP:       ---");
+        Serial.println("  ITXPW:     ---");
+    }
 
     return ERROR_NONE;
 }
