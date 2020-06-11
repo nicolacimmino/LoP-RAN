@@ -18,11 +18,29 @@
 //    This source code referes, where apllicable, to the chapter and
 //    sub chapter of these documents.
 
-#ifndef __LOP_L4_H__
-#define __LOP_L4_H__
-
 #include <Arduino.h>
 
-bool sendMessage(uint8_t address, char *message, uint8_t messageLength);
+#include "L4.h"
+#include "LopParams.h"
+#include "Common.h"
 
-#endif
+extern byte lop_dap;
+extern char lop_message_buffer_i[];
+extern char lop_message_buffer_o[];
+
+byte sendMessage(uint8_t address, char *message, uint8_t messageLength)
+{
+    if (address != 0 && lop_dap != 0)
+    {
+        return ERROR_ADDRESS_INVALID;
+    }
+
+    // If we are the AP (DAP=0) TX means outbound else it means always inbound.
+    char *message_buffer = (lop_dap == 0) ? lop_message_buffer_o : lop_message_buffer_i;
+    memset(message_buffer, 0, LOP_MTU);
+    memcpy(message_buffer, message, min(messageLength, LOP_MTU)); // TODO: this is mtu size minus header size
+
+    lop_message_buffer_address_o = address;
+
+    return ERROR_NONE;
+}

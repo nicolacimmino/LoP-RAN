@@ -36,30 +36,30 @@
 
 #include <SPI.h>
 #include <EEPROM.h>
-#include "EEPROMMap.h"
-#include "Scheduler.h"
-#include "Common.h"
-#include "NRF24L01Driver.h"
-#include "ControlInterface.h"
-#include "Cron.h"
+#include "src/EEPROMMap.h"
+#include "src/Scheduler.h"
+#include "src/Common.h"
+#include "src/NRF24L01Driver.h"
+#include "src/ControlInterface.h"
+#include "src/Cron.h"
 
 void setup(void)
 {
-  EEPROM.write(EEPROM_NID_BASE + 0, 0x05); // NID
-  EEPROM.write(EEPROM_NID_BASE + 1, 0x05);
-  EEPROM.write(EEPROM_NID_BASE + 2, 0x05);
-  EEPROM.write(EEPROM_NID_BASE + 3, 0x05);
-  EEPROM.write(EEPROM_NID_BASE + 4, 0x05);
-  EEPROM.write(EEPROM_NID_BASE + 5, 0x05);
-  EEPROM.write(EEPROM_NID_BASE + 6, 0x05);
-  EEPROM.write(EEPROM_NID_BASE + 7, 0x05);
-  EEPROM.write(EEPROM_mp2p_UID_BASE, 0); // Keep IP stuff off for now.
+  // EEPROM.write(EEPROM_NID_BASE + 0, 0x05); // NID
+  // EEPROM.write(EEPROM_NID_BASE + 1, 0x05);
+  // EEPROM.write(EEPROM_NID_BASE + 2, 0x05);
+  // EEPROM.write(EEPROM_NID_BASE + 3, 0x05);
+  // EEPROM.write(EEPROM_NID_BASE + 4, 0x05);
+  // EEPROM.write(EEPROM_NID_BASE + 5, 0x05);
+  // EEPROM.write(EEPROM_NID_BASE + 6, 0x05);
+  // EEPROM.write(EEPROM_NID_BASE + 7, 0x05);
+  // EEPROM.write(EEPROM_mp2p_UID_BASE, 0); // Keep IP stuff off for now.
 
   // For demo purposes we have a LED between D5 and D6
-  pinMode(5, OUTPUT);
-  pinMode(6, OUTPUT);
-  digitalWrite(5, 0);
-  digitalWrite(6, 0);
+  // pinMode(5, OUTPUT);
+  // pinMode(6, OUTPUT);
+  // digitalWrite(5, 0);
+  // digitalWrite(6, 0);
 
   pinMode(PIN_ACT, OUTPUT);
   setupControlInterface();
@@ -78,7 +78,7 @@ void setup(void)
     EEPROM.write(EEPROM_CRON_BASE+EEPROM_CRON_TASK_OFFSET+ix,"\\http.get\\http://iotp2p.net:4000/api/node/aW90cDJwdG/alive\\\\\0"[ix]); 
   }
   */
-  pinMode(A5, INPUT);
+  //pinMode(A5, INPUT);
 }
 
 void loop(void)
@@ -87,8 +87,6 @@ void loop(void)
   //  is timed and scheduled there.
   runScheduler();
 }
-
-bool lastDoorStatus = false;
 
 // User code invoked at every frame.
 // Must run witing one timeslot.

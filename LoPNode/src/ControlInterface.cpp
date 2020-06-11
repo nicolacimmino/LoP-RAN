@@ -18,6 +18,7 @@
 //    This source code referes, where apllicable, to the chapter and
 //    sub chapter of these documents.
 
+#include "Errors.h"
 #include <Arduino.h>
 #include <EEPROM.h>
 #include "EEPROMMap.h"
@@ -28,6 +29,7 @@
 #include "LoPParams.h"
 #include "DataLink.h"
 #include "L4.h"
+#include "ControlInterface/ControlInterfaceCommands.h"
 
 char control_rx_buffer[MAX_CONTROL_MSG_SIZE];
 int control_rx_buffer_ix = 0;
@@ -131,16 +133,11 @@ void process_control_command()
 {
   Serial.println("");
 
-  if (strcasestr(control_rx_buffer, "ATTX ") - control_rx_buffer == 0)
+  char *command = strtok(control_rx_buffer, " ?\n");
+
+  if (strcasecmp(command, "ATTX") == 0)
   {
-    // Waste the command for now
-    strtok(control_rx_buffer, " ");
-
-    uint8_t address = atoi(strtok(NULL, " "));
-Serial.println(address);    
-    char *message = strtok(NULL, "\n");
-
-    if (!sendMessage(address, message, strlen(message)))
+    if (controlATTX())
     {
       Serial.println("ERR");
       return;
@@ -149,22 +146,22 @@ Serial.println(address);
     Serial.println("OK");
   }
 
-  else if (strcasestr(control_rx_buffer, "ATID?") - control_rx_buffer == 0)
+  else if (strcasecmp(command, "ATID?") == 0)
   {
     Serial.println("LoP-RAN RadioFW 0.1");
     Serial.println("OK");
   }
-  else if (strcasestr(control_rx_buffer, "ATDI") - control_rx_buffer == 0)
+  else if (strcasecmp(command, "ATDI") == 0)
   {
     lop_dia_enabled = (control_rx_buffer[4] == '1');
     Serial.println("OK");
   }
-  else if (strcasestr(control_rx_buffer, "ATSCAN") - control_rx_buffer == 0)
+  else if (strcasecmp(command, "ATSCAN") == 0)
   {
     scanner_mode = (control_rx_buffer[6] == '1');
     Serial.println("OK");
   }
-  else if (strcasestr(control_rx_buffer, "ATCFGR") - control_rx_buffer == 0)
+  else if (strcasecmp(command, "ATCFGR") == 0)
   {
     char *pEnd;
     unsigned long addressBase = strtoul(control_rx_buffer + 7, &pEnd, 10);
@@ -194,7 +191,7 @@ Serial.println(address);
     Serial.println("");
     Serial.println("OK");
   }
-  else if (strcasestr(control_rx_buffer, "ATCFGW") - control_rx_buffer == 0)
+  else if (strcasecmp(command, "ATCFGW") == 0)
   {
     char *pEnd;
     unsigned long address = strtoul(control_rx_buffer + 7, &pEnd, 10);
@@ -202,7 +199,7 @@ Serial.println(address);
     EEPROM.write(address, value);
     Serial.println("OK");
   }
-  else if (strcasestr(control_rx_buffer, "ATRX") - control_rx_buffer == 0)
+  else if (strcasecmp(command, "ATRX") == 0)
   {
     if (control_rx_buffer[4] == '?')
     {
@@ -214,39 +211,39 @@ Serial.println(address);
     }
     Serial.println("OK");
   }
-  else if (strcasestr(control_rx_buffer, "ATNT?") - control_rx_buffer == 0)
+  else if (strcasecmp(command, "ATNT?") == 0)
   {
     Serial.println((inner_link_up) ? "1" : "0");
     Serial.println("OK");
   }
-  else if (strcasestr(control_rx_buffer, "ATIPW?") - control_rx_buffer == 0)
+  else if (strcasecmp(command, "ATIPW?") == 0)
   {
     Serial.println(inbound_tx_power);
     Serial.println("OK");
   }
-  else if (strcasestr(control_rx_buffer, "ATDAP?") - control_rx_buffer == 0)
+  else if (strcasecmp(command, "ATDAP?") == 0)
   {
     Serial.println(lop_dap);
     Serial.println("OK");
   }
-  else if (strcasestr(control_rx_buffer, "ATADD?") - control_rx_buffer == 0)
+  else if (strcasecmp(command, "ATADD?") == 0)
   {
     Serial.println(node_address);
     Serial.println("OK");
   }
-  else if (strcasestr(control_rx_buffer, "ATAP1") - control_rx_buffer == 0)
+  else if (strcasecmp(command, "ATAP1") == 0)
   {
     lop_dap = 0;
     EEPROM.write(EEPROM_RFCH_ACT_AS_SEED, 1);
     Serial.println("OK");
   }
-  else if (strcasestr(control_rx_buffer, "ATAP0") - control_rx_buffer == 0)
+  else if (strcasecmp(command, "ATAP0") == 0)
   {
     lop_dap = 0xFF;
     EEPROM.write(EEPROM_RFCH_ACT_AS_SEED, 0);
     Serial.println("OK");
   }
-  else if (strcasestr(control_rx_buffer, "ATONL?") - control_rx_buffer == 0)
+  else if (strcasecmp(command, "ATONL?") == 0)
   {
     for (int ix = 0; ix < LOP_MAX_OUT_NEIGHBOURS; ix++)
     {
@@ -264,7 +261,7 @@ Serial.println(address);
     }
     Serial.println("OK");
   }
-  else if (strcasestr(control_rx_buffer, "ATME?") - control_rx_buffer == 0)
+  else if (strcasecmp(command, "ATME?") == 0)
   {
     // The below chunk of code calculates amount of free memory.
     // This code is found in several forums and blogs but I never found
@@ -281,7 +278,7 @@ Serial.println(address);
     Serial.println((int)&v - (__brkval == 0 ? (int)&__heap_start : (int)__brkval), DEC);
     Serial.println("OK");
   }
-  else if (strcasestr(control_rx_buffer, "AT") - control_rx_buffer == 0 && (control_rx_buffer[2] == '\r' || control_rx_buffer[2] == '\n'))
+  else if (strcasecmp(command, "AT") == 0)
   {
     Serial.println("OK");
   }
