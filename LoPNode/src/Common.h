@@ -24,6 +24,15 @@
 #include "NetTime.h"
 #include "DataLink.h"
 
+/**
+ * Handy to concatenate numeric defs with strings.
+ * Use:
+ * #define VALUE 10
+ * #define "My value: " STR(VALUE)
+ */
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+
 #define PIN_ACT 2
 
 // Message Buffer.

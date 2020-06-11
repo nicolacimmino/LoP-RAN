@@ -1,7 +1,7 @@
 
 #include "ControlInterfaceCommands.h"
 
-byte controlATPWq()
+byte controlATIPWq()
 {   
     Serial.println(inbound_tx_power);
     
