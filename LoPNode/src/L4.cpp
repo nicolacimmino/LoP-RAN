@@ -28,11 +28,16 @@ extern byte lop_dap;
 extern char lop_message_buffer_i[];
 extern char lop_message_buffer_o[];
 
-byte sendMessage(uint8_t address, char *message, uint8_t messageLength)
+byte sendMessage(uint8_t address, char *message, uint8_t messageLength = 0)
 {
     if (address != 0 && lop_dap != 0)
     {
         return ERROR_ADDRESS_INVALID;
+    }
+
+    if (messageLength == 0)
+    {
+        messageLength = strlen(message);
     }
 
     // If we are the AP (DAP=0) TX means outbound else it means always inbound.

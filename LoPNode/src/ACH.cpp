@@ -85,7 +85,7 @@ boolean registerWithInnerNode()
     }
 
     // We failed to receive a REGACK, we just wait the next ACH to retry. We are still in slot 1
-    //  so we cannot call directly wait until slot 1 as the call would return immediately.
+    //  so we cannot call directly wait until slot 1 ends as the call would return immediately.
     waitUntilInnerLink((NetTime){ 2, -1});  
     waitUntilInnerLink((NetTime){ 1, -1});    
   }

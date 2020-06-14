@@ -23,18 +23,3 @@
 #define EEPROM_RFCH_ACT_AS_SEED 0x02 // Act as anetwork seed if != 0
 #define EEPROM_NID_BASE 0x03         // Base of the Network Identifier (8 bytes up to 0x0A)
 #define EEPROM_AP_CHANNEL 0x0B       // AP Channel
-
-#define EEPROM_mp2p_UID_BASE 0x0B // Base of the msgp2p UID (max 40 bytes up to 0x33)
-#define EEPROM_mp2p_UID_LEN 40
-
-#define EEPROM_CRON_BASE 0x0200
-#define EEPROM_CRON_END 0x03FF
-#define EEPROM_CRON_SIZE 0x80 // Size of a single cron entry.
-
-#define EEPROM_CRON_HOURS_OFFSET 0
-#define EEPROM_CRON_MINUTES_OFFSET 1
-#define EEPROM_CRON_SECONDS_OFFSET 2
-#define EEPROM_CRON_TASK_OFFSET 3
-#define EEPROM_CRON_STAR_BIT 7
-#define EEPROM_CRON_SLASH_BIT 6
-#define EEPROM_CRON_VAL_MASK 0b00111111

@@ -19,6 +19,8 @@
 #ifndef __STARTUPSEQUENCE_H
 #define __STARTUPSEQUENCE_H
 
+#include "L4.h"
+
 void startupOnNetRegistration(void);
 
 #endif

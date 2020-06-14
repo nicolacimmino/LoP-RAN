@@ -19,7 +19,6 @@
 #include "NetTime.h"
 #include "LoPParams.h"
 #include "ControlInterface.h"
-#include "Cron.h"
 
 // Stores the offset between the internal system clock
 //  and the inner link network time.
@@ -34,10 +33,10 @@ NetTime getInnerLinkNetworkTime(void)
 {
   NetTime time;
   unsigned long timemS = (millis() - system_clock_offset) % (int)LOP_FRAMEDURATION;
-  
+
   time.off = timemS % (int)LOP_SLOTDURATION;
   time.slot = (long)floor(timemS / LOP_SLOTDURATION) % (int)(LOP_FRAMEDURATION / LOP_SLOTDURATION);
-  
+
   return time;
 }
 
@@ -48,7 +47,7 @@ NetTime getInnerLinkNetworkTime(void)
 //
 void setInnerLinkNetworkTime(NetTime newTime)
 {
-  long wantedMillis = newTime.slot * LOP_SLOTDURATION + newTime.off; 
+  long wantedMillis = newTime.slot * LOP_SLOTDURATION + newTime.off;
   long previous_offset = system_clock_offset;
   system_clock_offset = (millis() % (int)LOP_FRAMEDURATION) - wantedMillis;
   dia_simpleFormNumericLog("CLKADJ", 1, previous_offset - system_clock_offset);
@@ -59,26 +58,12 @@ void setInnerLinkNetworkTime(NetTime newTime)
 //
 void waitUntilInnerLink(NetTime time)
 {
-  uint8_t cnt = 0;
-  
   do
   {
     // We will sit in this loop most of the time we need to keep the
-    //  control interface alive. Another option was to serve the control
-    //  inteface on an interrupt, but that could interfere more easily 
-    //  with our real-time requirements.
-    // We srve alternatively the control interface and the scheduler so
-    //  we minimize the chances to delay leaving from this loop.
-    cnt++;
-    if((cnt % 2) == 0)
-    {
-      serveControlInterface();
-    }
-    else
-    {
-      processCronEntries();
-    }
-  } while(!isInnerLinkNetworkTime(time));
+    //  control interface alive.
+    serveControlInterface();
+  } while (!isInnerLinkNetworkTime(time));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////

@@ -27,6 +27,6 @@
 #include "LopParams.h"
 #include "LoPDia.h"
 
-byte sendMessage(uint8_t address, char *message, uint8_t messageLength);
+byte sendMessage(uint8_t address, char *message, uint8_t messageLength = 0);
 
 #endif

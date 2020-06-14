@@ -6,6 +6,9 @@
 byte controlATIDq()
 {
     Serial.println("LoP-RAN RadioFW 0.1");
+    Serial.println("Harware:");
+    Serial.print("  Version:   ");
+    Serial.println(EEPROM.read(EEPROM_HW_VERSION));
     Serial.println("Radio:");
     Serial.println("  CH LO-HI:  " STR(LOP_LOW_CHANNEL) "-" STR(LOP_HI_CHANNEL));
     Serial.println("  MTU:       " STR(LOP_MTU));

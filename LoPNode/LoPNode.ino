@@ -41,7 +41,6 @@
 #include "src/Common.h"
 #include "src/NRF24L01Driver.h"
 #include "src/ControlInterface.h"
-#include "src/Cron.h"
 #include "src/L4.h"
 
 void setup(void)
@@ -57,8 +56,7 @@ void setup(void)
   // EEPROM.write(EEPROM_NID_BASE + 5, 0x05);
   // EEPROM.write(EEPROM_NID_BASE + 6, 0x05);
   // EEPROM.write(EEPROM_NID_BASE + 7, 0x05);
-  // EEPROM.write(EEPROM_mp2p_UID_BASE, 0); // Keep IP stuff off for now.
-
+  
   pinMode(PIN_ACT, OUTPUT);
   setupControlInterface();
   setupRadio();
@@ -88,7 +86,7 @@ void userCode()
     char message[16];
     sprintf(message, "PING %i", millis() / 1000);
 
-    sendMessage(0, message, strlen(message));
+    sendMessage(0, message);
   }
 
   lastPing = millis();
