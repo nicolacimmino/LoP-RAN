@@ -46,10 +46,9 @@
 
 void setup(void)
 {
-  // EEPROM.write( 0, 0);
-  // EEPROM.write( 1, 50);
-  // EEPROM.write( 2, 0);
-
+  // EEPROM.write(EEPROM_HW_VERSION, 2);
+  // EEPROM.write(EEPROM_RFCH_INNER_NODE, 50);
+  // EEPROM.write(EEPROM_RFCH_ACT_AS_SEED, 0);
   // EEPROM.write(EEPROM_NID_BASE + 0, 0x05); // NID
   // EEPROM.write(EEPROM_NID_BASE + 1, 0x05);
   // EEPROM.write(EEPROM_NID_BASE + 2, 0x05);
@@ -87,7 +86,7 @@ void userCode()
   if (lop_dap != 0 && inner_link_up)
   {
     char message[16];
-    sprintf(message, "PING %i", millis()/1000);
+    sprintf(message, "PING %i", millis() / 1000);
 
     sendMessage(0, message, strlen(message));
   }

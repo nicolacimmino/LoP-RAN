@@ -8,9 +8,9 @@
 //  real-time requirements of LoP-RAN TDMA. We also use NRF24L01 "Pipe addresses"
 //  as a sort of extended preamble to prevent interslot data leackage.
 //
-// The code in this module draws some inspiration from the great RF24 
+// The code in this module draws some inspiration from the great RF24
 //  library Copyright (C) 2011 J. Coliz <maniacbug@ymail.com>, GNU
-//  which served also as a good support during the first phases of tests 
+//  which served also as a good support during the first phases of tests
 //  to get things up and running.
 //
 //  Copyright (C) 2014 Nicola Cimmino
@@ -33,45 +33,74 @@
 // Buffer used to send and receive data on the SPI.
 uint8_t spi_buffer[NRF24L01_SPI_BUFFER_SIZE];
 
+namespace NRF24L01
+{
+
+byte NRF24L01_CS_PIN;
+byte NRF24L01_CE_PIN;
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Determines hardware version specific settings.
+//
+void setupHardwareConfiguration()
+{
+  byte hwVersion = EEPROM.read(EEPROM_HW_VERSION);
+
+  switch (hwVersion)
+  {
+  case 1:
+    NRF24L01::NRF24L01_CS_PIN = NRF24L01_CS_PIN_V1;
+    NRF24L01::NRF24L01_CE_PIN = NRF24L01_CE_PIN_V1;
+    break;
+  case 2:
+    NRF24L01::NRF24L01_CS_PIN = NRF24L01_CS_PIN_V2;
+    NRF24L01::NRF24L01_CE_PIN = NRF24L01_CE_PIN_V2;
+    break;
+  }
+}
+
+} // namespace NRF24L01
+
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Brings up the SPI interface and makes basic settings for to the radio.
 //
 void initializeRadio()
 {
-    // Initialize SPI related pins.
-    pinMode(NRF24L01_CE_PIN, OUTPUT);
-    pinMode(NRF24L01_CS_PIN, OUTPUT);
-    pinMode(SCK, OUTPUT);
-    pinMode(MOSI, OUTPUT);
-    digitalWrite(NRF24L01_CS_PIN, HIGH);  
-    digitalWrite(NRF24L01_CE_PIN, LOW);
-    
-    // NRF24L01 PON (Power On Reset) is 10.3mS
-    //  according to datasheet. We wait a bit more
-    //  just to be on the safe side.
-    delay(15);
+  NRF24L01::setupHardwareConfiguration();
 
-    // We setup SPI with mode 0, MSB first and use SPI CLOCK
-    //  div by 4 to get a 2MHz SPI clock on a 16MHz xtal).
-    SPI.begin();
-    SPI.setDataMode(SPI_MODE0);
-    SPI.setBitOrder(MSBFIRST);
-    SPI.setClockDivider(SPI_CLOCK_DIV4);
-      
-    // Disable Auto ACK.
-    writeNRF24L01Register(NRF24L01_EN_AA, 0);
-    
-    // Set correct payload size.
-    writeNRF24L01Register(NRF24L01_RX_PW_P1, NRF24L01_PAYLOAD_SIZE);
-    
-    // Enable only pipe1 RX (we don't need zero cause we don't use ACK).
-    writeNRF24L01Register(NRF24L01_EN_RXADDR, 0b00000010);
-    
-    powerUpRadio();
-    
-    performSPITransaction(NRF24L01_FLUSH_TX, 0);
-    performSPITransaction(NRF24L01_FLUSH_RX, 0);
-     
+  // Initialize SPI related pins.
+  pinMode(NRF24L01::NRF24L01_CE_PIN, OUTPUT);
+  pinMode(NRF24L01::NRF24L01_CS_PIN, OUTPUT);
+  pinMode(SCK, OUTPUT);
+  pinMode(MOSI, OUTPUT);
+  digitalWrite(NRF24L01::NRF24L01_CS_PIN, HIGH);
+  digitalWrite(NRF24L01::NRF24L01_CE_PIN, LOW);
+
+  // NRF24L01 PON (Power On Reset) is 10.3mS
+  //  according to datasheet. We wait a bit more
+  //  just to be on the safe side.
+  delay(15);
+
+  // We setup SPI with mode 0, MSB first and use SPI CLOCK
+  //  div by 4 to get a 2MHz SPI clock on a 16MHz xtal).
+  SPI.begin();
+  SPI.setDataMode(SPI_MODE0);
+  SPI.setBitOrder(MSBFIRST);
+  SPI.setClockDivider(SPI_CLOCK_DIV4);
+
+  // Disable Auto ACK.
+  writeNRF24L01Register(NRF24L01_EN_AA, 0);
+
+  // Set correct payload size.
+  writeNRF24L01Register(NRF24L01_RX_PW_P1, NRF24L01_PAYLOAD_SIZE);
+
+  // Enable only pipe1 RX (we don't need zero cause we don't use ACK).
+  writeNRF24L01Register(NRF24L01_EN_RXADDR, 0b00000010);
+
+  powerUpRadio();
+
+  performSPITransaction(NRF24L01_FLUSH_TX, 0);
+  performSPITransaction(NRF24L01_FLUSH_RX, 0);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -83,11 +112,11 @@ void startReceiving()
   // Flush RX FIFO and clear RX_DR flag (DataReady).
   uint8_t status = performSPITransaction(NRF24L01_FLUSH_RX, 0);
   writeNRF24L01Register(NRF24L01_STATUS, status | 0b01000000);
-  
+
   // Set RX mode (bit 0 of CONFIG goes to one)
   // Since we are in Standby-I we need only 130uS for RX to settle.
   writeNRF24L01Register(NRF24L01_CONFIG, (readNRF24L01Register(NRF24L01_CONFIG) | 0b00000001));
-  digitalWrite(NRF24L01_CE_PIN, HIGH);
+  digitalWrite(NRF24L01::NRF24L01_CE_PIN, HIGH);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -95,14 +124,14 @@ void startReceiving()
 //
 void stopReceiving()
 {
-  digitalWrite(NRF24L01_CE_PIN, LOW);
+  digitalWrite(NRF24L01::NRF24L01_CE_PIN, LOW);
 }
 
 void readPayload(char *buffer)
 {
-  // Put the RX_FIFO data into the SPI buffer and then move it to the supplied buffer.	 
-  performSPITransaction(NRF24L01_R_RX_PAYLOAD, NRF24L01_PAYLOAD_SIZE); 
-  memcpy(buffer, spi_buffer, NRF24L01_PAYLOAD_SIZE); 
+  // Put the RX_FIFO data into the SPI buffer and then move it to the supplied buffer.
+  performSPITransaction(NRF24L01_R_RX_PAYLOAD, NRF24L01_PAYLOAD_SIZE);
+  memcpy(buffer, spi_buffer, NRF24L01_PAYLOAD_SIZE);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -117,11 +146,11 @@ boolean isDataAvailable()
   uint8_t fifo_status = readNRF24L01Register(NRF24L01_FIFO_STATUS);
 
   // There is data only if Data Ready and not RX Empty
-  if((status & _BV(NRF24L01_STATUS_RX_DR)) && !(fifo_status & _BV(NRF24L01_FIFO_STATUS_RX_EMPTY)))
+  if ((status & _BV(NRF24L01_STATUS_RX_DR)) && !(fifo_status & _BV(NRF24L01_FIFO_STATUS_RX_EMPTY)))
   {
-     // Reset Data Ready.
-     writeNRF24L01Register(NRF24L01_STATUS, status | _BV(NRF24L01_STATUS_RX_DR));
-     return true; 
+    // Reset Data Ready.
+    writeNRF24L01Register(NRF24L01_STATUS, status | _BV(NRF24L01_STATUS_RX_DR));
+    return true;
   }
   return false;
 }
@@ -131,56 +160,55 @@ boolean isDataAvailable()
 // Radio must be already in Standby-I when this is invoked.
 //
 void transmitBuffer(char *buffer, int length)
-{ 
-  // Flush the TX buffer.  
+{
+  // Flush the TX buffer.
   performSPITransaction(NRF24L01_FLUSH_TX, 0);
 
   // Set TX mode (bit 0 of CONFIG goes to zero)
   // Since we are in Standby-I we need only 130uS for TX to settle.
   writeNRF24L01Register(NRF24L01_CONFIG, (readNRF24L01Register(NRF24L01_CONFIG) & ~_BV(NRF24L01_CONFIG_PRIM_RX)));
-  digitalWrite(NRF24L01_CE_PIN, HIGH);
-  
+  digitalWrite(NRF24L01::NRF24L01_CE_PIN, HIGH);
+
   // We are here in Standby-II and will move to TX mode as soon as data is pushed to the TX FIFO.
   // Technically we enter this status after 130uS but we can just start to fill the TX FIFO.
-  
+
   unsigned long last_pll_lock = millis();
-  for(int buf_ix=0; buf_ix<length; buf_ix+=NRF24L01_PAYLOAD_SIZE)
+  for (int buf_ix = 0; buf_ix < length; buf_ix += NRF24L01_PAYLOAD_SIZE)
   {
-    memcpy(spi_buffer, buffer+buf_ix, NRF24L01_PAYLOAD_SIZE);
+    memcpy(spi_buffer, buffer + buf_ix, NRF24L01_PAYLOAD_SIZE);
     performSPITransaction(NRF24L01_W_TX_PAYLOAD, NRF24L01_PAYLOAD_SIZE);
-    
+
     // Wait to push more data if we have filled the FIFO
     // Bit 5 is TX_FIFO_FULL
-    while(readNRF24L01Register(NRF24L01_FIFO_STATUS) & _BV(NRF24L01_FIFO_STATUS_TX_FULL))
+    while (readNRF24L01Register(NRF24L01_FIFO_STATUS) & _BV(NRF24L01_FIFO_STATUS_TX_FULL))
     {
       delayMicroseconds(100);
     }
-  
-    // The PLL during TX mode runs in open loop mode, we cannot stay here more than 4mS as the 
+
+    // The PLL during TX mode runs in open loop mode, we cannot stay here more than 4mS as the
     //  oscillator might drift too much. If we go over 4mS we need to enter Standby-II mode
     //  and go back to TX mode in order for the oscillator to lock again. To go to Standby-II
     //  here we pull CE down and wait the TX FIFO to be empty.
-    if(millis() - last_pll_lock > 4)
+    if (millis() - last_pll_lock > 4)
     {
       // Wait for the FIFO to be empty, so we can enter Standby-II
       // Bit 4 is TX_FIFO_EMPTY
-      while(!(readNRF24L01Register(NRF24L01_FIFO_STATUS) & 0b00010000))
+      while (!(readNRF24L01Register(NRF24L01_FIFO_STATUS) & 0b00010000))
       {
         delayMicroseconds(100);
-      }  
-    } 
-    
-  } 
-  
+      }
+    }
+  }
+
   // Wait for the FIFO to be empty, so we can enter Standby-II
-  while(!(readNRF24L01Register(NRF24L01_FIFO_STATUS) & 0b00010000))
+  while (!(readNRF24L01Register(NRF24L01_FIFO_STATUS) & 0b00010000))
   {
     delayMicroseconds(100);
   }
-  
+
   // Back to Standby-I
-  writeNRF24L01Register(NRF24L01_CONFIG, (readNRF24L01Register(NRF24L01_CONFIG) & 0b11111110));  
-  digitalWrite(NRF24L01_CE_PIN, LOW);  
+  writeNRF24L01Register(NRF24L01_CONFIG, (readNRF24L01Register(NRF24L01_CONFIG) & 0b11111110));
+  digitalWrite(NRF24L01::NRF24L01_CE_PIN, LOW);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -189,7 +217,7 @@ void transmitBuffer(char *buffer, int length)
 void powerDownRadio()
 {
   // Power is controlled by bit 1 of CONFIG
-  writeNRF24L01Register(NRF24L01_CONFIG, (readNRF24L01Register(NRF24L01_CONFIG) & 0b11111101)); 
+  writeNRF24L01Register(NRF24L01_CONFIG, (readNRF24L01Register(NRF24L01_CONFIG) & 0b11111101));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -198,9 +226,8 @@ void powerDownRadio()
 void powerUpRadio()
 {
   // Power is controlled by bit 1 of CONFIG
-  writeNRF24L01Register(NRF24L01_CONFIG, (readNRF24L01Register(NRF24L01_CONFIG) | 0b00000010)); 
+  writeNRF24L01Register(NRF24L01_CONFIG, (readNRF24L01Register(NRF24L01_CONFIG) | 0b00000010));
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Sets the extended preamble for TX.
@@ -211,7 +238,7 @@ void powerUpRadio()
 void setTXExtendedPreamble(uint64_t extended_preamble)
 {
   // TX Address is 5 bytes long.
-  writeNRF24L01Register(NRF24L01_TX_ADDR, extended_preamble, 5); 
+  writeNRF24L01Register(NRF24L01_TX_ADDR, extended_preamble, 5);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -223,7 +250,7 @@ void setTXExtendedPreamble(uint64_t extended_preamble)
 void setRXExtendedPreamble(uint64_t extended_preamble)
 {
   // TX Address is 5 bytes long.
-  writeNRF24L01Register(NRF24L01_RX_ADDR_P1, extended_preamble, 5); 
+  writeNRF24L01Register(NRF24L01_RX_ADDR_P1, extended_preamble, 5);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -232,7 +259,7 @@ void setRXExtendedPreamble(uint64_t extended_preamble)
 void setTransmitPower(uint8_t power)
 {
   // Power is in bit2-1 of RF SETUP
-  writeNRF24L01Register(NRF24L01_RF_SETUP, (readNRF24L01Register(NRF24L01_RF_SETUP) & 0b11111001) | ((power & 0b11) << 1)); 
+  writeNRF24L01Register(NRF24L01_RF_SETUP, (readNRF24L01Register(NRF24L01_RF_SETUP) & 0b11111001) | ((power & 0b11) << 1));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -241,7 +268,7 @@ void setTransmitPower(uint8_t power)
 void setRFChannel(uint8_t channel)
 {
   // MAX RF channel is 127
-  writeNRF24L01Register(NRF24L01_RF_CH, channel & 0b01111111); 
+  writeNRF24L01Register(NRF24L01_RF_CH, channel & 0b01111111);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -250,7 +277,7 @@ void setRFChannel(uint8_t channel)
 void writeNRF24L01Register(uint8_t address, uint64_t value, uint8_t len)
 {
   // Write out the value, LSB first.
-  for(int buf_ix=0; buf_ix<len; buf_ix++)
+  for (int buf_ix = 0; buf_ix < len; buf_ix++)
   {
     spi_buffer[buf_ix] = value & 0xFF;
     value = value >> 8;
@@ -282,24 +309,23 @@ uint8_t readNRF24L01Register(uint8_t address)
 //
 uint8_t performSPITransaction(uint8_t command, uint8_t data_len)
 {
-    // CS low before we can talk.
-    digitalWrite(NRF24L01_CS_PIN, LOW);
+  // CS low before we can talk.
+  digitalWrite(NRF24L01::NRF24L01_CS_PIN, LOW);
 
-    // First we send the command. We also get out the status register.
-    uint8_t status = SPI.transfer(command);
+  // First we send the command. We also get out the status register.
+  uint8_t status = SPI.transfer(command);
 
-    // Then the all buffer.
-    if(data_len>0)
+  // Then the all buffer.
+  if (data_len > 0)
+  {
+    for (uint8_t buf_ix = 0; buf_ix < data_len; buf_ix++)
     {
-      for (uint8_t buf_ix=0; buf_ix<data_len; buf_ix++)
-      {
-        spi_buffer[buf_ix] = SPI.transfer(spi_buffer[buf_ix]);
-      }
+      spi_buffer[buf_ix] = SPI.transfer(spi_buffer[buf_ix]);
     }
-    
-    // Release the SPI bus.
-    digitalWrite(NRF24L01_CS_PIN, HIGH);
-    
-    return status;
-}
+  }
 
+  // Release the SPI bus.
+  digitalWrite(NRF24L01::NRF24L01_CS_PIN, HIGH);
+
+  return status;
+}

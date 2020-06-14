@@ -34,16 +34,28 @@
 
 #include <Arduino.h>
 #include <SPI.h>
+#include <EEPROM.h>
+#include "EEPROMMap.h"
+
+namespace NRF24L01
+{
+
+void setupHardwareConfiguration();
+
+extern byte NRF24L01_CS_PIN;
+extern byte NRF24L01_CE_PIN;
+
+} // namespace NRF24L01
 
 #define NRF24L01_SPI_BUFFER_SIZE 32
 
 // HW V1
-// #define NRF24L01_CS_PIN 10
-// #define NRF24L01_CE_PIN 9
+#define NRF24L01_CS_PIN_V1 10
+#define NRF24L01_CE_PIN_V1 9
 
 // HW V2
-#define NRF24L01_CS_PIN 8
-#define NRF24L01_CE_PIN 7
+#define NRF24L01_CS_PIN_V2 8
+#define NRF24L01_CE_PIN_V2 7
 
 // Commands
 #define NRF24L01_R_REGISTER 0x00

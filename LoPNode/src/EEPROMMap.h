@@ -15,23 +15,21 @@
 //    along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 // LoP-RAN Specifications are available at https://github.com/nicolacimmino/LoP-RAN/wiki
-//    This source code referes, where apllicable, to the chapter and 
+//    This source code referes, where apllicable, to the chapter and
 //    sub chapter of these documents.
 
+#define EEPROM_HW_VERSION 0x00       // Hardware version
+#define EEPROM_RFCH_INNER_NODE 0x01  // Last known good RF channel
+#define EEPROM_RFCH_ACT_AS_SEED 0x02 // Act as anetwork seed if != 0
+#define EEPROM_NID_BASE 0x03         // Base of the Network Identifier (8 bytes up to 0x0A)
+#define EEPROM_AP_CHANNEL 0x0B       // AP Channel
 
-#define EEPROM_RFCH_INNER_NODE  0x01            // Last known good RF channel
-#define EEPROM_RFCH_ACT_AS_SEED 0x02            // Act as anetwork seed if != 0
-#define EEPROM_NID_BASE         0x03            // Base of the Network Identifier (8 bytes up to 0x0A)
-#define EEPROM_AP_CHANNEL       0x0B            // AP Channel
+#define EEPROM_mp2p_UID_BASE 0x0B // Base of the msgp2p UID (max 40 bytes up to 0x33)
+#define EEPROM_mp2p_UID_LEN 40
 
-
-
-#define EEPROM_mp2p_UID_BASE    0x0B            // Base of the msgp2p UID (max 40 bytes up to 0x33)
-#define EEPROM_mp2p_UID_LEN     40
-
-#define EEPROM_CRON_BASE        0x0200
-#define EEPROM_CRON_END         0x03FF
-#define EEPROM_CRON_SIZE        0x80            // Size of a single cron entry.
+#define EEPROM_CRON_BASE 0x0200
+#define EEPROM_CRON_END 0x03FF
+#define EEPROM_CRON_SIZE 0x80 // Size of a single cron entry.
 
 #define EEPROM_CRON_HOURS_OFFSET 0
 #define EEPROM_CRON_MINUTES_OFFSET 1
