@@ -132,12 +132,12 @@ void run_scanner_schedule()
     startReceiving();
     while(getInnerLinkNetworkTime().off < LOP_SLOTDURATION / 4)
     {
-      if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 4))
+      if(receiveLoPRANMessage(lopFrameBuffer, LOP_MTU , LOP_SLOTDURATION / 4))
       {
         lop_dia_enabled = true;
         dia_logRawString("RAWSCAN ");
         dia_logRawTime();  
-        dia_logBufferToHex(lop_rx_buffer,lop_rx_buffer[4]);
+        dia_logBufferToHex(lopFrameBuffer,lopFrameBuffer[4]);
         dia_closeLog();
         lop_dia_enabled = false;
       }
@@ -145,12 +145,12 @@ void run_scanner_schedule()
     
     setRXExtendedPreamble(outbound_pipe);
     startReceiving();
-    if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 4))
+    if(receiveLoPRANMessage(lopFrameBuffer, LOP_MTU , LOP_SLOTDURATION / 4))
     {
       lop_dia_enabled = true;
       dia_logRawString("RAWSCAN "); 
       dia_logRawTime(); 
-      dia_logBufferToHex(lop_rx_buffer,lop_rx_buffer[4]);
+      dia_logBufferToHex(lopFrameBuffer,lopFrameBuffer[4]);
       dia_closeLog();
       lop_dia_enabled = false;
     }

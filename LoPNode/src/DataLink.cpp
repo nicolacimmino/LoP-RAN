@@ -29,10 +29,7 @@
 #include "NRF24L01Driver.h"
 
 // TX Buffer.
-char lop_tx_buffer[LOP_MTU];
-
-// RX Buffer.
-char lop_rx_buffer[LOP_MTU];
+char lopFrameBuffer[LOP_MTU];
 
 // Distance from Access Point.
 // Default is 0xFF (that is no access).
@@ -45,7 +42,7 @@ void setupDataLink()
   // Preamble must always be in the beginning of each 
   //  message. We prefill here the TX buffer so we 
   //  save some redundant code in every message composition.
-  strncpy(lop_tx_buffer, preamble, 4);
+  strncpy(lopFrameBuffer, preamble, 4);
   
   // Initialize lop_dap according to our role
   lop_dap=(EEPROM.read(EEPROM_RFCH_ACT_AS_SEED)==1)?0:0xFF;

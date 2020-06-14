@@ -59,7 +59,7 @@ void inititateCCHTransaction()
   // |5   |6     |7      |...|
   // |0x80|MSGLEN|MSGDATA|...|
 
-  lop_tx_buffer[txBufIndex++] = 0x80; // MSGI
+  lopFrameBuffer[txBufIndex++] = 0x80; // MSGI
 
   txBufIndex++; // MSG LEN will be filled up when known
 
@@ -69,10 +69,10 @@ void inititateCCHTransaction()
     //  as there is already the MSG length
     if (lop_message_buffer_i[ix] == 0)
     {
-      lop_tx_buffer[6] = ix; // MSG content length
+      lopFrameBuffer[6] = ix; // MSG content length
       break;
     }
-    lop_tx_buffer[txBufIndex++] = lop_message_buffer_i[ix];
+    lopFrameBuffer[txBufIndex++] = lop_message_buffer_i[ix];
   }
 
   // Set the radio to the power we negotiated during ranging.
@@ -87,9 +87,9 @@ void inititateCCHTransaction()
   delay(constrain(LOP_RTXGUARD - getInnerLinkNetworkTime().off, 0, LOP_RTXGUARD));
 
   // Send the datagram.
-  sendLoPRANMessage(lop_tx_buffer, txBufIndex);
+  sendLoPRANMessage(lopFrameBuffer, txBufIndex);
 
-  if (lop_tx_buffer[6] > 0)
+  if (lopFrameBuffer[6] > 0)
   {
     dia_simpleFormTextLog("MSGI", lop_message_buffer_i);
   }
@@ -97,21 +97,21 @@ void inititateCCHTransaction()
   // Empty the message buffer.
   lop_message_buffer_i[0] = 0;
 
-  if (receiveLoPRANMessage(lop_rx_buffer, LOP_MTU, LOP_SLOTDURATION / 2))
+  if (receiveLoPRANMessage(lopFrameBuffer, LOP_MTU, LOP_SLOTDURATION / 2))
   {
-    if (lop_rx_buffer[5] == (char)0x81)
+    if (lopFrameBuffer[5] == (char)0x81)
     {
-      setInnerLinkNetworkTime((NetTime){getInnerLinkNetworkTime().slot, lop_rx_buffer[6]});
+      setInnerLinkNetworkTime((NetTime){getInnerLinkNetworkTime().slot, lopFrameBuffer[6]});
 
-      for (int ix = 0; ix < lop_rx_buffer[7]; ix++)
+      for (int ix = 0; ix < lopFrameBuffer[7]; ix++)
       {
-        lop_message_buffer_o[ix] = lop_rx_buffer[8 + ix];
+        lop_message_buffer_o[ix] = lopFrameBuffer[8 + ix];
       }
 
       // We add null terminator as it's not sent.
-      if (lop_rx_buffer[7] > 0)
+      if (lopFrameBuffer[7] > 0)
       {
-        lop_message_buffer_o[lop_rx_buffer[7]] = 0;
+        lop_message_buffer_o[lopFrameBuffer[7]] = 0;
         dia_simpleFormTextLog("MSGO", lop_message_buffer_o);
       }
 
@@ -145,19 +145,19 @@ void serveCCH()
   setTransmitPower(neighbourDescriptor->tx_power);
   setRFChannel(lop_outbound_channel);
 
-  if (receiveLoPRANMessage(lop_rx_buffer, LOP_MTU, LOP_SLOTDURATION / 2))
+  if (receiveLoPRANMessage(lopFrameBuffer, LOP_MTU, LOP_SLOTDURATION / 2))
   {
-    if (lop_rx_buffer[5] == (char)0x80)
+    if (lopFrameBuffer[5] == (char)0x80)
     {
-      for (int ix = 0; ix < lop_rx_buffer[6]; ix++)
+      for (int ix = 0; ix < lopFrameBuffer[6]; ix++)
       {
-        lop_message_buffer_i[ix] = lop_rx_buffer[7 + ix];
+        lop_message_buffer_i[ix] = lopFrameBuffer[7 + ix];
       }
 
       // We add null terminator as it's not sent.
-      if (lop_rx_buffer[6] > 0)
+      if (lopFrameBuffer[6] > 0)
       {
-        lop_message_buffer_i[lop_rx_buffer[6]] = 0;
+        lop_message_buffer_i[lopFrameBuffer[6]] = 0;
         lop_message_buffer_address_i = neighbourDescriptor->address;
         dia_simpleFormTextLog("MSGI", lop_message_buffer_i);
       }
@@ -168,7 +168,7 @@ void serveCCH()
       // |5   |6  |7     |8  |...|
       // |0x81|OFF|MSGLEN|MSG|...|
 
-      lop_tx_buffer[txBufIndex++] = 0x81; // MSGO
+      lopFrameBuffer[txBufIndex++] = 0x81; // MSGO
 
       txBufIndex++; // Current OFF will be filled just before sending
       txBufIndex++; // MSG LEN will be filled up when known
@@ -176,7 +176,7 @@ void serveCCH()
       // See if the outbound message waiting is for the address of the
       //  node assigned to this slot, if not we just send an empty message
       //  in order to complete the CCH trasaction.
-      lop_tx_buffer[7] = 0;
+      lopFrameBuffer[7] = 0;
       if (lop_message_buffer_address_o == neighbourDescriptor->address)
       {
         for (int ix = 0; ix < LOP_MTU; ix++) // MSG content
@@ -185,10 +185,10 @@ void serveCCH()
           //  as there is already the MSG length
           if (lop_message_buffer_o[ix] == 0)
           {
-            lop_tx_buffer[7] = ix; // MSG content length
+            lopFrameBuffer[7] = ix; // MSG content length
             break;
           }
-          lop_tx_buffer[txBufIndex++] = lop_message_buffer_o[ix];
+          lopFrameBuffer[txBufIndex++] = lop_message_buffer_o[ix];
         }
         // Empty the message buffer.
         lop_message_buffer_o[0] = 0;
@@ -196,10 +196,10 @@ void serveCCH()
 
       delay(LOP_RTXGUARD);
 
-      lop_tx_buffer[6] = getInnerLinkNetworkTime().off; // OFF
+      lopFrameBuffer[6] = getInnerLinkNetworkTime().off; // OFF
 
-      sendLoPRANMessage(lop_tx_buffer, txBufIndex);
-      if (lop_tx_buffer[7] > 0)
+      sendLoPRANMessage(lopFrameBuffer, txBufIndex);
+      if (lopFrameBuffer[7] > 0)
       {
         dia_simpleFormTextLog("MSGO", lop_message_buffer_o);
       }

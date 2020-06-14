@@ -48,9 +48,9 @@ boolean registerWithInnerNode()
     byte randToken = random(0,255);
        
     // Build the the REG message according to LOP_01.01§6.1
-    lop_tx_buffer[LOP_IX_SDU_ID] = LOP_SDU_REG;
-    lop_tx_buffer[LOP_IX_SDU_REG_POW] = inbound_tx_power;
-    lop_tx_buffer[LOP_IX_SDU_REG_TOKEN] = randToken;
+    lopFrameBuffer[LOP_IX_SDU_ID] = LOP_SDU_REG;
+    lopFrameBuffer[LOP_IX_SDU_REG_POW] = inbound_tx_power;
+    lopFrameBuffer[LOP_IX_SDU_REG_TOKEN] = randToken;
     
     // Setup the ACH phy layer parameters according to LOP_01.01§4        
     setTransmitPower(inbound_tx_power);
@@ -61,21 +61,21 @@ boolean registerWithInnerNode()
     // Introduce a guard to accomodate for sligh drift according to LOP_01.01§6
     delay(LOP_RTXGUARD);
     
-    sendLoPRANMessage(lop_tx_buffer, LOP_LEN_SDU_REG);
+    sendLoPRANMessage(lopFrameBuffer, LOP_LEN_SDU_REG);
     
     // Wait a reply, expect  a REGACK with the same token, ignore anything else
     //  according to according to LOP_01.01§6.2
-    if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 2))
+    if(receiveLoPRANMessage(lopFrameBuffer, LOP_MTU , LOP_SLOTDURATION / 2))
     {
-      if(lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_REGACK && (byte)lop_rx_buffer[LOP_IX_SDU_REGACK_TOKEN] == randToken)
+      if(lopFrameBuffer[LOP_IX_SDU_ID] == LOP_SDU_REGACK && (byte)lopFrameBuffer[LOP_IX_SDU_REGACK_TOKEN] == randToken)
       {
         // Store the inbound link time slot assigned to us.
-        inboundTimeSlot = lop_rx_buffer[LOP_IX_SDU_REGACK_SLOT];
+        inboundTimeSlot = lopFrameBuffer[LOP_IX_SDU_REGACK_SLOT];
         
         node_address = 0;
         for(int ix=0; ix<sizeof(node_address); ix++)
         {
-          node_address += lop_rx_buffer[LOP_IX_SDU_REGACK_ADDRESS+ix] << (ix*4); 
+          node_address += lopFrameBuffer[LOP_IX_SDU_REGACK_ADDRESS+ix] << (ix*4); 
         }
         
         L5::onL4LinkUp();
@@ -106,32 +106,32 @@ void serveACH()
   setRXExtendedPreamble(ACH_PIPE_ADDR_IN);
   setRFChannel(lop_outbound_channel);
    
-  if(receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_SLOTDURATION / 2))
+  if(receiveLoPRANMessage(lopFrameBuffer, LOP_MTU , LOP_SLOTDURATION / 2))
   {
     // Expect a REG message.
-    if(lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_REG)
+    if(lopFrameBuffer[LOP_IX_SDU_ID] == LOP_SDU_REG)
     {
       // Allocate radio resources and store them in the ONL.
-      pONDescriptor neighbourDescriptor = allocateRadioResources(lop_rx_buffer[LOP_IX_SDU_REG_POW]);
+      pONDescriptor neighbourDescriptor = allocateRadioResources(lopFrameBuffer[LOP_IX_SDU_REG_POW]);
 
       // Build the the REG message according to LOP_01.01§6.2
-      lop_tx_buffer[LOP_IX_SDU_ID] = LOP_SDU_REGACK;
-      lop_tx_buffer[LOP_IX_SDU_REGACK_TOKEN] = lop_rx_buffer[LOP_IX_SDU_REG_TOKEN];        // TOKEN
-      lop_tx_buffer[LOP_IX_SDU_REGACK_SLOT] = neighbourDescriptor->resourceMask.slot;   // RMSLOT
+      lopFrameBuffer[LOP_IX_SDU_ID] = LOP_SDU_REGACK;
+      lopFrameBuffer[LOP_IX_SDU_REGACK_TOKEN] = lopFrameBuffer[LOP_IX_SDU_REG_TOKEN];        // TOKEN
+      lopFrameBuffer[LOP_IX_SDU_REGACK_SLOT] = neighbourDescriptor->resourceMask.slot;   // RMSLOT
       
-      lop_tx_buffer[LOP_IX_SDU_REGACK_ADDRESS] = neighbourDescriptor->address & 0xFF;      // Address.
-      lop_tx_buffer[LOP_IX_SDU_REGACK_ADDRESS+1] = neighbourDescriptor->address >>8 & 0xFF;      
-      lop_tx_buffer[LOP_IX_SDU_REGACK_ADDRESS+2] = neighbourDescriptor->address >>16 & 0xFF;      
-      lop_tx_buffer[LOP_IX_SDU_REGACK_ADDRESS+3] = neighbourDescriptor->address >>24 & 0xFF;      
+      lopFrameBuffer[LOP_IX_SDU_REGACK_ADDRESS] = neighbourDescriptor->address & 0xFF;      // Address.
+      lopFrameBuffer[LOP_IX_SDU_REGACK_ADDRESS+1] = neighbourDescriptor->address >>8 & 0xFF;      
+      lopFrameBuffer[LOP_IX_SDU_REGACK_ADDRESS+2] = neighbourDescriptor->address >>16 & 0xFF;      
+      lopFrameBuffer[LOP_IX_SDU_REGACK_ADDRESS+3] = neighbourDescriptor->address >>24 & 0xFF;      
       
       // Introduce a guard to accomodate for RX/TX switch time according to LOP_01.01§6
       delay(LOP_RTXGUARD);
     
       // Send the PDU using the power negotiated with the outer node.
-      setTransmitPower(lop_rx_buffer[LOP_IX_SDU_REG_POW]);  
-      sendLoPRANMessage(lop_tx_buffer, LOP_LEN_SDU_REGACK);
+      setTransmitPower(lopFrameBuffer[LOP_IX_SDU_REG_POW]);  
+      sendLoPRANMessage(lopFrameBuffer, LOP_LEN_SDU_REGACK);
       
-      dia_simpleFormNumericLog("REG",lop_rx_buffer[LOP_IX_SDU_REGACK_SLOT]);
+      dia_simpleFormNumericLog("REG",lopFrameBuffer[LOP_IX_SDU_REGACK_SLOT]);
     }
   }    
 }

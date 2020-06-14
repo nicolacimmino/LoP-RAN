@@ -27,10 +27,8 @@
 const char preamble[5] = {0x55, 0xAA, 0x55, 0xAA, 0x00}; 
 
 // TX Buffer.
-extern char lop_tx_buffer[];
+extern char lopFrameBuffer[];
 
-// RX Buffer.
-extern char lop_rx_buffer[];
 
 // Distance from access point
 extern byte lop_dap;

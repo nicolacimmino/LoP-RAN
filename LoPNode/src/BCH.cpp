@@ -56,35 +56,35 @@ void broadcastBCH()
   for(byte power=NRF24L01_TX_POW_0dBm; (int8_t)power>=NRF24L01_TX_POW_m18dBm; power--)
   { 
     // We build the the BCH SDU according to LOP_01.01§5.1 
-    lop_tx_buffer[LOP_IX_SDU_ID] = LOP_SDU_BCH;
-    lop_tx_buffer[LOP_IX_SDU_BCH_POW] = power;
-    lop_tx_buffer[LOP_IX_SDU_BCH_DAP] = lop_dap;
+    lopFrameBuffer[LOP_IX_SDU_ID] = LOP_SDU_BCH;
+    lopFrameBuffer[LOP_IX_SDU_BCH_POW] = power;
+    lopFrameBuffer[LOP_IX_SDU_BCH_DAP] = lop_dap;
     
     #ifdef LOP_ALPHA_NET
-    lop_tx_buffer[LOP_IX_SDU_BCH_INFO] = 0x0 << LOP_IX_SDU_BCH_INFO_NET_TYPE_msb;
-    lop_tx_buffer[LOP_IX_SDU_BCH_INFO] = ((getActiveOuterNeighboursCount() >= LOP_MAX_OUT_NEIGHBOURS)?1:0) << LOP_IX_SDU_BCH_INFO_NODE_FULL_msb;
+    lopFrameBuffer[LOP_IX_SDU_BCH_INFO] = 0x0 << LOP_IX_SDU_BCH_INFO_NET_TYPE_msb;
+    lopFrameBuffer[LOP_IX_SDU_BCH_INFO] = ((getActiveOuterNeighboursCount() >= LOP_MAX_OUT_NEIGHBOURS)?1:0) << LOP_IX_SDU_BCH_INFO_NODE_FULL_msb;
     #else
     #error Missing implementation for current network type.
     #endif
 
     for(int ix=0; ix<LOP_IX_SDU_BCH_NID_LEN; ix++)
     {
-      lop_tx_buffer[LOP_IX_SDU_BCH_NID_BASE+ix] = EEPROM.read(EEPROM_NTID_BASE+ix);
+      lopFrameBuffer[LOP_IX_SDU_BCH_NID_BASE+ix] = EEPROM.read(EEPROM_NTID_BASE+ix);
     }
     
     // And we finally send out the SDU using the current power.
     setTransmitPower(power);
-    sendLoPRANMessage(lop_tx_buffer, LOP_LEN_SDU_BCH);
+    sendLoPRANMessage(lopFrameBuffer, LOP_LEN_SDU_BCH);
   }
    
   // We build the the BCHS (sync) SDU according to LOP_01.01§5.2
-  lop_tx_buffer[LOP_IX_SDU_ID] = LOP_SDU_BCHS;
-  lop_tx_buffer[LOP_IX_SDU_BCHS_OFF] = getInnerLinkNetworkTime().off;
+  lopFrameBuffer[LOP_IX_SDU_ID] = LOP_SDU_BCHS;
+  lopFrameBuffer[LOP_IX_SDU_BCHS_OFF] = getInnerLinkNetworkTime().off;
     
   // We use max power for sync so we can reach all nodes that might have heard us
   //  as specified in "BCH Timing" LOP_01.01§5
   setTransmitPower(NRF24L01_TX_POW_0dBm);
-  sendLoPRANMessage(lop_tx_buffer, LOP_LEN_SDU_BCHS);
+  sendLoPRANMessage(lopFrameBuffer, LOP_LEN_SDU_BCHS);
          
 }
 
@@ -121,8 +121,8 @@ void innerNodeScanAndSync()
     //  the chances to get a full BCH broadcast while not spending too much time on the
     //  same radio channel.
     setRFChannel(inbound_channel);
-    if((!receiveLoPRANMessage(lop_rx_buffer, LOP_MTU , LOP_FRAMEDURATION))
-          || (lop_rx_buffer[LOP_IX_SDU_BCH_INFO] & LOP_IX_SDU_BCH_INFO_NODE_FULL_MASK) != 0)
+    if((!receiveLoPRANMessage(lopFrameBuffer, LOP_MTU , LOP_FRAMEDURATION))
+          || (lopFrameBuffer[LOP_IX_SDU_BCH_INFO] & LOP_IX_SDU_BCH_INFO_NODE_FULL_MASK) != 0)
     {
       // We got nothing, or the node was full move to the next channel. We continuously loop all available channels.
       inbound_channel++;
@@ -138,14 +138,14 @@ void innerNodeScanAndSync()
   
       continue; 
     }
-    else if(lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_BCH)
+    else if(lopFrameBuffer[LOP_IX_SDU_ID] == LOP_SDU_BCH)
     {    
         
       // We got a BCH SDU. This is a good channel so we start ranging if the NID matches
       bool nidMatch = true;
       for(int ix=0; ix<LOP_IX_SDU_BCH_NID_LEN; ix++)
       {
-        if(lop_rx_buffer[LOP_IX_SDU_BCH_NID_BASE+ix] != EEPROM.read(EEPROM_NTID_BASE+ix))
+        if(lopFrameBuffer[LOP_IX_SDU_BCH_NID_BASE+ix] != EEPROM.read(EEPROM_NTID_BASE+ix))
         {
            nidMatch = false;
         }
@@ -161,22 +161,22 @@ void innerNodeScanAndSync()
                  
       // Process ranging info and store lowest usable power if we heard
       //  a message weaker than last one.
-      if(inbound_tx_power > lop_rx_buffer[LOP_IX_SDU_BCH_POW])
-        inbound_tx_power = lop_rx_buffer[LOP_IX_SDU_BCH_POW];
+      if(inbound_tx_power > lopFrameBuffer[LOP_IX_SDU_BCH_POW])
+        inbound_tx_power = lopFrameBuffer[LOP_IX_SDU_BCH_POW];
         
       // Set our DAP as one more of the detected node. This is our current DAP
       //  even though the link is not currently yet up (that will happen in the
       //  ACH abd will be signalled by inner_link_up.
-      lop_dap = lop_rx_buffer[LOP_IX_SDU_BCH_DAP]+1;
+      lop_dap = lopFrameBuffer[LOP_IX_SDU_BCH_DAP]+1;
     } 
-    else if(inbound_tx_power != NRF24L01_TX_POW_INVALID  && lop_rx_buffer[LOP_IX_SDU_ID] == LOP_SDU_BCHS)
+    else if(inbound_tx_power != NRF24L01_TX_POW_INVALID  && lopFrameBuffer[LOP_IX_SDU_ID] == LOP_SDU_BCHS)
     {
       // We got a BCHS SDU. 
       
       // Sync our nettime to the one received by the network. This is still off by the actual
       //  physical layer trasmit time, this in practice is well below 1mS since BCHS messages 
       //  have no ACK and are very short.
-      setInnerLinkNetworkTime((NetTime){0, lop_rx_buffer[LOP_IX_SDU_BCHS_OFF]});
+      setInnerLinkNetworkTime((NetTime){0, lopFrameBuffer[LOP_IX_SDU_BCHS_OFF]});
       
       // We have a sync.
       dia_simpleFormNumericLog("BCHS", 2, inbound_channel, inbound_tx_power);

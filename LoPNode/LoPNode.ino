@@ -56,7 +56,7 @@ void setup(void)
   // EEPROM.write(EEPROM_NTID_BASE + 5, 0x05);
   // EEPROM.write(EEPROM_NTID_BASE + 6, 0x05);
   // EEPROM.write(EEPROM_NTID_BASE + 7, 0x05);
-  // uint32_t noid = 0x015A4502;
+  // uint32_t noid = 0x015A4503;
   // EEPROM.put(EEPROM_NOID_BASE, noid);
 
   pinMode(PIN_ACT, OUTPUT);
