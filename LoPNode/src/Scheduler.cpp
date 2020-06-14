@@ -124,8 +124,8 @@ void run_scanner_schedule()
     }
     else
     {
-      inbound_pipe =  CCH_PIPE_ADDR_IN | slot;
-      outbound_pipe = CCH_PIPE_ADDR_OUT | slot;
+      inbound_pipe =  CCH::getCCHPipeAddressesIn() | slot;
+      outbound_pipe = CCH::getCCHPipeAddressesOut() | slot;
     } 
     
     setRXExtendedPreamble(inbound_pipe);

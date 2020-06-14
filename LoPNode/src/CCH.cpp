@@ -29,16 +29,24 @@
 #include "CCH.h"
 #include "NRF24L01Driver.h"
 
-uint64_t CCH_PIPE_ADDR_IN = 0;
-uint64_t CCH_PIPE_ADDR_OUT = 0;
+namespace CCH
+{
 
-void calculateCCHPipeAddresses()
+uint32_t getCCHPipeAddressesIn()
 {
   NetTime currentTime = getInnerLinkNetworkTime();
 
-  CCH_PIPE_ADDR_IN = 0x51000200 | currentTime.slot;
-  CCH_PIPE_ADDR_OUT = 0x50000200 | currentTime.slot;
+  return 0x51000200 | currentTime.slot;
 }
+
+uint32_t getCCHPipeAddressesOut()
+{
+  NetTime currentTime = getInnerLinkNetworkTime();
+
+  return 0x50000200 | currentTime.slot;
+}
+
+} // namespace CCH
 
 void inititateCCHTransaction()
 {
@@ -71,9 +79,8 @@ void inititateCCHTransaction()
   setTransmitPower(inbound_tx_power);
 
   // Set up the right pipe address for the current network time.
-  calculateCCHPipeAddresses();
-  setTXExtendedPreamble(CCH_PIPE_ADDR_IN);
-  setRXExtendedPreamble(CCH_PIPE_ADDR_OUT);
+  setTXExtendedPreamble(CCH::getCCHPipeAddressesIn());
+  setRXExtendedPreamble(CCH::getCCHPipeAddressesOut());
   setRFChannel(inbound_channel);
 
   // Wait what is left of the RTX guard period.
@@ -129,11 +136,12 @@ void serveCCH()
   pONDescriptor neighbourDescriptor = getNeighbourDescriptor(getInnerLinkNetworkTime());
 
   if (neighbourDescriptor == 0)
+  {
     return;
+  }
 
-  calculateCCHPipeAddresses();
-  setTXExtendedPreamble(CCH_PIPE_ADDR_OUT);
-  setRXExtendedPreamble(CCH_PIPE_ADDR_IN);
+  setTXExtendedPreamble(CCH::getCCHPipeAddressesOut());
+  setRXExtendedPreamble(CCH::getCCHPipeAddressesIn());
   setTransmitPower(neighbourDescriptor->tx_power);
   setRFChannel(lop_outbound_channel);
 

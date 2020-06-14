@@ -15,18 +15,21 @@
 //    along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 // LoP-RAN Specifications are available at https://github.com/nicolacimmino/LoP-RAN/wiki
-//    This source code referes, where apllicable, to the chapter and 
+//    This source code referes, where apllicable, to the chapter and
 //    sub chapter of these documents.
 
 #ifndef __CCH_H__
 #define __CCH_H__
 
-extern uint64_t CCH_PIPE_ADDR_IN;
-extern uint64_t CCH_PIPE_ADDR_OUT;
+namespace CCH
+{
 
-void calculateCCHPipeAddresses();
+uint32_t getCCHPipeAddressesIn();
+uint32_t getCCHPipeAddressesOut();
+
+} // namespace CCH
+
 void inititateCCHTransaction();
 void serveCCH();
 
 #endif
-
