@@ -48,15 +48,17 @@ void setup(void)
   // EEPROM.write(EEPROM_HW_VERSION, 2);
   // EEPROM.write(EEPROM_RFCH_INNER_NODE, 50);
   // EEPROM.write(EEPROM_RFCH_ACT_AS_SEED, 0);
-  // EEPROM.write(EEPROM_NID_BASE + 0, 0x05); // NID
-  // EEPROM.write(EEPROM_NID_BASE + 1, 0x05);
-  // EEPROM.write(EEPROM_NID_BASE + 2, 0x05);
-  // EEPROM.write(EEPROM_NID_BASE + 3, 0x05);
-  // EEPROM.write(EEPROM_NID_BASE + 4, 0x05);
-  // EEPROM.write(EEPROM_NID_BASE + 5, 0x05);
-  // EEPROM.write(EEPROM_NID_BASE + 6, 0x05);
-  // EEPROM.write(EEPROM_NID_BASE + 7, 0x05);
-  
+  // EEPROM.write(EEPROM_NTID_BASE + 0, 0x05); // NID
+  // EEPROM.write(EEPROM_NTID_BASE + 1, 0x05);
+  // EEPROM.write(EEPROM_NTID_BASE + 2, 0x05);
+  // EEPROM.write(EEPROM_NTID_BASE + 3, 0x05);
+  // EEPROM.write(EEPROM_NTID_BASE + 4, 0x05);
+  // EEPROM.write(EEPROM_NTID_BASE + 5, 0x05);
+  // EEPROM.write(EEPROM_NTID_BASE + 6, 0x05);
+  // EEPROM.write(EEPROM_NTID_BASE + 7, 0x05);
+  // uint32_t noid = 0x015A4502;
+  // EEPROM.put(EEPROM_NOID_BASE, noid);
+
   pinMode(PIN_ACT, OUTPUT);
   setupControlInterface();
   setupRadio();
@@ -83,8 +85,11 @@ void userCode()
 
   if (lop_dap != 0 && inner_link_up)
   {
-    char message[16];
-    sprintf(message, "PING %i", millis() / 1000);
+    char message[32];
+    uint32_t noid;
+    EEPROM.get(EEPROM_NOID_BASE, noid);
+
+    sprintf(message, "PING 0x%08lX %u", noid, millis()/1000);
 
     sendMessage(0, message);
   }

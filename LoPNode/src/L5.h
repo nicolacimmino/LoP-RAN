@@ -21,7 +21,9 @@
 
 #include "L4.h"
 
-void startupOnNetRegistration(void);
+namespace L5
+{
+void onL4LinkUp(void);
+}
 
 #endif
-

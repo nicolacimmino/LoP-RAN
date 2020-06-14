@@ -69,7 +69,7 @@ void broadcastBCH()
 
     for(int ix=0; ix<LOP_IX_SDU_BCH_NID_LEN; ix++)
     {
-      lop_tx_buffer[LOP_IX_SDU_BCH_NID_BASE+ix] = EEPROM.read(EEPROM_NID_BASE+ix);
+      lop_tx_buffer[LOP_IX_SDU_BCH_NID_BASE+ix] = EEPROM.read(EEPROM_NTID_BASE+ix);
     }
     
     // And we finally send out the SDU using the current power.
@@ -145,7 +145,7 @@ void innerNodeScanAndSync()
       bool nidMatch = true;
       for(int ix=0; ix<LOP_IX_SDU_BCH_NID_LEN; ix++)
       {
-        if(lop_rx_buffer[LOP_IX_SDU_BCH_NID_BASE+ix] != EEPROM.read(EEPROM_NID_BASE+ix))
+        if(lop_rx_buffer[LOP_IX_SDU_BCH_NID_BASE+ix] != EEPROM.read(EEPROM_NTID_BASE+ix))
         {
            nidMatch = false;
         }

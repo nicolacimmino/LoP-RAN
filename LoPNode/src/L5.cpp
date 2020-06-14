@@ -20,18 +20,23 @@
 #include "EEPROMMap.h"
 #include <EEPROM.h>
 
-#include "StartupSequence.h"
+#include "L5.h"
 
-uint8_t last_startup_step = 0;
-
-void processStartupSequence()
+namespace L5
 {
-}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Invoked every time the node performs a successfull network entry.
 //
-void startupOnNetRegistration()
+void onL4LinkUp()
 {
-  sendMessage(0, "ENTER");
+  char message[16];
+  uint32_t noid;
+  EEPROM.get(EEPROM_NOID_BASE, noid);
+
+  sprintf(message, "ENTER 0x%08X", noid);
+
+  sendMessage(0, message);
 }
+
+} // namespace L5

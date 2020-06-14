@@ -21,5 +21,6 @@
 #define EEPROM_HW_VERSION 0x00       // Hardware version
 #define EEPROM_RFCH_INNER_NODE 0x01  // Last known good RF channel
 #define EEPROM_RFCH_ACT_AS_SEED 0x02 // Act as anetwork seed if != 0
-#define EEPROM_NID_BASE 0x03         // Base of the Network Identifier (8 bytes up to 0x0A)
+#define EEPROM_NTID_BASE 0x03        // Base of the Network Identifier (8 bytes up to 0x0A)
 #define EEPROM_AP_CHANNEL 0x0B       // AP Channel
+#define EEPROM_NOID_BASE 0x0C        // Base of the Node Identifier (4 bytes up to 0x0F)

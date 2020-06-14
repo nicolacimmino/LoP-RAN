@@ -21,10 +21,19 @@ byte controlATIDq()
     Serial.println("Network:");
     Serial.print("  AP:        ");
     Serial.println((lop_dap == 0) ? "YES" : "NO");
-    Serial.print("  NID:       ");
+    Serial.print("  NTID:      ");
     for (byte ix = 0; ix < 8; ix++)
     {
-        Serial.print(EEPROM.read(EEPROM_NID_BASE + ix));
+        Serial.print(EEPROM.read(EEPROM_NTID_BASE + ix) >> 4, HEX);
+        Serial.print(EEPROM.read(EEPROM_NTID_BASE + ix) & 0xF, HEX);
+        Serial.print(".");
+    }
+    Serial.println((char)0x7F);
+    Serial.print("  NOID:      ");
+    for (byte ix = 0; ix < 8; ix++)
+    {
+        Serial.print(EEPROM.read(EEPROM_NOID_BASE + ix) >> 4, HEX);
+        Serial.print(EEPROM.read(EEPROM_NOID_BASE + ix) & 0xF, HEX);            
         Serial.print(".");
     }
     Serial.println((char)0x7F);
