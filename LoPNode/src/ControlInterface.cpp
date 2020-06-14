@@ -149,7 +149,7 @@ void process_control_command()
   {
     result = controlATDIn(true);
   }
-  else if (strcasecmp(command, "ATDI1") == 0)
+  else if (strcasecmp(command, "ATDI0") == 0)
   {
     result = controlATDIn(false);
   }

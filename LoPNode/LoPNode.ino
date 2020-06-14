@@ -46,6 +46,10 @@
 
 void setup(void)
 {
+  // EEPROM.write( 0, 0);
+  // EEPROM.write( 1, 50);
+  // EEPROM.write( 2, 0);
+
   // EEPROM.write(EEPROM_NID_BASE + 0, 0x05); // NID
   // EEPROM.write(EEPROM_NID_BASE + 1, 0x05);
   // EEPROM.write(EEPROM_NID_BASE + 2, 0x05);
@@ -61,7 +65,7 @@ void setup(void)
   setupRadio();
 }
 
-void loop(void)
+void loop()
 {
   // We sit forever in this call, everything
   //  is timed and scheduled there.

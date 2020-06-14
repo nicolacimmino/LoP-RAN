@@ -37,8 +37,13 @@
 
 #define NRF24L01_SPI_BUFFER_SIZE 32
 
-#define NRF24L01_CS_PIN 8
-#define NRF24L01_CE_PIN 7
+// HW V1
+#define NRF24L01_CS_PIN 10
+#define NRF24L01_CE_PIN 9
+
+// HW V2
+// #define NRF24L01_CS_PIN 8
+// #define NRF24L01_CE_PIN 7
 
 // Commands
 #define NRF24L01_R_REGISTER    0x00
