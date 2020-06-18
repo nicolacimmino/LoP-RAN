@@ -15,15 +15,7 @@
 //    along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 
-#include "Arduino.h"
-#include "Common.h"
-#include "LoPDia.h"
-#include "LoPParams.h"
-#include "DataLink.h"
 #include "OuterNeighboursList.h"
-#include "NetTime.h"
-
-
 
 pONDescriptor OuterNeighboursList[LOP_MAX_OUT_NEIGHBOURS];
 

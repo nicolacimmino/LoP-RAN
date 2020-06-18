@@ -15,10 +15,7 @@
 //    along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 
-#include "LoPDia.h"
 #include "NetTime.h"
-#include "LoPParams.h"
-#include "ControlInterface.h"
 
 // Stores the offset between the internal system clock
 //  and the inner link network time.
@@ -52,6 +49,9 @@ void setInnerLinkNetworkTime(NetTime newTime)
   system_clock_offset = (millis() % (int)LOP_FRAMEDURATION) - wantedMillis;
   dia_simpleFormNumericLog("CLKADJ", 1, previous_offset - system_clock_offset);
 }
+
+// TODO: remove dependency by passing as function pointer to wait
+extern void serveControlInterface();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Waits until the specified slot and off is reached.

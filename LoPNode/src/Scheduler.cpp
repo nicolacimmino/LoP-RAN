@@ -14,18 +14,8 @@
 //    You should have received a copy of the GNU General Public License
 //    along with this program.  If not, see http://www.gnu.org/licenses/.
 //
+
 #include "Scheduler.h"
-#include "Common.h"
-#include "LoPParams.h"
-#include "LoPDia.h"
-#include "NetTime.h"
-#include "DataLink.h"
-#include "ACH.h"
-#include "BCH.h"
-#include "CCH.h"
-#include "OuterNeighboursList.h"
-#include "ControlInterface.h"
-#include "NRF24L01Driver.h"
 
 void runScheduler(void)
 {

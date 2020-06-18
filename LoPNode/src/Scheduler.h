@@ -19,6 +19,18 @@
 #define __SCHEDULER_H__
 
 #include <Arduino.h>
+#include "Scheduler.h"
+#include "Common.h"
+#include "LoPParams.h"
+#include "LoPDia.h"
+#include "NetTime.h"
+#include "DataLink.h"
+#include "ACH.h"
+#include "BCH.h"
+#include "CCH.h"
+#include "OuterNeighboursList.h"
+#include "ControlInterface.h"
+#include "NRF24L01Driver.h"
 
 void runScheduler(void);
 void run_regular_schedule(void);

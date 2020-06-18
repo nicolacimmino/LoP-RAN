@@ -18,15 +18,7 @@
 //    This source code referes, where apllicable, to the chapter and 
 //    sub chapter of these documents.
 
-#include "Arduino.h"
-#include <SPI.h>
-#include <EEPROM.h>
-#include "EEPROMMap.h"
-#include "LoPDia.h"
-#include "NetTime.h"
 #include "DataLink.h"
-#include "LoPParams.h"
-#include "NRF24L01Driver.h"
 
 // TX Buffer.
 char lopFrameBuffer[LOP_MTU];

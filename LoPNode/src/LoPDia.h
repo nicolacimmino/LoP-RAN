@@ -15,26 +15,28 @@
 //    along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 // LoP-RAN Specifications are available at https://github.com/nicolacimmino/LoP-RAN/wiki
-//    This source code referes, where apllicable, to the chapter and 
+//    This source code referes, where apllicable, to the chapter and
 //    sub chapter of these documents.
 
 #ifndef __LopDia_h__
 #define __LopDia_h__
 
 #include <Arduino.h>
+#include <stdarg.h>
+#include "Arduino.h"
+#include "LoPDia.h"
+#include "NetTime.h"
 
 extern boolean lop_dia_enabled;
 
 void dia_logTime();
-void dia_logString(char* string);
+void dia_logString(char *string);
 void dia_logInt(int value);
 void dia_closeLog();
-void dia_simpleFormNumericLog(const char* event, int count, ...);
-void dia_simpleFormTextLog(const char* event, const char* text);
+void dia_simpleFormNumericLog(const char *event, int count, ...);
+void dia_simpleFormTextLog(const char *event, const char *text);
 void dia_logBufferToHex(char *data, uint8_t length);
 void dia_logRawTime();
-void dia_logRawString(char* string);
+void dia_logRawString(char *string);
 
 #endif
-
-

@@ -21,6 +21,16 @@
 #ifndef __CCH_H__
 #define __CCH_H__
 
+#include <Arduino.h>
+#include <EEPROM.h>
+#include "Common.h"
+#include "LoPDia.h"
+#include "LoPParams.h"
+#include "DataLink.h"
+#include "OuterNeighboursList.h"
+#include "NetTime.h"
+#include "NRF24L01Driver.h"
+
 namespace CCH
 {
 

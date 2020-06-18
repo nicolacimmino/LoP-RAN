@@ -21,8 +21,14 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
+#include <Arduino.h>
+#include <EEPROM.h>
+#include "EEPROMMap.h"
 #include "NetTime.h"
 #include "DataLink.h"
+#include "ControlInterface.h"
+#include "LopParams.h"
+#include "NRF24L01Driver.h"
 
 /**
  * Handy to concatenate numeric defs with strings.

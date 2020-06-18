@@ -18,18 +18,7 @@
 //    This source code referes, where apllicable, to the chapter and
 //    sub chapter of these documents.
 
-#include "Errors.h"
-#include <Arduino.h>
-#include <EEPROM.h>
-#include "EEPROMMap.h"
-#include "Common.h"
 #include "ControlInterface.h"
-#include "LoPDia.h"
-#include "OuterNeighboursList.h"
-#include "LoPParams.h"
-#include "DataLink.h"
-#include "L4.h"
-#include "ControlInterface/ControlInterfaceCommands.h"
 
 char control_rx_buffer[MAX_CONTROL_MSG_SIZE];
 int control_rx_buffer_ix = 0;

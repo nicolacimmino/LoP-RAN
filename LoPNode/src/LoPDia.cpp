@@ -18,11 +18,7 @@
 //    This source code referes, where apllicable, to the chapter and 
 //    sub chapter of these documents.
 
-#include "Arduino.h"
 #include "LoPDia.h"
-#include "NetTime.h"
-#include <stdarg.h>
-
 
 // Enables the LOP-Diagnostic interface that outputs on serial port
 //  a log of the radio activity.

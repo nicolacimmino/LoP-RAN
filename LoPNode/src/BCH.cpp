@@ -18,18 +18,7 @@
 //    This source code referes, where apllicable, to the chapter and 
 //    sub chapter of these documents.
 
-#include "Arduino.h"
-#include <EEPROM.h>
-#include "Common.h"
-#include "EEPROMMap.h"
-#include "LoPDia.h"
-#include "LoPParams.h"
-#include "DataLink.h"
-#include "NetTime.h"
 #include "BCH.h"
-#include "ControlInterface.h"
-#include "OuterNeighboursList.h"
-#include "NRF24L01Driver.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Broadcast BCH

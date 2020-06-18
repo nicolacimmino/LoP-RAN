@@ -19,6 +19,9 @@
 #define __NETTIME_H__
 
 #include <Arduino.h>
+#include "LoPDia.h"
+#include "LoPParams.h"
+//#include "ControlInterface.h"
 
 typedef struct
 {

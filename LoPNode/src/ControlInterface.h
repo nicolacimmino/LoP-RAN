@@ -21,6 +21,19 @@
 #ifndef __CONTROLINTERFACE_H__
 #define __CONTROLINTERFACE_H__
 
+#include <Arduino.h>
+#include <EEPROM.h>
+#include "Errors.h"
+#include "EEPROMMap.h"
+#include "Common.h"
+#include "NetTime.h"
+#include "LoPDia.h"
+#include "OuterNeighboursList.h"
+#include "LoPParams.h"
+#include "DataLink.h"
+#include "L4.h"
+#include "ControlInterface/ControlInterfaceCommands.h"
+
 #define MAX_CONTROL_MSG_SIZE 256
 
 extern char control_rx_buffer[];

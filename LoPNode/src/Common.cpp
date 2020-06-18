@@ -18,25 +18,18 @@
 //    This source code referes, where apllicable, to the chapter and
 //    sub chapter of these documents.
 
-#include <Arduino.h>
-#include <EEPROM.h>
-#include "EEPROMMap.h"
-#include "NetTime.h"
-#include "DataLink.h"
-#include "ControlInterface.h"
-#include "LopParams.h"
-#include "NRF24L01Driver.h"
+#include "Common.h"
 
 // Inbound and outbound Message Buffers.
 char lop_message_buffer_i[LOP_MTU];
 char lop_message_buffer_o[LOP_MTU];
 
 // Address of the source/destination of the current message.
-uint64_t lop_message_buffer_address_i;
-uint64_t lop_message_buffer_address_o;
+uint32_t lop_message_buffer_address_i;
+uint32_t lop_message_buffer_address_o;
 
 // Address assigned to this node.
-uint64_t node_address = 0xFFFFFFFF;
+uint32_t node_address = 0xFFFFFFFF;
 
 // Lowest usable power to talk to the inner node.
 uint8_t inbound_tx_power = NRF24L01_TX_POW_0dBm;

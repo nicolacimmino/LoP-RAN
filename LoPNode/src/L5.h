@@ -19,6 +19,10 @@
 #ifndef __STARTUPSEQUENCE_H
 #define __STARTUPSEQUENCE_H
 
+#include <Arduino.h>
+#include <EEPROM.h>
+#include "Common.h"
+#include "EEPROMMap.h"
 #include "L4.h"
 
 namespace L5

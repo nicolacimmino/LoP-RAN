@@ -21,6 +21,15 @@
 #ifndef __DataLink_h__
 #define __DataLink_h__
 
+#include <Arduino.h>
+#include <SPI.h>
+#include <EEPROM.h>
+#include "EEPROMMap.h"
+#include "LoPDia.h"
+#include "NetTime.h"
+#include "DataLink.h"
+#include "LoPParams.h"
+#include "NRF24L01Driver.h"
 
 // The actual transmitted preamble is 4 bytes, we null terminate it to be able to use
 //  string manipulation functions when comparing etc.

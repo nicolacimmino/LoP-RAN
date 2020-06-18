@@ -18,11 +18,7 @@
 //    This source code referes, where apllicable, to the chapter and
 //    sub chapter of these documents.
 
-#include <Arduino.h>
-
 #include "L4.h"
-#include "LopParams.h"
-#include "Common.h"
 
 extern byte lop_dap;
 extern char lop_message_buffer_i[];

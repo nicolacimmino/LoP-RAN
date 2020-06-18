@@ -1,6 +1,6 @@
 {
     "board": "arduino:avr:nano",
     "sketch": "LoPNode.ino",
-    "port": "COM16",
+    "port": "COM11",
     "configuration": "cpu=atmega328old"
 }

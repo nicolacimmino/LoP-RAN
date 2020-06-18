@@ -18,6 +18,11 @@
 #ifndef __OUTERNEIGHBOURSLIST_H
 #define __OUTERNEIGHBOURSLIST_H
 
+#include <Arduino.h>
+#include "Common.h"
+#include "LoPDia.h"
+#include "LoPParams.h"
+#include "DataLink.h"
 #include "NetTime.h"
 
 typedef struct
@@ -36,4 +41,3 @@ pONDescriptor getNeighbourDescriptor(NetTime time);
 byte getActiveOuterNeighboursCount();
 
 #endif
-
