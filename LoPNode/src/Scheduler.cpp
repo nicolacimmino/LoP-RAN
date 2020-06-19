@@ -62,12 +62,7 @@ void run_regular_schedule()
       }
       else if(slot == inboundTimeSlot)
       {
-        inititateCCHTransaction();
-        if(tx_error_count > LOP_MAX_TX_ERROR)
-        {
-          inner_link_up = false;
-          break;
-        }
+        inititateCCHTransaction();       
       }
       else if(slot == LOP_SLOTS_COUNT-1)
       {

@@ -120,6 +120,11 @@ void inititateCCHTransaction()
   }
 
   digitalWrite(PIN_ACT, 0);
+
+  if (tx_error_count > LOP_MAX_TX_ERROR)
+  {
+    inner_link_up = false;
+  }
 }
 
 void serveCCH()
