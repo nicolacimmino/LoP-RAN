@@ -31,6 +31,9 @@ public:
     virtual void setRFChannel(uint8_t channel) = 0;
     virtual void send(char *buffer, int length) = 0;
     virtual bool receive(char *buffer, uint8_t *bufferDataSize, uint16_t timeoutMilliseconds) = 0;
+    uint16_t errTOUT = 0;
+    uint16_t errOVFL = 0;
+    uint16_t errOOS = 0;
 };
 
 #endif

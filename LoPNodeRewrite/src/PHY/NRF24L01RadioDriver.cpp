@@ -190,6 +190,7 @@ bool NRF24L01RadioDriver::receive(char *buffer, uint8_t *bufferDataSize, uint16_
             if (millis() - startTime > timeoutMilliseconds)
             {
                 this->stopReceiving();
+                this->errTOUT++;
 
                 return false;
             }
@@ -203,6 +204,7 @@ bool NRF24L01RadioDriver::receive(char *buffer, uint8_t *bufferDataSize, uint16_
         if ((packet[NRF24L01_PACKET_HEADER_SEQ] & 0xF) != expctedSeq)
         {
             this->stopReceiving();
+            this->errOOS++;
 
             return false;
         }
@@ -210,6 +212,7 @@ bool NRF24L01RadioDriver::receive(char *buffer, uint8_t *bufferDataSize, uint16_
         if (packet[NRF24L01_PACKET_HEADER_BUFFER_LEN] > *bufferDataSize)
         {
             this->stopReceiving();
+            this->errOVFL++;
 
             return false;
         }
