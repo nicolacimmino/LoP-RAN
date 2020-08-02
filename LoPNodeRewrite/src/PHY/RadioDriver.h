@@ -30,7 +30,7 @@ public:
     virtual void setTXPower(uint8_t power) = 0;
     virtual void setRFChannel(uint8_t channel) = 0;
     virtual void send(char *buffer, int length) = 0;
-    virtual bool receive(char *buffer, uint8_t wantedBytes, uint16_t timeoutMilliseconds) = 0;
+    virtual bool receive(char *buffer, uint8_t *bufferDataSize, uint16_t timeoutMilliseconds) = 0;
 };
 
 #endif

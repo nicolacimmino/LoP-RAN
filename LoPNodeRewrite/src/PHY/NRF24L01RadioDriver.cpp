@@ -106,7 +106,7 @@ void NRF24L01RadioDriver::setRFChannel(uint8_t channel)
 /**********************************************************************************************
  * Sends the supplied buffer.
  */
-void NRF24L01RadioDriver::send(char *buffer, int length)
+void NRF24L01RadioDriver::send(char *buffer, int bufferLength)
 {
     // We can assume radio is in Standby-I when this is invoked as only receive sets
     // it other modes and it does enter Standby-I when done.
@@ -123,16 +123,17 @@ void NRF24L01RadioDriver::send(char *buffer, int length)
 
     uint8_t packet[NRF24L01_PAYLOAD_SIZE];
     unsigned long last_pll_lock = millis();
-    uint8_t packets = ceil((float)length / (float)NRF24L01_PACKET_DATA_SIZE);
+    uint8_t packets = ceil((float)bufferLength / (float)NRF24L01_PACKET_DATA_SIZE);
 
     uint8_t seq = 0;
 
-    for (uint16_t ix = 0; ix < length; ix += NRF24L01_PACKET_DATA_SIZE)
+    for (uint16_t ix = 0; ix < bufferLength; ix += NRF24L01_PACKET_DATA_SIZE)
     {
         memcpy(packet + NRF24L01_PACKET_HEADER_SIZE, buffer + ix, NRF24L01_PACKET_DATA_SIZE);
         seq++;
-        packet[0] = packets << 4 | seq;
- 
+        packet[NRF24L01_PACKET_HEADER_SEQ] = packets << 4 | seq;
+        packet[NRF24L01_PACKET_HEADER_BUFFER_LEN] = bufferLength;
+
         this->performSPITransaction(NRF24L01_W_TX_PAYLOAD, NRF24L01_PAYLOAD_SIZE, packet);
 
         // Wait to push more data if we have filled the FIFO
@@ -173,7 +174,7 @@ void NRF24L01RadioDriver::send(char *buffer, int length)
  * Receives.
  *
  */
-bool NRF24L01RadioDriver::receive(char *buffer, uint8_t wantedBytes, uint16_t timeoutMilliseconds)
+bool NRF24L01RadioDriver::receive(char *buffer, uint8_t *bufferDataSize, uint16_t timeoutMilliseconds)
 {
     unsigned long startTime = millis();
     uint8_t receivedBytes = 0;
@@ -198,20 +199,28 @@ bool NRF24L01RadioDriver::receive(char *buffer, uint8_t wantedBytes, uint16_t ti
         uint8_t packet[NRF24L01_PAYLOAD_SIZE];
 
         this->performSPITransaction(NRF24L01_R_RX_PAYLOAD, NRF24L01_PAYLOAD_SIZE, packet);
-  
-        if ((packet[0] & 0xF) != expctedSeq)
+
+        if ((packet[NRF24L01_PACKET_HEADER_SEQ] & 0xF) != expctedSeq)
         {
             this->stopReceiving();
 
             return false;
         }
 
-        memcpy(buffer + receivedBytes, packet + 1, NRF24L01_PACKET_DATA_SIZE);
+        if (packet[NRF24L01_PACKET_HEADER_BUFFER_LEN] > *bufferDataSize)
+        {
+            this->stopReceiving();
+
+            return false;
+        }
+
+        memcpy(buffer + receivedBytes, packet + NRF24L01_PACKET_HEADER_SIZE, NRF24L01_PACKET_DATA_SIZE);
 
         receivedBytes += NRF24L01_PACKET_DATA_SIZE;
 
-        if ((packet[0] >> 4) == (packet[0] & 0xF))
+        if ((packet[NRF24L01_PACKET_HEADER_SEQ] >> 4) == (packet[NRF24L01_PACKET_HEADER_SEQ] & 0xF))
         {
+            *bufferDataSize = packet[NRF24L01_PACKET_HEADER_BUFFER_LEN];
             this->stopReceiving();
             return true;
         }

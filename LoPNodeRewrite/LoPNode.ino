@@ -35,29 +35,37 @@ void setup(void)
 
   radio->setRXExtendedPreamble(643234);
   radio->setTXExtendedPreamble(643234);
-  radio->setTXPower(3);
+  radio->setTXPower(0);
   radio->setRFChannel(85);
 
   Serial.println("Setup done");
 }
 
-uint16_t r = 0;
+uint8_t r = 0;
+char buffer[64];
+uint8_t dataBufferSize = 64;
 
 void loop()
 {
-  char buffer[64];
-  memset(buffer, 0, 64);
-  r++;
-  sprintf(buffer, "TEST MESSAGE OF FIXED LENGTH  AND SOME CHANGING ab DATA %i", r);
-  //               1234567890123456789012345678901212345678901234567890123456789012
-  //               0        1         2         3           4         5         6 
-  radio->send(buffer, strlen(buffer));
-  Serial.println("Sent");
+  
+  // memset(buffer, 0, 64);
 
-  // if (radio->receive(buffer, 64, 100))
-  // {
-  //   Serial.println(buffer);
-  // }
+  // r++;
+  // sprintf(buffer, "TEST MESSAGE OF FIXED LENGTH  AND SOME CHANGING ab DATA %i", r);
+  // //               1234567890123456789012345678901212345678901234567890123456789012
+  // //               0        1         2         3           4         5         6 
+  // radio->send(buffer, strlen(buffer));
+  // Serial.println("Sent");
+  // delay(500);
+
+  if (radio->receive(buffer, &dataBufferSize, 1000))
+  {
+    //Serial.println(dataBufferSize);
+    Serial.println(buffer);
+  } else {
+    Serial.println("RX ERR");
+  }
+
   // radio->receive(buffer, 32, 100);
   // Serial.println(buffer);
 }

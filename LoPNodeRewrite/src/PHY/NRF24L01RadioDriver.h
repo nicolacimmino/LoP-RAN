@@ -90,7 +90,10 @@
 #define NRF24L01_TX_POW_INVALID 4
 
 #define NRF24L01_PACKET_DATA_SIZE 16
-#define NRF24L01_PACKET_HEADER_SIZE 1
+#define NRF24L01_PACKET_HEADER_SIZE 2
+#define NRF24L01_PACKET_HEADER_SEQ 0
+#define NRF24L01_PACKET_HEADER_BUFFER_LEN 1
+
 #define NRF24L01_PAYLOAD_SIZE NRF24L01_PACKET_HEADER_SIZE + NRF24L01_PACKET_DATA_SIZE
 
 #define NRF24L01_EXTENDED_PREAMBLE_SIZE 5
@@ -118,8 +121,8 @@ public:
     void setTXExtendedPreamble(uint64_t preamble);
     void setTXPower(uint8_t power);
     void setRFChannel(uint8_t channel);
-    void send(char *buffer, int length);
-    bool receive(char *buffer, uint8_t wantedBytes, uint16_t timeoutMilliseconds);
+    void send(char *buffer, int length);    
+    bool receive(char *buffer, uint8_t *bufferDataSize, uint16_t timeoutMilliseconds);
 };
 
 #endif
