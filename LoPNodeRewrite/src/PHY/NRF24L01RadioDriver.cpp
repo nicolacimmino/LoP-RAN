@@ -106,7 +106,7 @@ void NRF24L01RadioDriver::setRFChannel(uint8_t channel)
 /**********************************************************************************************
  * Sends the supplied buffer.
  */
-void NRF24L01RadioDriver::send(char *buffer, int bufferLength)
+void NRF24L01RadioDriver::send(char *buffer, int dataLength)
 {
     // We can assume radio is in Standby-I when this is invoked as only receive sets
     // it other modes and it does enter Standby-I when done.
@@ -122,17 +122,17 @@ void NRF24L01RadioDriver::send(char *buffer, int bufferLength)
     // We are here in Standby-II and will move to TX mode as soon as data is pushed to the TX FIFO.
 
     uint8_t packet[NRF24L01_PAYLOAD_SIZE];
+
     unsigned long last_pll_lock = millis();
-    uint8_t packets = ceil((float)bufferLength / (float)NRF24L01_PACKET_DATA_SIZE);
 
     uint8_t seq = 0;
 
-    for (uint16_t ix = 0; ix < bufferLength; ix += NRF24L01_PACKET_DATA_SIZE)
+    for (uint16_t ix = 0; ix < dataLength; ix += NRF24L01_PACKET_DATA_SIZE)
     {
         memcpy(packet + NRF24L01_PACKET_HEADER_SIZE, buffer + ix, NRF24L01_PACKET_DATA_SIZE);
         seq++;
-        packet[NRF24L01_PACKET_HEADER_SEQ] = packets << 4 | seq;
-        packet[NRF24L01_PACKET_HEADER_BUFFER_LEN] = bufferLength;
+        packet[NRF24L01_PACKET_HEADER_SEQ] = seq;
+        packet[NRF24L01_PACKET_HEADER_DATA_LEN] = dataLength;
 
         this->performSPITransaction(NRF24L01_W_TX_PAYLOAD, NRF24L01_PAYLOAD_SIZE, packet);
 
@@ -147,13 +147,13 @@ void NRF24L01RadioDriver::send(char *buffer, int bufferLength)
         //  and go back to TX mode in order for the oscillator to lock again. To go to Standby-II
         //  here we pull CE down and wait the TX FIFO to be empty.
         if (millis() - last_pll_lock > 4)
-        {
+        {         
             // Wait for the FIFO to be empty, so we can enter Standby-II
             // Bit 4 is TX_FIFO_EMPTY
             while (!(this->readRegister(NRF24L01_FIFO_STATUS) & 0b00010000))
             {
                 delayMicroseconds(100);
-            }
+            }            
         }
     }
 
@@ -178,10 +178,10 @@ bool NRF24L01RadioDriver::receive(char *buffer, uint8_t *bufferDataSize, uint16_
 {
     unsigned long startTime = millis();
     uint8_t receivedBytes = 0;
+    uint8_t expctedSeq = 0;
+    uint8_t packet[NRF24L01_PAYLOAD_SIZE];
 
     this->startReceiving();
-
-    uint8_t expctedSeq = 0;
 
     while (true)
     {
@@ -197,11 +197,10 @@ bool NRF24L01RadioDriver::receive(char *buffer, uint8_t *bufferDataSize, uint16_
         }
 
         expctedSeq++;
-        uint8_t packet[NRF24L01_PAYLOAD_SIZE];
 
         this->performSPITransaction(NRF24L01_R_RX_PAYLOAD, NRF24L01_PAYLOAD_SIZE, packet);
 
-        if ((packet[NRF24L01_PACKET_HEADER_SEQ] & 0xF) != expctedSeq)
+        if (packet[NRF24L01_PACKET_HEADER_SEQ] != expctedSeq)
         {
             this->stopReceiving();
             this->errOOS++;
@@ -209,7 +208,7 @@ bool NRF24L01RadioDriver::receive(char *buffer, uint8_t *bufferDataSize, uint16_
             return false;
         }
 
-        if (packet[NRF24L01_PACKET_HEADER_BUFFER_LEN] > *bufferDataSize)
+        if (packet[NRF24L01_PACKET_HEADER_DATA_LEN] > *bufferDataSize)
         {
             this->stopReceiving();
             this->errOVFL++;
@@ -221,9 +220,9 @@ bool NRF24L01RadioDriver::receive(char *buffer, uint8_t *bufferDataSize, uint16_
 
         receivedBytes += NRF24L01_PACKET_DATA_SIZE;
 
-        if ((packet[NRF24L01_PACKET_HEADER_SEQ] >> 4) == (packet[NRF24L01_PACKET_HEADER_SEQ] & 0xF))
+        if (receivedBytes >= packet[NRF24L01_PACKET_HEADER_DATA_LEN])
         {
-            *bufferDataSize = packet[NRF24L01_PACKET_HEADER_BUFFER_LEN];
+            *bufferDataSize = packet[NRF24L01_PACKET_HEADER_DATA_LEN];
             this->stopReceiving();
             return true;
         }

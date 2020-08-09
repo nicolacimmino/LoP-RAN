@@ -45,25 +45,28 @@ uint8_t r = 0;
 char buffer[64];
 uint8_t dataBufferSize = 64;
 
+#define ACT_AS_TX
+
 void loop()
 {
 
-  // memset(buffer, 0, 64);
-
-  // r++;
-  // sprintf(buffer, "TEST MESSAGE OF FIXED LENGTH  AND SOME CHANGING ab DATA %i", r);
-  // //               1234567890123456789012345678901212345678901234567890123456789012
-  // //               0        1         2         3           4         5         6
-  // radio->send(buffer, strlen(buffer));
-  // radio->receive(buffer, &dataBufferSize, 500);
-  // Serial.println("Sent");
-  // //delay(500);
+#ifdef ACT_AS_TX
+  memset(buffer, 0, 64);
+  memset(buffer, 'A', 1 + (r++ % 62));
+  //sprintf(buffer, "TEST MESSAGE OF FIXED LENGTH  AND SOME CHANGING ab DATA %i", r++);
+  //               1234567890123456789012345678901212345678901234567890123456789012
+  //               0        1         2         3           4         5         6
+  radio->send(buffer, strlen(buffer));
+  radio->receive(buffer, &dataBufferSize, 500);
+  Serial.println(buffer);
+  delay(200);
+#else
 
   dataBufferSize = 64;
   if (radio->receive(buffer, &dataBufferSize, 1000))
   {
-    //Serial.println(dataBufferSize);
-    Serial.println(buffer);
+    Serial.println(dataBufferSize);
+    //Serial.println(buffer);
     delay(100);
     strcpy(buffer, "OK");
     radio->send(buffer, strlen(buffer));
@@ -73,7 +76,5 @@ void loop()
     sprintf(buffer, "TOUT: %i OVFL:%i OOS:%i", radio->errTOUT, radio->errOVFL, radio->errOOS);
     Serial.println(buffer);
   }
-
-  // radio->receive(buffer, 32, 100);
-  // Serial.println(buffer);
+#endif
 }
