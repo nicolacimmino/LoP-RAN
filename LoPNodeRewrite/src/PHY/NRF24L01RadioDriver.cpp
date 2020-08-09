@@ -298,7 +298,7 @@ void NRF24L01RadioDriver::initializeRadio()
     SPI.begin();
     SPI.setDataMode(SPI_MODE0);
     SPI.setBitOrder(MSBFIRST);
-    SPI.setClockDivider(SPI_CLOCK_DIV4);
+    SPI.setClockDivider(SPI_CLOCK_DIV2);
 
     // Disable Auto ACK.
     this->writeRegister(NRF24L01_EN_AA, 0);

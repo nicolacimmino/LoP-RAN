@@ -35,7 +35,7 @@ void setup(void)
 
   radio->setRXExtendedPreamble(643234);
   radio->setTXExtendedPreamble(643234);
-  radio->setTXPower(0);
+  radio->setTXPower(3);
   radio->setRFChannel(85);
 
   Serial.println("Setup done");
@@ -45,15 +45,14 @@ uint8_t r = 0;
 char buffer[64];
 uint8_t dataBufferSize = 64;
 
-#define ACT_AS_TX
+//#define ACT_AS_TX
 
 void loop()
 {
 
 #ifdef ACT_AS_TX
-  memset(buffer, 0, 64);
-  memset(buffer, 'A', 1 + (r++ % 62));
-  //sprintf(buffer, "TEST MESSAGE OF FIXED LENGTH  AND SOME CHANGING ab DATA %i", r++);
+  memset(buffer, 0, 64);  
+  sprintf(buffer, "TEST MESSAGE OF FIXED LENGTH  AND SOME CHANGING ab DATA %i", r++);
   //               1234567890123456789012345678901212345678901234567890123456789012
   //               0        1         2         3           4         5         6
   radio->send(buffer, strlen(buffer));
@@ -65,8 +64,7 @@ void loop()
   dataBufferSize = 64;
   if (radio->receive(buffer, &dataBufferSize, 1000))
   {
-    Serial.println(dataBufferSize);
-    //Serial.println(buffer);
+    Serial.println(buffer);
     delay(100);
     strcpy(buffer, "OK");
     radio->send(buffer, strlen(buffer));
